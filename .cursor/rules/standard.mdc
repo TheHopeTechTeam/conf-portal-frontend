@@ -1,0 +1,92 @@
+---
+description: Standard
+globs:
+alwaysApply: true
+---
+# 專案標準規範
+
+## 基本規範
+
+- 使用 camelCase 命名所有變數名稱。
+- 使用 camelCase 命名所有函數名稱。
+- 使用 PascalCase 命名所有元件名稱和類別名稱。
+- 使用 UPPER_SNAKE_CASE 命名所有常數和環境變數。（例如：`UPPER_CASE` 或 `UPPER_CASE_ENV_VAR`）
+- 使用 kebab-case 命名所有檔案和資料夾名稱。
+- 不檢查 linting 規則。（例如：eslint 等）
+- 專案使用 npm 進行依賴管理。
+- 有使用到 html、ReactNode、JSX.Element 的檔案以 tsx 結尾。
+- 專案有設定 path alias，使用 @ 代表 src 目錄。
+- 所有 function 都使用 arrow function 語法。
+
+## TypeScript
+
+- 嚴格使用 TypeScript，為所有 props、state 和函數參數定義明確的型別。
+- 使用 interface 定義物件型別，使用 type 定義聯合型別和工具型別。
+- 優先使用泛型來提高程式碼的可重用性。
+- 避免使用 `any` 定義型別，所有型別都應該明確定義。
+
+## React 元件
+
+- 使用函數式元件和 React Hooks。
+- 元件檔案應使用 PascalCase 命名，並放在對應的功能目錄下。
+- 每個元件應有明確的 props 介面定義。
+- 使用 React.memo() 優化效能，避免不必要的重新渲染。
+- 優先使用自定義 Hooks 來抽取可重用的邏輯。
+
+## 目錄結構
+
+- 遵循現有的目錄結構：`src/components/`、`src/pages/`、`src/context/`、`src/hooks/` 等。
+- 相關的元件應放在對應的功能目錄下（例如：`components/auth/`、`components/ui/`）。
+- 共用元件應放在 `components/common/` 目錄下。
+- 頁面元件應放在 `pages/` 目錄下，並按功能分類。
+
+## 狀態管理
+
+- 優先使用 React Context 進行全域狀態管理。
+- 使用自定義 Hooks 封裝複雜的狀態邏輯。
+- 避免過度使用全域狀態，優先使用本地狀態。
+- 狀態更新應使用不可變的方式。
+
+## 樣式和 UI
+
+- 使用 Tailwind CSS 進行樣式設計。
+- 遵循現有的設計系統和元件庫。
+- 確保響應式設計，支援不同螢幕尺寸。
+- 優先使用現有的 UI 元件，避免重複造輪子。
+- 所有 icon 都使用 react-icons 來引入，並優先使用 md 系列的 icon。
+
+## 路由管理
+
+- 使用 React Router 進行路由管理。
+- 路由定義應集中在 `App.tsx` 中。
+- 使用懶載入優化頁面載入效能。
+- 路由路徑應使用 kebab-case 命名。
+
+## 效能優化
+
+- 使用 React.lazy() 進行程式碼分割。
+- 實作適當的錯誤邊界。
+- 優化圖片和資源載入。
+- 使用 React DevTools 進行效能分析。
+
+## 無障礙設計
+
+- 確保所有互動元素都有適當的 ARIA 屬性。
+- 支援鍵盤導航。
+- 維持足夠的顏色對比度。
+- 提供適當的 alt 文字給圖片。
+
+## API 整合
+
+- 使用 Axios 進行 HTTP 請求。
+- 實作請求/回應攔截器。
+- 統一錯誤處理。
+- 支援請求快取。
+- 除了 DataPage 元件外，其他元件不要直接使用 httpClient 進行 API 請求，請在 api/ 中建立對應的 api 資源。
+
+## 程式碼品質
+
+- 保持程式碼簡潔和可讀性。
+- 使用有意義的變數和函數名稱。
+- 避免過度複雜的邏輯，必要時進行重構。
+- 遵循 DRY（Don't Repeat Yourself）原則。
