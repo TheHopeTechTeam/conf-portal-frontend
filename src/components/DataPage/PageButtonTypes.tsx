@@ -11,7 +11,7 @@ import {
   MdSearch,
   MdVisibility,
 } from "react-icons/md";
-import { PageButtonType } from "./types";
+import { PageButtonType, PopoverType } from "./types";
 
 // 內建按鈕類型
 export enum PAGE_BUTTON_TYPES {
@@ -86,24 +86,20 @@ export const createPageButton = (type: PageButtonTypeKey, onClick: () => void, o
 };
 
 export class CommonPageButton {
-  static SEARCH = (onClick: () => void, options: Partial<PageButtonType> = {}) => {
-    return createPageButton(PAGE_BUTTON_TYPES.SEARCH, onClick, {
-      variant: "outline",
-      align: "right",
-      ...options,
-    });
-  };
-
-  static SEARCH_POPOVER = (content: ReactNode, options: Partial<PageButtonType> = {}) => {
+  static SEARCH = (
+    popoverCallback: (props: {
+      isOpen: boolean;
+      onOpenChange: (open: boolean) => void;
+      trigger: ReactNode;
+      popover: PopoverType;
+    }) => ReactNode,
+    options: Partial<PageButtonType> = {}
+  ) => {
     return createPageButton(PAGE_BUTTON_TYPES.SEARCH, () => {}, {
       variant: "outline",
       align: "left",
       tooltip: "搜尋",
-      popover: {
-        title: "搜尋",
-        position: "bottom",
-        content,
-      },
+      popoverCallback,
       ...options,
     });
   };
@@ -125,7 +121,6 @@ export class CommonPageButton {
   };
 
   static RECYCLE = (onClick: () => void, options: Partial<PageButtonType> = {}) => {
-    console.log(options);
     return createPageButton(PAGE_BUTTON_TYPES.RECYCLE, onClick, {
       variant: "outline",
       align: "right",

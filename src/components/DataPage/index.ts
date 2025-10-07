@@ -16,4 +16,7 @@ export { useContextMenu } from "./useContextMenu";
 // PageButton 工具函數
 export { CommonPageButton, createPageButton, getPageButtonIcon, getPageButtonText, PAGE_BUTTON_TYPES } from "./PageButtonTypes";
 
+// Search Popover content
+export { default as SearchPopoverContent } from "./SearchPopoverContent";
+
 export type * from "./types";

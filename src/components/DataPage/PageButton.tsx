@@ -1,5 +1,5 @@
-import Popover from "@/components/ui/popover";
 import Tooltip from "@/components/ui/tooltip";
+import { useState } from "react";
 import { PageButtonType } from "./types";
 
 interface PageButtonProps {
@@ -21,14 +21,18 @@ export default function PageButton({ button, mode }: PageButtonProps) {
     size = "sm",
     tooltip,
     flat = false,
-    popover,
     className,
+    popoverCallback,
+    popover,
   } = button;
+
+  // 用於控制 Popover 的狀態
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   // 根據模式決定顯示內容
   const showIcon = mode === "toolbar" || mode === "contextmenu";
   const showText = mode === "contextmenu";
-  const showTooltip = mode === "toolbar" && (tooltip || text) && !popover;
+  const showTooltip = mode === "toolbar" && (tooltip || text) && !popoverCallback;
 
   // 樣式配置
   const getVariantClasses = () => {
@@ -104,15 +108,16 @@ export default function PageButton({ button, mode }: PageButtonProps) {
     buttonElement
   );
 
-  if (mode === "toolbar" && popover) {
+  if (mode === "toolbar" && popoverCallback && popover) {
     return (
-      <Popover
-        title={popover.title}
-        position={popover.position || "bottom"}
-        trigger={<span className="inline-block">{wrappedWithTooltip}</span>}
-      >
-        {popover.content}
-      </Popover>
+      <>
+        {popoverCallback({
+          isOpen: isPopoverOpen,
+          onOpenChange: setIsPopoverOpen,
+          trigger: wrappedWithTooltip,
+          popover: popover,
+        })}
+      </>
     );
   }
 

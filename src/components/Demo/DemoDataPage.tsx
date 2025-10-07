@@ -1,14 +1,14 @@
 import { httpClient } from "@/api";
 import { demoService } from "@/api/services/demoService";
-import type { DataTableColumn, DataTableRowAction } from "@/components/DataPage";
-import { CommonPageButton, DataPage } from "@/components/DataPage";
+import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
+import { CommonPageButton, DataPage, SearchPopoverContent } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
-import { Gender } from "@/const/enums";
+import { Gender, PopoverPosition } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MdDelete, MdEdit } from "react-icons/md";
 import DemoDataForm, { type DemoFormValues } from "./DemoDataForm";
 import DemoDeleteForm from "./DemoDeleteForm";
@@ -52,8 +52,29 @@ export default function DemoDataPage() {
   const [editing, setEditing] = useState<DemoDetail | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch function
+  // Fetch function - 使用 useRef 避免不必要的重新創建
+  const fetchPagesRef = useRef({
+    currentPage,
+    pageSize,
+    orderBy,
+    descending,
+    keyword,
+    showDeleted,
+  });
+
+  // 更新 ref 當依賴項改變時
+  fetchPagesRef.current = {
+    currentPage,
+    pageSize,
+    orderBy,
+    descending,
+    keyword,
+    showDeleted,
+  };
+
   const fetchPages = useCallback(async () => {
+    const { currentPage, pageSize, orderBy, descending, keyword, showDeleted } = fetchPagesRef.current;
+
     setLoading(true);
     try {
       const params = {
@@ -79,7 +100,7 @@ export default function DemoDataPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, orderBy, descending, keyword, showDeleted]);
+  }, []); // 空依賴項，避免重新創建
 
   // Columns definition
   const columns: DataTableColumn<DemoDetail>[] = useMemo(
@@ -168,43 +189,42 @@ export default function DemoDataPage() {
 
   // Toolbar buttons
   const toolbarButtons = useMemo(() => {
-    const searchContent = (
-      <div className="p-4">
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={searchDraft}
-            onChange={(e) => setSearchDraft(e.target.value)}
-            placeholder="輸入關鍵字"
-            className="dark:bg-dark-900 h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-          />
-          <button
-            className="inline-flex items-center justify-center rounded-md bg-brand-500 px-3 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-            onClick={() => {
-              setKeyword(searchDraft);
-              setCurrentPage(1);
-              fetchPages();
-            }}
-          >
-            搜尋
-          </button>
-          <button
-            className="inline-flex items-center justify-center rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-            onClick={() => {
-              setSearchDraft("");
-              setKeyword("");
-              setCurrentPage(1);
-              fetchPages();
-            }}
-          >
-            清除
-          </button>
-        </div>
-      </div>
+    // 使用 popoverCallback 模式，使用統一的 trigger 樣式
+    const searchPopoverCallback = ({
+      isOpen,
+      onOpenChange,
+      trigger,
+      popover,
+    }: {
+      isOpen: boolean;
+      onOpenChange: (open: boolean) => void;
+      trigger: ReactNode;
+      popover: PopoverType;
+    }) => (
+      <SearchPopoverContent
+        value={searchDraft}
+        onChange={setSearchDraft}
+        onSearch={() => {
+          setKeyword(searchDraft);
+          setCurrentPage(1);
+          onOpenChange(false); // 搜尋完成後關閉 Popover
+        }}
+        onClear={() => {
+          setSearchDraft("");
+          setKeyword("");
+          setCurrentPage(1);
+          onOpenChange(false); // 清除完成後關閉 Popover
+        }}
+        placeholder="輸入關鍵字"
+        trigger={trigger}
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        popover={popover}
+      />
     );
 
     return [
-      CommonPageButton.SEARCH_POPOVER(searchContent),
+      CommonPageButton.SEARCH(searchPopoverCallback, { popover: { title: "搜尋", position: PopoverPosition.BottomLeft, width: "300px" } }),
       CommonPageButton.ADD(
         () => {
           setFormMode("create");
@@ -231,7 +251,7 @@ export default function DemoDataPage() {
   // Trigger fetch on dependencies change
   useEffect(() => {
     fetchPages();
-  }, [fetchPages]);
+  }, [currentPage, pageSize, orderBy, descending, keyword, showDeleted, fetchPages]);
 
   // Event handlers wired to DataPage
   const handleSort = (columnKey: string | null, newDescending: boolean) => {

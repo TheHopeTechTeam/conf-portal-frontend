@@ -1,3 +1,4 @@
+import { PopoverPosition } from "@/const/enums";
 import { ReactNode } from "react";
 
 /**
@@ -151,6 +152,15 @@ export interface DataTablePageInternalState {
 }
 
 /**
+ * Popover 介面
+ */
+export interface PopoverType {
+  title: ReactNode;
+  position?: PopoverPosition;
+  width?: string;
+}
+
+/**
  * PageButton 介面（對應現有的 DataTableButton）
  */
 export interface PageButtonType {
@@ -184,12 +194,14 @@ export interface PageButtonType {
   tooltip?: string;
   /** 自定義樣式類名 */
   className?: string;
-  /** 以 Popover 呈現的設定（僅 toolbar 模式適用） */
-  popover?: {
-    title: ReactNode;
-    position?: "top" | "right" | "bottom" | "left";
-    content: ReactNode;
-  };
+  /** Popover 回調函數（僅 toolbar 模式適用） */
+  popoverCallback?: (props: {
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+    trigger: ReactNode;
+    popover: PopoverType;
+  }) => ReactNode;
+  popover?: PopoverType;
 }
 
 /**
