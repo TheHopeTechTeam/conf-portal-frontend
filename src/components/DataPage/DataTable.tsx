@@ -5,7 +5,7 @@ import DataTableHeader from "@/components/DataPage/DataTableHeader";
 import { useContextMenu } from "@/components/DataPage/useContextMenu";
 import { Table } from "@/components/ui/table";
 import { useState } from "react";
-import { DataTablePagedData, DataTableProps, PageButton } from "./types";
+import { DataTablePagedData, DataTableProps, PageButtonType } from "./types";
 
 export default function DataTable<T extends Record<string, unknown>>({
   data,
@@ -132,7 +132,7 @@ export default function DataTable<T extends Record<string, unknown>>({
     }
 
     // 生成右鍵選單按鈕
-    let contextMenuButtons: PageButton[] = [];
+    let contextMenuButtons: PageButtonType[] = [];
 
     if (rowActions) {
       if (typeof rowActions === "function") {

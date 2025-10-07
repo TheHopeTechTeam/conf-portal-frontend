@@ -14,9 +14,6 @@ export { default as ContextMenu } from "./ContextMenu";
 export { useContextMenu } from "./useContextMenu";
 
 // PageButton 工具函數
-export { createCommonButtons, createPageButton, getPageButtonIcon, getPageButtonText, PAGE_BUTTON_TYPES } from "./PageButtonTypes";
-
-// Demo 組件
-export { default as DataPageDemo } from "./DataPageDemo";
+export { CommonPageButton, createPageButton, getPageButtonIcon, getPageButtonText, PAGE_BUTTON_TYPES } from "./PageButtonTypes";
 
 export type * from "./types";

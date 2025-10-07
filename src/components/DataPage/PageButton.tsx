@@ -1,22 +1,34 @@
+import Popover from "@/components/ui/popover";
 import Tooltip from "@/components/ui/tooltip";
-import { PageButton as PageButtonType } from "./types";
+import { PageButtonType } from "./types";
 
 interface PageButtonProps {
   /** 按鈕配置 */
   button: PageButtonType;
   /** 顯示模式 */
   mode: "toolbar" | "contextmenu";
-  /** 額外的樣式類名 */
-  className?: string;
 }
 
-export default function PageButton({ button, mode, className }: PageButtonProps) {
-  const { key, text, icon, onClick, disabled = false, loading = false, variant = "outline", size = "sm", tooltip, flat = false } = button;
+export default function PageButton({ button, mode }: PageButtonProps) {
+  const {
+    key,
+    text,
+    icon,
+    onClick,
+    disabled = false,
+    loading = false,
+    variant = "outline",
+    size = "sm",
+    tooltip,
+    flat = false,
+    popover,
+    className,
+  } = button;
 
   // 根據模式決定顯示內容
   const showIcon = mode === "toolbar" || mode === "contextmenu";
   const showText = mode === "contextmenu";
-  const showTooltip = mode === "toolbar" && (tooltip || text);
+  const showTooltip = mode === "toolbar" && (tooltip || text) && !popover;
 
   // 樣式配置
   const getVariantClasses = () => {
@@ -84,11 +96,25 @@ export default function PageButton({ button, mode, className }: PageButtonProps)
     </button>
   );
 
-  return showTooltip ? (
+  const wrappedWithTooltip = showTooltip ? (
     <Tooltip content={tooltip || text}>
       <span className="inline-block">{buttonElement}</span>
     </Tooltip>
   ) : (
     buttonElement
   );
+
+  if (mode === "toolbar" && popover) {
+    return (
+      <Popover
+        title={popover.title}
+        position={popover.position || "bottom"}
+        trigger={<span className="inline-block">{wrappedWithTooltip}</span>}
+      >
+        {popover.content}
+      </Popover>
+    );
+  }
+
+  return wrappedWithTooltip;
 }

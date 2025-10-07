@@ -153,7 +153,7 @@ export interface DataTablePageInternalState {
 /**
  * PageButton 介面（對應現有的 DataTableButton）
  */
-export interface PageButton {
+export interface PageButtonType {
   /** 按鈕鍵值 */
   key: string;
   /** 按鈕文字 */
@@ -184,6 +184,12 @@ export interface PageButton {
   tooltip?: string;
   /** 自定義樣式類名 */
   className?: string;
+  /** 以 Popover 呈現的設定（僅 toolbar 模式適用） */
+  popover?: {
+    title: ReactNode;
+    position?: "top" | "right" | "bottom" | "left";
+    content: ReactNode;
+  };
 }
 
 /**
@@ -215,9 +221,9 @@ export interface DataTablePageProps<T> {
   /** 是否支援回收站 */
   recycleable?: boolean;
   /** 頁面按鈕 */
-  pageButtons?: PageButton[] | ((state: DataTablePageInternalState) => PageButton[]);
+  pageButtons?: PageButtonType[] | ((state: DataTablePageInternalState) => PageButtonType[]);
   /** 行右鍵選單 */
-  getRowContextMenu?: (row: T, index: number, state: DataTablePageInternalState) => PageButton[];
+  getRowContextMenu?: (row: T, index: number, state: DataTablePageInternalState) => PageButtonType[];
   /** 預設查詢參數 */
   defaultParams?: Record<string, unknown>;
   /** 樣式類名 */

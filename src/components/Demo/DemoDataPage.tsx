@@ -1,7 +1,8 @@
 import { httpClient } from "@/api";
 import { demoService } from "@/api/services/demoService";
 import type { DataTableColumn, DataTableRowAction } from "@/components/DataPage";
-import { DataPage, createCommonButtons } from "@/components/DataPage";
+import { CommonPageButton, DataPage } from "@/components/DataPage";
+import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
 import { Gender } from "@/const/enums";
@@ -35,6 +36,7 @@ export default function DemoDataPage() {
   const [currentPage, setCurrentPage] = useState(1); // 1-based for UI
   const [pageSize, setPageSize] = useState(10);
   const [keyword, setKeyword] = useState("");
+  const [searchDraft, setSearchDraft] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
   const [orderBy, setOrderBy] = useState<string>();
   const [descending, setDescending] = useState<boolean>();
@@ -165,21 +167,66 @@ export default function DemoDataPage() {
   );
 
   // Toolbar buttons
-  const toolbarButtons = useMemo(
-    () =>
-      createCommonButtons({
-        onAdd: () => {
+  const toolbarButtons = useMemo(() => {
+    const searchContent = (
+      <div className="p-4">
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={searchDraft}
+            onChange={(e) => setSearchDraft(e.target.value)}
+            placeholder="輸入關鍵字"
+            className="dark:bg-dark-900 h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+          />
+          <button
+            className="inline-flex items-center justify-center rounded-md bg-brand-500 px-3 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            onClick={() => {
+              setKeyword(searchDraft);
+              setCurrentPage(1);
+              fetchPages();
+            }}
+          >
+            搜尋
+          </button>
+          <button
+            className="inline-flex items-center justify-center rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            onClick={() => {
+              setSearchDraft("");
+              setKeyword("");
+              setCurrentPage(1);
+              fetchPages();
+            }}
+          >
+            清除
+          </button>
+        </div>
+      </div>
+    );
+
+    return [
+      CommonPageButton.SEARCH_POPOVER(searchContent),
+      CommonPageButton.ADD(
+        () => {
           setFormMode("create");
           setEditing(null);
           openModal();
         },
-        onRefresh: () => {
-          // Force refresh by calling fetchPages directly
-          fetchPages();
-        },
+        {
+          visible: !showDeleted,
+        }
+      ),
+      CommonPageButton.REFRESH(() => {
+        fetchPages();
       }),
-    [openModal, fetchPages]
-  );
+      CommonPageButton.RECYCLE(
+        () => {
+          setShowDeleted(!showDeleted);
+          setCurrentPage(1);
+        },
+        { className: getRecycleButtonClassName(showDeleted) }
+      ),
+    ];
+  }, [openModal, fetchPages, showDeleted, searchDraft]);
 
   // Trigger fetch on dependencies change
   useEffect(() => {
@@ -196,16 +243,6 @@ export default function DemoDataPage() {
       setOrderBy(columnKey);
       setDescending(newDescending);
     }
-  };
-
-  const handleSearch = (searchKeyword: string) => {
-    setKeyword(searchKeyword);
-    setCurrentPage(1);
-  };
-
-  const handleRecycleToggle = (newShowDeleted: boolean) => {
-    setShowDeleted(newShowDeleted);
-    setCurrentPage(1);
   };
 
   const handlePageChange = (page: number) => {
@@ -296,18 +333,11 @@ export default function DemoDataPage() {
         data={pagedData}
         columns={columns}
         loading={loading}
-        initialOrderBy={orderBy}
-        initialDescending={descending}
-        initialKeyword={keyword}
-        initialShowDeleted={showDeleted}
-        searchable={true}
-        searchPlaceholder="搜尋 Demo..."
+        orderBy={orderBy}
+        descending={descending}
         buttons={toolbarButtons}
-        showRecycleToggle={true}
         rowActions={rowActions}
         onSort={handleSort}
-        onSearch={handleSearch}
-        onRecycleToggle={handleRecycleToggle}
         onPageChange={handlePageChange}
         onItemsPerPageChange={handleItemsPerPageChange}
       />

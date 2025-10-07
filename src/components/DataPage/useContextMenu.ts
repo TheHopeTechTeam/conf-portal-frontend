@@ -1,10 +1,10 @@
 import { useCallback, useState } from "react";
-import { PageButton } from "./types";
+import { PageButtonType } from "./types";
 
 interface ContextMenuState {
   visible: boolean;
   position: { x: number; y: number };
-  buttons: PageButton[];
+  buttons: PageButtonType[];
 }
 
 export const useContextMenu = () => {
@@ -14,7 +14,7 @@ export const useContextMenu = () => {
     buttons: [],
   });
 
-  const showContextMenu = useCallback((event: React.MouseEvent, buttons: PageButton[]) => {
+  const showContextMenu = useCallback((event: React.MouseEvent, buttons: PageButtonType[]) => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -32,7 +32,7 @@ export const useContextMenu = () => {
     }));
   }, []);
 
-  const updateButtons = useCallback((buttons: PageButton[]) => {
+  const updateButtons = useCallback((buttons: PageButtonType[]) => {
     setState((prev) => ({
       ...prev,
       buttons,

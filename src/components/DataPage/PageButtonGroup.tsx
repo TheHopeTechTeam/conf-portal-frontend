@@ -1,5 +1,5 @@
 import PageButton from "./PageButton";
-import { PageButton as PageButtonType } from "./types";
+import { PageButtonType } from "./types";
 
 interface PageButtonGroupProps {
   /** 按鈕列表 */

@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { PageButton } from "./types";
+import { PageButtonType } from "./types";
 
 interface ContextMenuProps {
   /** 選單按鈕 */
-  buttons: PageButton[];
+  buttons: PageButtonType[];
   /** 是否顯示 */
   visible: boolean;
   /** 位置 */
