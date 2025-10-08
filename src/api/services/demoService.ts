@@ -5,14 +5,14 @@ export interface DemoDetailDto {
   name: string;
   remark?: string;
   age?: number;
-  gender?: 0 | 1 | 2;
+  gender?: 0 | 1 | 2 | 3;
 }
 
 export interface DemoCreateDto {
   name: string;
   remark?: string;
   age?: number;
-  gender?: 0 | 1 | 2;
+  gender?: 0 | 1 | 2 | 3;
 }
 
 export interface DemoUpdateDto extends DemoCreateDto {}

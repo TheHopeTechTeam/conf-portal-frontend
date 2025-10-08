@@ -66,9 +66,6 @@ export default function DataTable<T extends Record<string, unknown>>({
 
     setSelectedRows(newSelectedRows);
     setSelectedKeys(newSelectedKeys);
-
-    console.log("selectedRows", newSelectedRows);
-    console.log("selectedKeys", newSelectedKeys);
     onRowSelect?.(newSelectedRows, newSelectedKeys);
   };
 
@@ -87,9 +84,6 @@ export default function DataTable<T extends Record<string, unknown>>({
 
     setSelectedRows(newSelectedRows);
     setSelectedKeys(newSelectedKeys);
-
-    console.log("selectedRows", newSelectedRows);
-    console.log("selectedKeys", newSelectedKeys);
     onRowSelect?.(newSelectedRows, newSelectedKeys);
   };
 

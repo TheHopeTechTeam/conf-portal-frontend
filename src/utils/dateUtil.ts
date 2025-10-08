@@ -24,12 +24,12 @@ export class DateUtil {
   /**
    * 格式化日期
    * @param date 日期值
-   * @param format 格式字串，預設 'YYYY-MM-DD'
+   * @param format 格式字串，預設 'YYYY年MM月DD日 HH:mm'
    * @returns 格式化後的日期字串
    */
-  static format(date: unknown, format: string = "ddd MMM DD YYYY HH:mm:ss"): string | null {
+  static format(date: unknown, format: string = "YYYY年MM月DD日 HH:mm"): string | undefined {
     const momentDate = this.parseDate(date);
-    return momentDate ? momentDate.format(format) : null;
+    return momentDate ? momentDate.format(format) : undefined;
   }
 
   /**
