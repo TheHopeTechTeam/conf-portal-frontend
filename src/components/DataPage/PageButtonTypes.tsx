@@ -8,6 +8,7 @@ import {
   MdFileDownload,
   MdOutlineRecycling,
   MdRefresh,
+  MdRestore,
   MdSearch,
   MdVisibility,
 } from "react-icons/md";
@@ -18,7 +19,9 @@ export enum PAGE_BUTTON_TYPES {
   ADD = "add",
   REFRESH = "refresh",
   SEARCH = "search",
+  BULK_DELETE = "bulk_delete",
   RECYCLE = "recycle",
+  RESTORE = "restore",
   DOWNLOAD = "download",
   EDIT = "edit",
   DELETE = "delete",
@@ -33,7 +36,7 @@ export type PageButtonTypeKey = (typeof PAGE_BUTTON_TYPES)[keyof typeof PAGE_BUT
 export const getRecycleButtonClassName = (active: boolean): string => {
   return active
     ? "bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
-    : "border border-red-300 text-red-500 hover:bg-red-50 dark:border-red-600 dark:text-red-500 dark:hover:bg-red-800";
+    : "border border-red-500 text-red-500 hover:bg-red-50 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-500/10";
 };
 
 // 內建按鈕圖標（使用 react-icons/md）
@@ -42,7 +45,9 @@ export const getPageButtonIcon = (type: PageButtonTypeKey): ReactNode => {
     [PAGE_BUTTON_TYPES.ADD]: <MdAdd className="w-4 h-4" />,
     [PAGE_BUTTON_TYPES.REFRESH]: <MdRefresh className="w-4 h-4" />,
     [PAGE_BUTTON_TYPES.SEARCH]: <MdSearch className="w-4 h-4" />,
+    [PAGE_BUTTON_TYPES.BULK_DELETE]: <MdDelete className="w-4 h-4" />,
     [PAGE_BUTTON_TYPES.RECYCLE]: <MdOutlineRecycling className="w-4 h-4" />,
+    [PAGE_BUTTON_TYPES.RESTORE]: <MdRestore className="w-4 h-4" />,
     [PAGE_BUTTON_TYPES.DOWNLOAD]: <MdDownload className="w-4 h-4" />,
     [PAGE_BUTTON_TYPES.EDIT]: <MdEdit className="w-4 h-4" />,
     [PAGE_BUTTON_TYPES.DELETE]: <MdDelete className="w-4 h-4" />,
@@ -60,7 +65,9 @@ export const getPageButtonText = (type: PageButtonTypeKey): string => {
     [PAGE_BUTTON_TYPES.SEARCH]: "搜尋",
     [PAGE_BUTTON_TYPES.ADD]: "新增",
     [PAGE_BUTTON_TYPES.REFRESH]: "刷新",
+    [PAGE_BUTTON_TYPES.BULK_DELETE]: "批量刪除",
     [PAGE_BUTTON_TYPES.RECYCLE]: "回收站",
+    [PAGE_BUTTON_TYPES.RESTORE]: "批量還原",
     [PAGE_BUTTON_TYPES.DOWNLOAD]: "下載",
     [PAGE_BUTTON_TYPES.EDIT]: "編輯",
     [PAGE_BUTTON_TYPES.DELETE]: "刪除",
@@ -79,7 +86,6 @@ export const createPageButton = (type: PageButtonTypeKey, onClick: () => void, o
     text: getPageButtonText(type),
     icon: getPageButtonIcon(type),
     onClick,
-    variant: "outline",
     size: "md",
     ...options,
   };
@@ -96,7 +102,6 @@ export class CommonPageButton {
     options: Partial<PageButtonType> = {}
   ) => {
     return createPageButton(PAGE_BUTTON_TYPES.SEARCH, () => {}, {
-      variant: "outline",
       align: "left",
       tooltip: "搜尋",
       popoverCallback,
@@ -114,17 +119,33 @@ export class CommonPageButton {
 
   static REFRESH = (onClick: () => void, options: Partial<PageButtonType> = {}) => {
     return createPageButton(PAGE_BUTTON_TYPES.REFRESH, onClick, {
-      variant: "outline",
+      outline: true,
       align: "right",
       ...options,
     });
   };
 
+  static BULK_DELETE = (onClick: () => void, options: Partial<PageButtonType> = {}) => {
+    return createPageButton(PAGE_BUTTON_TYPES.BULK_DELETE, onClick, {
+      variant: "danger",
+      outline: true,
+      align: "right",
+      tooltip: "批量刪除",
+      ...options,
+    });
+  };
   static RECYCLE = (onClick: () => void, options: Partial<PageButtonType> = {}) => {
     return createPageButton(PAGE_BUTTON_TYPES.RECYCLE, onClick, {
-      variant: "outline",
       align: "right",
       tooltip: "顯示已刪除項目",
+      ...options,
+    });
+  };
+
+  static RESTORE = (onClick: () => void, options: Partial<PageButtonType> = {}) => {
+    return createPageButton(PAGE_BUTTON_TYPES.RESTORE, onClick, {
+      align: "left",
+      tooltip: "批量還原",
       ...options,
     });
   };

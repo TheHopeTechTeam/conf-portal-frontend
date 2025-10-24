@@ -21,6 +21,7 @@ export default function PageButton({ button, mode }: PageButtonProps) {
     size = "sm",
     tooltip,
     flat = false,
+    outline = false,
     className,
     popoverCallback,
     popover,
@@ -36,12 +37,44 @@ export default function PageButton({ button, mode }: PageButtonProps) {
 
   // 樣式配置
   const getVariantClasses = () => {
+    // 如果指定了 outline 參數，優先使用 outline 樣式
+    if (outline) {
+      switch (variant) {
+        case "primary":
+          return "border border-brand-500 text-brand-500 hover:bg-brand-50 dark:border-brand-400 dark:text-brand-400 dark:hover:bg-brand-500/10";
+        case "success":
+          return "border border-green-500 text-green-500 hover:bg-green-50 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-500/10";
+        case "warning":
+          return "border border-yellow-500 text-yellow-500 hover:bg-yellow-50 dark:border-yellow-400 dark:text-yellow-400 dark:hover:bg-yellow-500/10";
+        case "danger":
+          return "border border-red-500 text-red-500 hover:bg-red-50 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-500/10";
+        case "info":
+          return "border border-blue-500 text-blue-500 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-500/10";
+        case "secondary":
+          return "border border-gray-500 text-gray-500 hover:bg-gray-50 dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-500/10";
+        case "ghost":
+          return "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800";
+        default:
+          return "border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800";
+      }
+    }
+
+    // 非 outline 樣式
     switch (variant) {
       case "primary":
         return "bg-brand-500 text-white hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700";
+      case "success":
+        return "bg-green-500 text-white hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700";
+      case "warning":
+        return "bg-yellow-500 text-white hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700";
+      case "danger":
+        return "bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700";
+      case "info":
+        return "bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700";
+      case "secondary":
+        return "bg-gray-500 text-white hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700";
       case "ghost":
         return "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800";
-      case "outline":
       default:
         return "border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800";
     }

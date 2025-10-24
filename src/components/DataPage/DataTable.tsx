@@ -4,7 +4,7 @@ import DataTableFooter from "@/components/DataPage/DataTableFooter";
 import DataTableHeader from "@/components/DataPage/DataTableHeader";
 import { useContextMenu } from "@/components/DataPage/useContextMenu";
 import { Table } from "@/components/ui/table";
-import { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { DataTablePagedData, DataTableProps, PageButtonType } from "./types";
 
 export default function DataTable<T extends Record<string, unknown>>({
@@ -24,6 +24,7 @@ export default function DataTable<T extends Record<string, unknown>>({
   headerClassName,
   rowClassName,
   rowKey = "id",
+  onClearSelectionRef,
 }: DataTableProps<T>) {
   const [selectedRows, setSelectedRows] = useState<T[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
@@ -69,8 +70,25 @@ export default function DataTable<T extends Record<string, unknown>>({
     onRowSelect?.(newSelectedRows, newSelectedKeys);
   };
 
+  // 清除選中狀態
+  const clearSelection = useCallback(() => {
+    setSelectedRows([]);
+    setSelectedKeys([]);
+    onRowSelect?.([], []);
+  }, [onRowSelect]);
+
+  // 將 clearSelection 暴露給父組件
+  useEffect(() => {
+    if (onClearSelectionRef) {
+      onClearSelectionRef(clearSelection);
+    }
+  }, [onClearSelectionRef, clearSelection]);
+
   // 處理全選
   const handleSelectAll = (checked: boolean) => {
+    // 單選模式下不支援全選
+    if (singleSelect) return;
+
     let newSelectedRows: T[] = [];
     let newSelectedKeys: string[] = [];
 
@@ -131,35 +149,51 @@ export default function DataTable<T extends Record<string, unknown>>({
     if (rowActions) {
       if (typeof rowActions === "function") {
         const actions = rowActions(row, index);
-        contextMenuButtons = actions.map((action) => ({
-          key: action.key,
-          text: action.label,
-          icon: action.icon,
-          onClick: () => {
-            action.onClick(row, index);
-            contextMenu.hideContextMenu();
-          },
-          disabled: action.disabled?.(row),
-          variant: "ghost" as const,
-          size: "sm" as const,
-          color: action.variant,
-          className: action.className,
-        }));
+        contextMenuButtons = actions
+          .filter((action) => {
+            // 檢查 visible 屬性
+            if (action.visible === undefined) return true;
+            if (typeof action.visible === "boolean") return action.visible;
+            if (typeof action.visible === "function") return action.visible(row);
+            return true;
+          })
+          .map((action) => ({
+            key: action.key,
+            text: action.label,
+            icon: action.icon,
+            onClick: () => {
+              action.onClick(row, index);
+              contextMenu.hideContextMenu();
+            },
+            disabled: action.disabled?.(row),
+            variant: "ghost" as const,
+            size: "sm" as const,
+            color: action.variant,
+            className: action.className,
+          }));
       } else {
-        contextMenuButtons = rowActions.map((action) => ({
-          key: action.key,
-          text: action.label,
-          icon: action.icon,
-          onClick: () => {
-            action.onClick(row, index);
-            contextMenu.hideContextMenu();
-          },
-          disabled: action.disabled?.(row),
-          variant: "ghost" as const,
-          size: "sm" as const,
-          color: action.variant,
-          className: action.className,
-        }));
+        contextMenuButtons = rowActions
+          .filter((action) => {
+            // 檢查 visible 屬性
+            if (action.visible === undefined) return true;
+            if (typeof action.visible === "boolean") return action.visible;
+            if (typeof action.visible === "function") return action.visible(row);
+            return true;
+          })
+          .map((action) => ({
+            key: action.key,
+            text: action.label,
+            icon: action.icon,
+            onClick: () => {
+              action.onClick(row, index);
+              contextMenu.hideContextMenu();
+            },
+            disabled: action.disabled?.(row),
+            variant: "ghost" as const,
+            size: "sm" as const,
+            color: action.variant,
+            className: action.className,
+          }));
       }
     }
 
@@ -185,6 +219,7 @@ export default function DataTable<T extends Record<string, unknown>>({
         <Table className="w-full">
           <DataTableHeader<T>
             columns={columns}
+            singleSelect={singleSelect}
             orderBy={orderBy}
             descending={descending}
             onSort={handleSort}
@@ -196,6 +231,7 @@ export default function DataTable<T extends Record<string, unknown>>({
           <DataTableBody<T>
             data={items}
             columns={columns}
+            singleSelect={singleSelect}
             selectedRows={selectedRows}
             selectedKeys={selectedKeys}
             onRowSelect={handleRowSelect}

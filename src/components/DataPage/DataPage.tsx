@@ -9,6 +9,8 @@ interface DataPageProps<T extends Record<string, unknown>> {
   columns: DataTableColumn<T>[];
   /** 載入狀態 */
   loading?: boolean;
+  /** 是否為單選模式 */
+  singleSelect?: boolean;
   /** 當前排序欄位（外部控制） */
   orderBy?: string;
   /** 是否降序（外部控制） */
@@ -27,12 +29,15 @@ interface DataPageProps<T extends Record<string, unknown>> {
   onItemsPerPageChange?: (pageSize: number) => void;
   /** 容器樣式類名 */
   className?: string;
+  /** 清除選中狀態的回調 */
+  onClearSelectionRef?: (clearFn: () => void) => void;
 }
 
 export default function DataPage<T extends Record<string, unknown>>({
   data,
   columns,
   loading = false,
+  singleSelect = false,
   orderBy,
   descending,
   buttons = [],
@@ -42,6 +47,7 @@ export default function DataPage<T extends Record<string, unknown>>({
   onPageChange,
   onItemsPerPageChange,
   className,
+  onClearSelectionRef,
 }: DataPageProps<T>) {
   return (
     <div className={`h-full flex flex-col rounded-xl bg-white dark:bg-white/[0.03] ${className || ""}`}>
@@ -51,11 +57,13 @@ export default function DataPage<T extends Record<string, unknown>>({
           data={data}
           columns={columns}
           loading={loading}
+          singleSelect={singleSelect}
           orderBy={orderBy}
           descending={descending}
           onSort={onSort}
           onRowSelect={onRowSelect}
           rowActions={rowActions}
+          onClearSelectionRef={onClearSelectionRef}
           pagination={{
             onPageChange: onPageChange || (() => {}),
             onItemsPerPageChange: onItemsPerPageChange || (() => {}),

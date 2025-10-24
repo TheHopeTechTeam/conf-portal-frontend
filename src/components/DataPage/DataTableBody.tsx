@@ -10,6 +10,8 @@ interface DataTableBodyProps<T> {
   data: T[];
   /** 欄位定義 */
   columns: DataTableColumn<T>[];
+  /** 是否為單選模式 */
+  singleSelect?: boolean;
   /** 已選取的行 */
   selectedRows: T[];
   /** 已選取的鍵值 */
@@ -37,6 +39,7 @@ interface DataTableBodyProps<T> {
 export default function DataTableBody<T extends Record<string, unknown>>({
   data,
   columns,
+  singleSelect = false,
   selectedKeys,
   onRowSelect,
   onRowContextMenu,
@@ -165,23 +168,26 @@ export default function DataTableBody<T extends Record<string, unknown>>({
               onContextMenu={(e: React.MouseEvent<HTMLTableRowElement>) => onRowContextMenu?.(row, index, e)}
             >
               {/* 選取欄位 */}
-              <TableCell className="px-2 py-4 dark:text-white/90 whitespace-nowrap w-12">
-                <div className="flex items-center justify-center">
-                  <Checkbox checked={isSelected} onChange={(checked) => handleRowSelect(row, checked)} />
-                </div>
-              </TableCell>
+              {!singleSelect && (
+                <TableCell className="px-2 py-4 dark:text-white/90 whitespace-nowrap w-12">
+                  <div className="flex items-center justify-center">
+                    <Checkbox checked={isSelected} onChange={(checked) => handleRowSelect(row, checked)} />
+                  </div>
+                </TableCell>
+              )}
 
               {/* 動態欄位 */}
               {columns.map((column, columnIndex) => {
                 if (column.visible === false) return null;
 
+                const firstColumn = columnIndex === 0 && singleSelect ? "pl-8" : "";
                 const isLastColumn = columnIndex === columns.filter((c) => c.visible !== false).length - 1;
                 const shouldShowExpandButton = hasExpandColumn && isLastColumn;
 
                 return (
                   <TableCell
                     key={column.key}
-                    className={`px-4 py-4 font-normal text-gray-800 text-theme-sm dark:text-white/90 ${
+                    className={`${firstColumn} px-4 py-4 font-normal text-gray-800 text-theme-sm dark:text-white/90 ${
                       column.overflow ? "" : "whitespace-nowrap"
                     } ${column.className || ""}`}
                     style={{

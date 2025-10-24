@@ -63,6 +63,8 @@ export interface DataTableRowAction<T> {
   onClick: (row: T, index: number) => void;
   /** 是否禁用 */
   disabled?: (row: T) => boolean;
+  /** 是否可見 */
+  visible?: boolean | ((row: T) => boolean);
   /** 動作顏色變體 */
   variant?: "default" | "primary" | "danger" | "warning" | "success";
   /** 自定義顏色類名 */
@@ -125,6 +127,8 @@ export interface DataTableProps<T> {
   rowClassName?: string;
   /** 行鍵值 */
   rowKey?: keyof T | ((row: T) => string);
+  /** 清除選中狀態的回調 */
+  onClearSelectionRef?: (clearFn: () => void) => void;
 }
 
 /**
@@ -186,8 +190,10 @@ export interface PageButtonType {
   loading?: boolean;
   /** 扁平樣式 */
   flat?: boolean;
+  /** 邊框樣式 */
+  outline?: boolean;
   /** 變體樣式 */
-  variant?: "outline" | "primary" | "ghost";
+  variant?: "primary" | "ghost" | "success" | "warning" | "danger" | "info" | "secondary";
   /** 尺寸 */
   size?: "sm" | "md" | "lg";
   /** 提示文字 */

@@ -65,14 +65,63 @@ export interface Role {
 }
 
 // 權限相關型別
-export interface Permission {
+export interface PermissionResource {
   id: string;
   name: string;
+  key: string;
   code: string;
-  description: string;
-  resource: string;
+}
+
+export interface PermissionVerb {
+  id: string;
+  displayName: string;
   action: string;
-  createdAt: string;
+}
+
+export interface Permission {
+  id: string;
+  displayName: string;
+  code: string;
+  resource: PermissionResource;
+  verb: PermissionVerb;
+  isActive: boolean;
+  description?: string;
+  remark?: string;
+}
+
+export interface PermissionPageItem {
+  id: string;
+  displayName: string;
+  code: string;
+  isActive: boolean;
+  description?: string;
+  remark?: string;
+  resourceName: string;
+  verbName: string;
+}
+
+export interface PermissionPage {
+  page: number;
+  page_size: number;
+  total: number;
+  items: PermissionPageItem[];
+}
+
+export interface PermissionCreate {
+  displayName: string;
+  code: string;
+  resourceId: string;
+  verbId: string;
+  isActive: boolean;
+  description?: string;
+  remark?: string;
+}
+
+export interface PermissionUpdate extends PermissionCreate {}
+
+export interface PermissionDelete {
+  reason?: string;
+  permanent?: boolean;
 }
 
 // 資源相關型別

@@ -107,7 +107,7 @@ export default function Tooltip({
     <div className="relative inline-block" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       {children}
       <div
-        className={`absolute ${pos.container} transition-opacity duration-200 ${
+        className={`absolute z-999 ${pos.container} transition-opacity duration-200 ${
           isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >

@@ -81,8 +81,8 @@ export const userService = {
     return httpClient.request<void>({ method: "DELETE", url: `/api/v1/admin/user/${id}`, data: payload });
   },
 
-  async restore(payload: UserBulkDeleteDto) {
-    return httpClient.put<void>("/api/v1/admin/user/restore", payload);
+  async restore(ids: string[]) {
+    return httpClient.put<void>("/api/v1/admin/user/restore", { ids });
   },
 };
 

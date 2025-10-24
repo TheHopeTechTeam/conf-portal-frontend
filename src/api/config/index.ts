@@ -33,11 +33,13 @@ export const API_ENDPOINTS = {
 
   // 權限管理
   PERMISSIONS: {
-    LIST: "/permissions",
-    CREATE: "/permissions",
-    DETAIL: (id: string) => `/permissions/${id}`,
-    UPDATE: (id: string) => `/permissions/${id}`,
-    DELETE: (id: string) => `/permissions/${id}`,
+    PAGES: `${ADMIN_API_PREFIX}/permission/pages`,
+    LIST: `${ADMIN_API_PREFIX}/permission/`,
+    CREATE: `${ADMIN_API_PREFIX}/permission/`,
+    DETAIL: (id: string) => `${ADMIN_API_PREFIX}/permission/${id}`,
+    UPDATE: (id: string) => `${ADMIN_API_PREFIX}/permission/${id}`,
+    DELETE: (id: string) => `${ADMIN_API_PREFIX}/permission/${id}`,
+    RESTORE: `${ADMIN_API_PREFIX}/permission/restore`,
     CHECK: "/permissions/check",
     CHECK_MULTIPLE: "/permissions/check-multiple",
   },

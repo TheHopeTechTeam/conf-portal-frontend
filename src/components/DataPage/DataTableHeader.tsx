@@ -5,6 +5,8 @@ import { DataTableColumn } from "./types";
 interface DataTableHeaderProps<T> {
   /** 欄位定義 */
   columns: DataTableColumn<T>[];
+  /** 是否為單選模式 */
+  singleSelect?: boolean;
   /** 當前排序欄位 */
   orderBy?: string;
   /** 是否降序 */
@@ -23,6 +25,7 @@ interface DataTableHeaderProps<T> {
 
 export default function DataTableHeader<T>({
   columns,
+  singleSelect = false,
   orderBy,
   descending = false,
   onSort,
@@ -81,10 +84,10 @@ export default function DataTableHeader<T>({
 
   return (
     <TableHeader className={className}>
-      <TableRow>
+      <TableRow className="border-l border-b border-gray-100 dark:border-white/[0.05]">
         {/* 選取欄位 */}
-        {onSelectAll && (
-          <TableCell isHeader className="px-2 py-3 border-b border-l border-gray-100 dark:border-white/[0.05] w-12">
+        {!singleSelect && onSelectAll && (
+          <TableCell isHeader className="px-2 py-3 w-12">
             <div className="flex items-center justify-center">
               <Checkbox checked={isAllSelected} onChange={handleSelectAll} />
             </div>
@@ -95,6 +98,7 @@ export default function DataTableHeader<T>({
         {columns.map((column, columnIndex) => {
           if (column.visible === false) return null;
 
+          const firstColumn = columnIndex === 0 && singleSelect ? "pl-8" : "";
           const isSortable = column.sortable && onSort;
           const isActive = orderBy === column.key;
           const isLastColumn = columnIndex === columns.filter((c) => c.visible !== false).length - 1;
@@ -104,7 +108,7 @@ export default function DataTableHeader<T>({
             <TableCell
               key={column.key}
               isHeader
-              className={`px-4 py-3 border-b border-gray-100 dark:border-white/[0.05] ${column.className || ""}`}
+              className={`${firstColumn} px-4 py-3 border-b border-gray-100 dark:border-white/[0.05] ${column.className || ""}`}
               style={{
                 width: column.width,
                 minWidth: column.minWidth,
