@@ -362,13 +362,16 @@ export default function DemoDataPage() {
         onItemsPerPageChange={handleItemsPerPageChange}
       />
 
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[600px] w-full mx-4 p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">{formMode === "create" ? "新增 Demo" : "編輯 Demo"}</h3>
+      <Modal
+        title={formMode === "create" ? "新增 Demo" : "編輯 Demo"}
+        isOpen={isOpen}
+        onClose={closeModal}
+        className="max-w-[600px] w-full mx-4 p-6"
+      >
         <DemoDataForm mode={formMode} defaultValues={editing} onSubmit={handleSubmit} onCancel={closeModal} submitting={submitting} />
       </Modal>
 
-      <Modal isOpen={isDeleteOpen} onClose={closeDeleteModal} className="max-w-[560px] w-full mx-4 p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">確認刪除</h3>
+      <Modal title="確認刪除" isOpen={isDeleteOpen} onClose={closeDeleteModal} className="max-w-[560px] w-full mx-4 p-6">
         <DemoDeleteForm onSubmit={handleDelete} onCancel={closeDeleteModal} submitting={submitting} />
       </Modal>
     </>

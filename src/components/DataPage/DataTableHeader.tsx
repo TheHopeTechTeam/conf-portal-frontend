@@ -1,4 +1,4 @@
-import Checkbox from "@/components/form/input/Checkbox";
+import Checkbox from "@/components/ui/checkbox";
 import { TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DataTableColumn } from "./types";
 

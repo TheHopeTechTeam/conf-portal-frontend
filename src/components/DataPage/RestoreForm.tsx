@@ -1,4 +1,4 @@
-import Button from "../ui/button/Button";
+import Button from "../ui/button";
 
 interface RestoreFormProps {
   onSubmit: (ids: string[]) => Promise<void> | void;

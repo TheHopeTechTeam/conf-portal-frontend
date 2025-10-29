@@ -1,6 +1,6 @@
 import { PopoverType } from "@/components/DataPage";
 import SearchPopoverContent from "@/components/DataPage/SearchPopoverContent";
-import Button from "@/components/ui/button/Button";
+import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Gender } from "@/const/enums";

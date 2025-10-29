@@ -1,4 +1,4 @@
-import DeleteForm from "../DataPage/DeleteForm";
+import DeleteForm from "@/components/DataPage/DeleteForm";
 
 interface PermissionDeleteFormProps {
   onSubmit: (payload: { reason?: string; permanent?: boolean }) => Promise<void> | void;

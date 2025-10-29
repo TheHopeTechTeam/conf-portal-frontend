@@ -1,4 +1,4 @@
-import Button from "@/components/ui/button/Button";
+import Button from "@/components/ui/button";
 import Popover from "@/components/ui/popover";
 import { PopoverType } from "./types";
 

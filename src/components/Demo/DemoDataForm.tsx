@@ -1,6 +1,6 @@
 import { Gender } from "@/const/enums";
 import { useEffect, useState } from "react";
-import Button from "../ui/button/Button";
+import Button from "../ui/button";
 
 export interface DemoFormValues {
   id?: string;

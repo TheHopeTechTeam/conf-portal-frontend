@@ -1,4 +1,4 @@
-import Checkbox from "@/components/form/input/Checkbox";
+import Checkbox from "@/components/ui/checkbox";
 import Spinner from "@/components/ui/spinner";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
 import Tooltip from "@/components/ui/tooltip";

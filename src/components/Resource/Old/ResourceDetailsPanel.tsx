@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { MdCancel, MdEdit, MdSave } from "react-icons/md";
-import type { ResourceMenuItem } from "../../api/services/resourceService";
-import { AdminResourceType } from "../../api/services/resourceService";
-import type { ResourceFormData, ResourceFormErrors } from "../../types/resource";
-import Input from "../form/input/InputField";
-import Textarea from "../form/input/TextArea";
-import Label from "../form/Label";
-import Button from "../ui/button/Button";
+import type { ResourceMenuItem } from "@/api/services/resourceService";
+import { AdminResourceType } from "@/api/services/resourceService";
+import type { ResourceFormData, ResourceFormErrors } from "@/types/resource";
+import Input from "@/components/ui/input";
+import Textarea from "@/components/ui/textarea";
+import Label from "@/components/ui/label";
+import Button from "@/components/ui/button";
 
 interface ResourceDetailsPanelProps {
   selectedResource: ResourceMenuItem | null;

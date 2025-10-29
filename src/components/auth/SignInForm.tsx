@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
-import Label from "../form/Label";
-import Checkbox from "../form/input/Checkbox";
-import Input from "../form/input/InputField";
-import Button from "../ui/button/Button";
+import Label from "@/components/ui/label";
+import Checkbox from "@/components/ui/checkbox";
+import Input from "@/components/ui/input";
+import Button from "@/components/ui/button";
 
 export default function SignInForm() {
   const [email, setEmail] = useState("");

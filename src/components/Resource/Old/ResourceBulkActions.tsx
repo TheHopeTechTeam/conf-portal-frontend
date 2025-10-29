@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { MdClear, MdDelete, MdSelectAll } from "react-icons/md";
-import { useResourcePermissions } from "../../hooks/useResourcePermissions";
-import Button from "../ui/button/Button";
+import { useResourcePermissions } from "@/hooks/useResourcePermissions";
+import Button from "@/components/ui/button";
 
 interface ResourceBulkActionsProps {
   selectedIds: string[];

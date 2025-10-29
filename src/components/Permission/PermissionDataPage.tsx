@@ -421,18 +421,25 @@ export default function PermissionDataPage() {
         }}
       />
 
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[800px] w-full mx-4 p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">{formMode === "create" ? "新增權限" : "編輯權限"}</h3>
+      <Modal
+        title={formMode === "create" ? "新增權限" : "編輯權限"}
+        isOpen={isOpen}
+        onClose={closeModal}
+        className="max-w-[800px] w-full mx-4 p-6"
+      >
         <PermissionDataForm mode={formMode} defaultValues={editing} onSubmit={handleSubmit} onCancel={closeModal} submitting={submitting} />
       </Modal>
 
-      <Modal isOpen={isDeleteOpen} onClose={closeDeleteModal} className="max-w-[560px] w-full mx-4 p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">{showDeleted ? "確認永久刪除權限" : "確認刪除權限"}</h3>
+      <Modal
+        title={showDeleted ? "確認永久刪除權限" : "確認刪除權限"}
+        isOpen={isDeleteOpen}
+        onClose={closeDeleteModal}
+        className="max-w-[560px] w-full mx-4 p-6"
+      >
         <PermissionDeleteForm onSubmit={handleDelete} onCancel={closeDeleteModal} submitting={submitting} isPermanent={showDeleted} />
       </Modal>
 
-      <Modal isOpen={isRestoreOpen} onClose={closeRestoreModal} className="max-w-[500px] w-full mx-4 p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">還原權限</h3>
+      <Modal title="還原權限" isOpen={isRestoreOpen} onClose={closeRestoreModal} className="max-w-[500px] w-full mx-4 p-6">
         <RestoreForm
           ids={restoreIds}
           entityName="權限"
@@ -442,8 +449,7 @@ export default function PermissionDataPage() {
         />
       </Modal>
 
-      <Modal isOpen={isViewOpen} onClose={closeViewModal} className="max-w-[800px] w-full mx-4 p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">權限詳細資料</h3>
+      <Modal title="權限詳細資料" isOpen={isViewOpen} onClose={closeViewModal} className="max-w-[800px] w-full mx-4 p-6">
         {viewing && <PermissionDetailView permissionId={viewing.id} />}
       </Modal>
     </>

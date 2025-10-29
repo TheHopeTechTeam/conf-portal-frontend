@@ -13,6 +13,9 @@ export interface ResourceMenuItem {
   description?: string;
   remark?: string;
   sequence: number;
+  is_deleted: boolean;
+  is_group?: boolean; // 是否為分組項目
+  group_type?: "MENU" | "SYSTEM"; // 分組類型
 }
 
 // 創建資源請求
@@ -69,8 +72,11 @@ export interface ResourceTreeNode {
   description?: string;
   remark?: string;
   sequence: number;
+  is_deleted: boolean;
   children: ResourceTreeNode[];
   level: number;
+  is_group?: boolean; // 是否為分組項目
+  group_type?: "MENU" | "SYSTEM"; // 分組類型
 }
 
 // 資源表單數據

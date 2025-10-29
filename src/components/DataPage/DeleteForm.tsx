@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Button from "../ui/button/Button";
+import Button from "@/components/ui/button";
 
 interface DeleteFormProps {
   onSubmit: (payload: { reason?: string; permanent?: boolean }) => Promise<void> | void;

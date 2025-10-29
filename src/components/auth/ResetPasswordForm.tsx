@@ -1,6 +1,6 @@
 import { Link } from "react-router";
-import Label from "../form/Label";
-import Input from "../form/input/InputField";
+import Label from "@/components/ui/label";
+import Input from "@/components/ui/input";
 
 export default function ResetPasswordForm() {
   return (

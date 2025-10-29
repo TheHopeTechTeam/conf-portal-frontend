@@ -217,11 +217,12 @@ class HttpClient {
     });
   }
 
-  // DELETE 請求
-  async delete<T = unknown>(url: string): Promise<ApiResponse<T>> {
+  // DELETE 請求（支援 body）
+  async delete<T = unknown>(url: string, data?: unknown): Promise<ApiResponse<T>> {
     return this.request<T>({
       method: "DELETE",
       url,
+      data,
     });
   }
 

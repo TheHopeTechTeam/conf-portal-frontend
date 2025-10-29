@@ -46,7 +46,7 @@ export const API_ENDPOINTS = {
 
   // 資源管理（管理員）
   RESOURCES: {
-    LIST: "/resources",
+    LIST: `${ADMIN_API_PREFIX}/resource/lists`,
     CREATE: `${ADMIN_API_PREFIX}/resource/`,
     DETAIL: (id: string) => `${ADMIN_API_PREFIX}/resource/${id}`,
     UPDATE: (id: string) => `${ADMIN_API_PREFIX}/resource/${id}`,

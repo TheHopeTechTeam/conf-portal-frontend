@@ -53,7 +53,7 @@ class RouteFilterManager {
         element: resolveRouteElementByKey(it.key),
         meta: {
           title: it.name,
-          icon: resolveIcon(it.icon || undefined),
+          icon: resolveIcon(it.icon || undefined).icon,
           requiresAuth: true,
           order: it.sequence ? Math.floor(it.sequence) : undefined,
         },

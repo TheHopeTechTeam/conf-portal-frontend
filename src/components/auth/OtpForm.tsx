@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Link } from "react-router";
-import Label from "../form/Label";
+import Label from "@/components/ui/label";
 
 export default function OtpForm() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);

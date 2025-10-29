@@ -44,7 +44,7 @@ export function useNavigationItems(): {
 
         const item: NavigationItem = {
           name: it.name,
-          icon: resolveIcon(it.icon || undefined),
+          icon: resolveIcon(it.icon || undefined).icon,
           path: it.path,
           order: it.sequence ? Math.floor(it.sequence) : 999,
         };
@@ -101,9 +101,9 @@ export function useNavigationItems(): {
       const parentOrder = Math.min(...DEMO_NAV.map((n) => n.order ?? 999));
       system.push({
         name: "Demo",
-        icon: resolveIcon("MdScience"),
+        icon: resolveIcon("MdScience").icon,
         order: parentOrder,
-        subItems: DEMO_NAV.map((n) => ({ name: n.name, path: n.path, icon: resolveIcon(n.icon) })),
+        subItems: DEMO_NAV.map((n) => ({ name: n.name, path: n.path, icon: resolveIcon(n.icon).icon })),
       });
     }
 

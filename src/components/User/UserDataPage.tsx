@@ -523,18 +523,25 @@ export default function UserDataPage() {
         }}
       />
 
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[800px] w-full mx-4 p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">{formMode === "create" ? "新增用戶" : "編輯用戶"}</h3>
+      <Modal
+        title={formMode === "create" ? "新增用戶" : "編輯用戶"}
+        isOpen={isOpen}
+        onClose={closeModal}
+        className="max-w-[800px] w-full mx-4 p-6"
+      >
         <UserDataForm mode={formMode} defaultValues={editing} onSubmit={handleSubmit} onCancel={closeModal} submitting={submitting} />
       </Modal>
 
-      <Modal isOpen={isDeleteOpen} onClose={closeDeleteModal} className="max-w-[560px] w-full mx-4 p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">{showDeleted ? "確認永久刪除用戶" : "確認刪除用戶"}</h3>
+      <Modal
+        title={showDeleted ? "確認永久刪除用戶" : "確認刪除用戶"}
+        isOpen={isDeleteOpen}
+        onClose={closeDeleteModal}
+        className="max-w-[560px] w-full mx-4 p-6"
+      >
         <UserDeleteForm onSubmit={handleDelete} onCancel={closeDeleteModal} submitting={submitting} isPermanent={showDeleted} />
       </Modal>
 
-      <Modal isOpen={isRestoreOpen} onClose={closeRestoreModal} className="max-w-[500px] w-full mx-4 p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">還原用戶</h3>
+      <Modal title="還原用戶" isOpen={isRestoreOpen} onClose={closeRestoreModal} className="max-w-[500px] w-full mx-4 p-6">
         <RestoreForm
           ids={restoreIds}
           entityName="用戶"
@@ -544,8 +551,7 @@ export default function UserDataPage() {
         />
       </Modal>
 
-      <Modal isOpen={isViewOpen} onClose={closeViewModal} className="max-w-[900px] w-full mx-4 p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">用戶詳細資料</h3>
+      <Modal title="用戶詳細資料" isOpen={isViewOpen} onClose={closeViewModal} className="max-w-[900px] w-full mx-4 p-6">
         {viewing && <UserDetailView userId={viewing.id} />}
       </Modal>
     </>

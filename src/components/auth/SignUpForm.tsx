@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { MdArrowBack, MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { Link } from "react-router";
-import Label from "../form/Label";
-import Checkbox from "../form/input/Checkbox";
-import Input from "../form/input/InputField";
+import Label from "@/components/ui/label";
+import Checkbox from "@/components/ui/checkbox";
+import Input from "@/components/ui/input";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
