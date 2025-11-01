@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Button from "../ui/button";
 import Checkbox from "../ui/checkbox";
 import Input, { IconInput } from "../ui/input";
+import { Select } from "../ui/select";
 import TextArea from "../ui/textarea";
 
 export interface ResourceFormValues {
@@ -132,7 +133,7 @@ const ResourceDataForm: React.FC<ResourceDataFormProps> = ({ mode, defaultValues
 
   const { icon: dynamicIcon, error: iconError, isValid: isIconValid } = iconResult;
 
-  const handleChange = (field: keyof ResourceFormValues, value: any) => {
+  const handleChange = (field: keyof ResourceFormValues, value: string | number | boolean | undefined) => {
     setValues((prev) => ({ ...prev, [field]: value }));
     // 清除該字段的錯誤
     if (errors[field]) {
@@ -233,14 +234,15 @@ const ResourceDataForm: React.FC<ResourceDataFormProps> = ({ mode, defaultValues
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               類型 <span className="text-red-500">*</span>
             </label>
-            <select
+            <Select
+              options={[
+                { value: AdminResourceType.GENERAL, label: "業務功能 (GENERAL)" },
+                { value: AdminResourceType.SYSTEM, label: "系統功能 (SYSTEM)" },
+              ]}
               value={values.type}
-              onChange={(e) => handleChange("type", Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            >
-              <option value={AdminResourceType.GENERAL}>業務功能 (GENERAL)</option>
-              <option value={AdminResourceType.SYSTEM}>系統功能 (SYSTEM)</option>
-            </select>
+              onChange={(value) => handleChange("type", Number(value))}
+              placeholder="請選擇類型"
+            />
           </div>
 
           <div>
@@ -270,7 +272,7 @@ const ResourceDataForm: React.FC<ResourceDataFormProps> = ({ mode, defaultValues
             <Checkbox
               id="is_visible"
               checked={!!values.is_visible}
-              onChange={(e) => handleChange("is_visible", e.target.checked)}
+              onChange={(checked) => handleChange("is_visible", checked)}
               label="資源可見"
             />
           </div>
@@ -295,7 +297,7 @@ const ResourceDataForm: React.FC<ResourceDataFormProps> = ({ mode, defaultValues
         <TextArea
           id="description"
           value={values.description}
-          onChange={(e) => handleChange("description", e.target.value)}
+          onChange={(value) => handleChange("description", value)}
           placeholder="請輸入資源描述"
           rows={3}
         />

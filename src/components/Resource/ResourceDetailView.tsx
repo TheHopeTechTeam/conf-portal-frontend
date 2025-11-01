@@ -67,10 +67,6 @@ const ResourceDetailView: React.FC<ResourceDetailViewProps> = ({ resourceId }) =
     return type === AdminResourceType.SYSTEM ? "系統功能" : "業務功能";
   };
 
-  const getTypeColor = (type: AdminResourceType) => {
-    return type === AdminResourceType.SYSTEM ? "text-blue-600 dark:text-blue-400" : "text-green-600 dark:text-green-400";
-  };
-
   return (
     <div className="space-y-8">
       {/* 基本資訊與狀態 Section */}
@@ -80,33 +76,27 @@ const ResourceDetailView: React.FC<ResourceDetailViewProps> = ({ resourceId }) =
         {/* 基本資訊 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">名稱</label>
-            <Input id="name" type="text" value={resource.name} disabled />
+            <Input id="name" label="名稱" type="text" value={resource.name} disabled />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Key</label>
-            <Input id="key" type="text" value={resource.key} disabled />
+            <Input id="key" label="Key" type="text" value={resource.key} disabled />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">代碼</label>
-            <Input id="code" type="text" value={resource.code} disabled />
+            <Input id="code" label="代碼" type="text" value={resource.code} disabled />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">路徑</label>
-            <Input id="path" type="text" value={resource.path || ""} disabled />
+            <Input id="path" label="路徑" type="text" value={resource.path || ""} disabled />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">類型</label>
-            <Input id="type" type="text" value={getTypeText(resource.type)} disabled />
+            <Input id="type" label="類型" type="text" value={getTypeText(resource.type)} disabled />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">圖示</label>
-            <Input id="icon" type="text" value={resource.icon || ""} disabled />
+            <Input id="icon" label="圖示" type="text" value={resource.icon || ""} disabled />
           </div>
         </div>
 
@@ -124,20 +114,17 @@ const ResourceDetailView: React.FC<ResourceDetailViewProps> = ({ resourceId }) =
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">父資源資訊</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">名稱</label>
-            <Input id="parent_name" type="text" value={resource.parent?.name || "無（根資源）"} disabled />
+            <Input id="parent_name" label="名稱" type="text" value={resource.parent?.name || "無（根資源）"} disabled />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Key</label>
-            <Input id="parent_key" type="text" value={resource.parent?.key || "無（根資源）"} disabled />
+            <Input id="parent_key" label="Key" type="text" value={resource.parent?.key || "無（根資源）"} disabled />
           </div>
         </div>
       </div>
 
       {/* 備註 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">備註</label>
-        <Input id="remark" type="text" value={resource.remark || ""} disabled />
+        <Input id="remark" label="備註" type="text" value={resource.remark || ""} disabled />
       </div>
 
       {/* 描述 */}

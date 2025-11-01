@@ -18,24 +18,22 @@ export const API_ENDPOINTS = {
     CHANGE_PASSWORD: `${ADMIN_API_PREFIX}/auth/change-password`,
   },
 
-  // 角色管理
+  // 角色管理（管理員）
   ROLES: {
-    LIST: "/roles",
-    CREATE: "/roles",
-    DETAIL: (id: string) => `/roles/${id}`,
-    UPDATE: (id: string) => `/roles/${id}`,
-    DELETE: (id: string) => `/roles/${id}`,
-    ASSIGN_PERMISSION: (id: string) => `/roles/${id}/assign-permission`,
-    REVOKE_PERMISSION: (id: string) => `/roles/${id}/revoke-permission`,
-    CHECK: "/roles/check",
-    CHECK_MULTIPLE: "/roles/check-multiple",
+    PAGES: `${ADMIN_API_PREFIX}/role/pages`,
+    CREATE: `${ADMIN_API_PREFIX}/role`,
+    DETAIL: (id: string) => `${ADMIN_API_PREFIX}/role/${id}`,
+    UPDATE: (id: string) => `${ADMIN_API_PREFIX}/role/${id}`,
+    DELETE: (id: string) => `${ADMIN_API_PREFIX}/role/${id}`,
+    RESTORE: (id: string) => `${ADMIN_API_PREFIX}/role/restore/${id}`,
+    ASSIGN_PERMISSIONS: (id: string) => `${ADMIN_API_PREFIX}/role/${id}/permissions`,
   },
 
   // 權限管理
   PERMISSIONS: {
     PAGES: `${ADMIN_API_PREFIX}/permission/pages`,
-    LIST: `${ADMIN_API_PREFIX}/permission/`,
-    CREATE: `${ADMIN_API_PREFIX}/permission/`,
+    LIST: `${ADMIN_API_PREFIX}/permission/list`,
+    CREATE: `${ADMIN_API_PREFIX}/permission`,
     DETAIL: (id: string) => `${ADMIN_API_PREFIX}/permission/${id}`,
     UPDATE: (id: string) => `${ADMIN_API_PREFIX}/permission/${id}`,
     DELETE: (id: string) => `${ADMIN_API_PREFIX}/permission/${id}`,
@@ -44,9 +42,14 @@ export const API_ENDPOINTS = {
     CHECK_MULTIPLE: "/permissions/check-multiple",
   },
 
+  // 動詞（Verb）管理
+  VERBS: {
+    LIST: `${ADMIN_API_PREFIX}/verb/list`,
+  },
+
   // 資源管理（管理員）
   RESOURCES: {
-    LIST: `${ADMIN_API_PREFIX}/resource/lists`,
+    LIST: `${ADMIN_API_PREFIX}/resource/list`,
     CREATE: `${ADMIN_API_PREFIX}/resource/`,
     DETAIL: (id: string) => `${ADMIN_API_PREFIX}/resource/${id}`,
     UPDATE: (id: string) => `${ADMIN_API_PREFIX}/resource/${id}`,

@@ -1,6 +1,6 @@
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import PageMeta from "@/components/common/PageMeta";
-import ResourcePageNew from "@/components/Resource/ResourcePageNew";
+import ResourcePageNew from "@/components/Resource/ResourcePage";
 
 export default function ResourceManagement() {
   return (

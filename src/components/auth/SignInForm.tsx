@@ -1,11 +1,10 @@
+import Button from "@/components/ui/button";
+import Checkbox from "@/components/ui/checkbox";
+import Input from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
-import Label from "@/components/ui/label";
-import Checkbox from "@/components/ui/checkbox";
-import Input from "@/components/ui/input";
-import Button from "@/components/ui/button";
 
 export default function SignInForm() {
   const [email, setEmail] = useState("");
@@ -45,21 +44,26 @@ export default function SignInForm() {
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
                 <div>
-                  <Label>
-                    Email <span className="text-error-500">*</span>{" "}
-                  </Label>
-                  <Input placeholder="info@gmail.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <Input
+                    id="email"
+                    label="Email"
+                    type="email"
+                    placeholder="info@gmail.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
                 </div>
                 <div>
-                  <Label>
-                    Password <span className="text-error-500">*</span>{" "}
-                  </Label>
                   <div className="relative">
                     <Input
+                      id="password"
+                      label="Password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      required
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}

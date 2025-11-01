@@ -3,30 +3,20 @@ import Dashboard from "@/pages/Dashboard";
 import ResourceManagement from "@/pages/System/ResourceManagement";
 import UserManagement from "@/pages/System/UserManagement";
 import RoleManagement from "@/pages/System/RoleManagement";
+import PermissionManagement from "@/pages/System/PermissionManagement";
 import React from "react";
 
 // 註冊可路由的元件，鍵值對應後端資源的 key
 const componentRegistry: Record<string, React.ComponentType> = {
   // Dashboard - 主要首頁
   DASHBOARD: Dashboard,
-
-  // System 模組
-  SYSTEM: Blank, // 系統首頁佔位
-
-  // 用戶管理
-  SYSTEM_USER: UserManagement,
-
-  // 角色管理
-  SYSTEM_ROLE: RoleManagement,
-
-  // 權限管理
-  SYSTEM_PERMISSION: Blank,
-
-  // 資源管理
-  SYSTEM_RESOURCE: ResourceManagement,
-
-  // 會議管理範例
+  // General
   CONFERENCE: Blank,
+  // System
+  SYSTEM_USER: UserManagement,
+  SYSTEM_RESOURCE: ResourceManagement,
+  SYSTEM_PERMISSION: PermissionManagement,
+  SYSTEM_ROLE: RoleManagement,
 };
 
 function normalizeKey(key: string): string {

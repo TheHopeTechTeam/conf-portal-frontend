@@ -1,7 +1,9 @@
 import React from "react";
+import Label from "../label";
 
 interface TextareaProps {
-  id?: string;
+  id: string;
+  label?: string;
   placeholder?: string;
   rows?: number;
   value?: string;
@@ -10,11 +12,13 @@ interface TextareaProps {
   disabled?: boolean;
   error?: boolean;
   hint?: string;
+  required?: boolean;
 }
 
 const TextArea: React.FC<TextareaProps> = ({
   id,
-  placeholder = "Enter your message",
+  label,
+  placeholder = "請輸入訊息",
   rows = 3,
   value = "",
   onChange,
@@ -22,6 +26,7 @@ const TextArea: React.FC<TextareaProps> = ({
   disabled = false,
   error = false,
   hint = "",
+  required = false,
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (onChange) {
@@ -40,18 +45,21 @@ const TextArea: React.FC<TextareaProps> = ({
   }
 
   return (
-    <div className="relative">
-      <textarea
-        id={id}
-        placeholder={placeholder}
-        rows={rows}
-        value={value}
-        onChange={handleChange}
-        disabled={disabled}
-        className={textareaClasses}
-      />
+    <>
+      {label && <Label htmlFor={id}>{label} {required && <span className="text-red-500">*</span>}</Label>}
+      <div className="relative">
+        <textarea
+          id={id}
+          placeholder={placeholder}
+          rows={rows}
+          value={value}
+          onChange={handleChange}
+          disabled={disabled}
+          className={textareaClasses}
+        />
+      </div>
       {hint && <p className={`mt-2 text-sm ${error ? "text-error-500" : "text-gray-500 dark:text-gray-400"}`}>{hint}</p>}
-    </div>
+    </>
   );
 };
 

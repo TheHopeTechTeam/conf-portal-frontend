@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Button from "../ui/button";
+import TextArea from "../ui/textarea";
 
 interface ResourceDeleteFormProps {
   onSubmit: (data: { reason?: string; permanent?: boolean }) => Promise<void> | void;
@@ -37,13 +38,7 @@ const ResourceDeleteForm: React.FC<ResourceDeleteFormProps> = ({ onSubmit, onCan
 
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">刪除原因（可選）</label>
-        <textarea
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          rows={3}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          placeholder="請輸入刪除原因"
-        />
+        <TextArea value={reason} onChange={(value) => setReason(value)} rows={3} placeholder="請輸入刪除原因" />
       </div>
 
       <div className="flex justify-end space-x-3 pt-4">

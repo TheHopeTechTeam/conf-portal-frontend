@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
 import Button from "@/components/ui/button";
+import TextArea from "@/components/ui/textarea";
+import { useEffect, useState } from "react";
 
 interface DeleteFormProps {
   onSubmit: (payload: { reason?: string; permanent?: boolean }) => Promise<void> | void;
@@ -31,13 +32,7 @@ const DeleteForm: React.FC<DeleteFormProps> = ({ onSubmit, onCancel, submitting,
       {!isPermanent && (
         <div>
           <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">刪除原因（軟刪除必填）</label>
-          <textarea
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
-            rows={3}
-            placeholder="請輸入刪除原因"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-          />
+          <TextArea rows={3} placeholder="請輸入刪除原因" value={reason} onChange={(value) => setReason(value)} error={!!error} />
           {error && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{error}</p>}
         </div>
       )}

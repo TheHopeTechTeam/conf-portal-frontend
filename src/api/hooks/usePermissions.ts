@@ -1,9 +1,9 @@
 import { permissionService } from "@/api";
-import type { Permission } from "@/api/types";
+import type { PermissionListItem } from "@/api/types";
 import { useCallback, useEffect, useState } from "react";
 
 export const usePermissions = () => {
-  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [permissions, setPermissions] = useState<PermissionListItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,7 +13,7 @@ export const usePermissions = () => {
       setError(null);
       const res = await permissionService.list();
       if (res.success) {
-        setPermissions(res.data);
+        setPermissions(res.data.items || []);
       } else {
         setError(res.message || "載入失敗");
       }

@@ -86,23 +86,19 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({ userId }) => {
       {/* 基本資訊 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">手機號碼</label>
-          <Input id="phone_number" type="text" value={userData.phone_number} disabled />
+          <Input id="phone_number" label="手機號碼" type="text" value={userData.phone_number} disabled />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">電子郵件</label>
-          <Input id="email" type="email" value={userData.email} disabled />
+          <Input id="email" label="電子郵件" type="email" value={userData.email} disabled />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">顯示名稱</label>
-          <Input id="display_name" type="text" value={userData.display_name || "未設定"} disabled />
+          <Input id="display_name" label="顯示名稱" type="text" value={userData.display_name || "未設定"} disabled />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">性別</label>
-          <Input id="gender" type="text" value={getGenderText(userData.gender)} disabled />
+          <Input id="gender" label="性別" type="text" value={getGenderText(userData.gender)} disabled />
         </div>
       </div>
 
@@ -129,9 +125,9 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({ userId }) => {
       {/* 時間資訊 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">最後登入</label>
           <Input
             id="last_login_at"
+            label="最後登入"
             type="text"
             value={userData.last_login_at ? DateUtil.format(userData.last_login_at) : "從未登入"}
             disabled
@@ -139,13 +135,23 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({ userId }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">建立時間</label>
-          <Input id="created_at" type="text" value={userData.created_at ? DateUtil.format(userData.created_at) : "未知"} disabled />
+          <Input
+            id="created_at"
+            label="建立時間"
+            type="text"
+            value={userData.created_at ? DateUtil.format(userData.created_at) : "未知"}
+            disabled
+          />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">更新時間</label>
-          <Input id="updated_at" type="text" value={userData.updated_at ? DateUtil.format(userData.updated_at) : "未知"} disabled />
+          <Input
+            id="updated_at"
+            label="更新時間"
+            type="text"
+            value={userData.updated_at ? DateUtil.format(userData.updated_at) : "未知"}
+            disabled
+          />
         </div>
       </div>
 

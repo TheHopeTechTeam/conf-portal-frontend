@@ -1,6 +1,9 @@
 import { Gender } from "@/const/enums";
 import { useEffect, useState } from "react";
 import Button from "../ui/button";
+import Input from "../ui/input";
+import { Select } from "../ui/select";
+import TextArea from "../ui/textarea";
 
 export interface DemoFormValues {
   id?: string;
@@ -54,48 +57,39 @@ const DemoDataForm: React.FC<DemoDataFormProps> = ({ mode, defaultValues, onSubm
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">名稱</label>
-        <input
-          type="text"
-          className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
-          value={values.name}
-          onChange={(e) => setValues((v) => ({ ...v, name: e.target.value }))}
-        />
+        <Input type="text" value={values.name} onChange={(e) => setValues((v) => ({ ...v, name: e.target.value }))} error={!!errors.name} />
         {errors.name && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.name}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">年齡</label>
-          <input
+          <Input
             type="number"
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
             value={values.age ?? ""}
             onChange={(e) => setValues((v) => ({ ...v, age: e.target.value === "" ? undefined : Number(e.target.value) }))}
+            error={!!errors.age}
           />
           {errors.age && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.age}</p>}
         </div>
         <div>
           <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">性別</label>
-          <select
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          <Select
+            options={[
+              { value: Gender.Unknown, label: "未知" },
+              { value: Gender.Male, label: "男性" },
+              { value: Gender.Female, label: "女性" },
+            ]}
             value={values.gender ?? Gender.Unknown}
-            onChange={(e) => setValues((v) => ({ ...v, gender: Number(e.target.value) as Gender }))}
-          >
-            <option value={Gender.Unknown}>未知</option>
-            <option value={Gender.Male}>男性</option>
-            <option value={Gender.Female}>女性</option>
-          </select>
+            onChange={(value) => setValues((v) => ({ ...v, gender: Number(value) as Gender }))}
+            placeholder="請選擇性別"
+          />
         </div>
       </div>
 
       <div>
         <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">備註</label>
-        <textarea
-          className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
-          rows={3}
-          value={values.remark || ""}
-          onChange={(e) => setValues((v) => ({ ...v, remark: e.target.value }))}
-        />
+        <TextArea rows={3} value={values.remark || ""} onChange={(value) => setValues((v) => ({ ...v, remark: value }))} />
       </div>
 
       <div className="flex justify-end gap-3 pt-2">

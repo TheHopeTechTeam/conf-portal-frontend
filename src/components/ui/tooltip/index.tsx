@@ -1,7 +1,7 @@
 import { useTheme } from "@/context/ThemeContext";
 import React, { useMemo } from "react";
 
-type TooltipPlacement = "top" | "right" | "bottom" | "left";
+export type TooltipPlacement = "top" | "right" | "bottom" | "left";
 type TooltipTheme = "light" | "dark" | "auto";
 
 interface TooltipProps {
@@ -104,7 +104,7 @@ export default function Tooltip({
   const arrowBg = isDark ? "bg-[#1E2634]" : "bg-white";
 
   return (
-    <div className="relative inline-block" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <div className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       {children}
       <div
         className={`absolute z-999 ${pos.container} transition-opacity duration-200 ${

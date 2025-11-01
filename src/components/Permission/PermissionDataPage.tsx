@@ -1,4 +1,5 @@
 import { permissionService } from "@/api";
+import type { PermissionDetail as ApiPermissionDetail, PermissionPageItem } from "@/api/types";
 import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
@@ -13,24 +14,6 @@ import PermissionDeleteForm from "./PermissionDeleteForm";
 import PermissionDetailView from "./PermissionDetailView";
 import PermissionSearchPopover, { type PermissionSearchFilters } from "./PermissionSearchPopover";
 
-type PermissionDetail = {
-  id: string;
-  displayName: string;
-  code: string;
-  isActive: boolean;
-  description?: string;
-  remark?: string;
-  resourceName: string;
-  verbName: string;
-};
-
-interface PermissionPagesResponse {
-  page: number; // 0-based from backend
-  page_size: number; // API 可能返回 pageSize
-  total: number;
-  items?: PermissionDetail[];
-}
-
 export default function PermissionDataPage() {
   const [currentPage, setCurrentPage] = useState(1); // 1-based for UI
   const [pageSize, setPageSize] = useState(10);
@@ -40,7 +23,7 @@ export default function PermissionDataPage() {
   const [orderBy, setOrderBy] = useState<string>();
   const [descending, setDescending] = useState<boolean>();
 
-  const [items, setItems] = useState<PermissionDetail[]>([]);
+  const [items, setItems] = useState<PermissionPageItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
@@ -51,8 +34,9 @@ export default function PermissionDataPage() {
   const { isOpen: isViewOpen, openModal: openViewModal, closeModal: closeViewModal } = useModal(false);
   const { isOpen: isRestoreOpen, openModal: openRestoreModal, closeModal: closeRestoreModal } = useModal(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
-  const [editing, setEditing] = useState<PermissionDetail | null>(null);
-  const [viewing, setViewing] = useState<PermissionDetail | null>(null);
+  const [editing, setEditing] = useState<PermissionPageItem | null>(null);
+  const [editingFormValues, setEditingFormValues] = useState<PermissionFormValues | null>(null);
+  const [viewing, setViewing] = useState<PermissionPageItem | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [restoreIds, setRestoreIds] = useState<string[]>([]);
 
@@ -123,7 +107,7 @@ export default function PermissionDataPage() {
   }, []); // 移除 clearSelection 依賴
 
   // Columns definition
-  const columns: DataTableColumn<PermissionDetail>[] = useMemo(
+  const columns: DataTableColumn<PermissionPageItem>[] = useMemo(
     () => [
       {
         key: "displayName",
@@ -137,7 +121,7 @@ export default function PermissionDataPage() {
         sortable: true,
         width: "200px",
         tooltip: (row) => row.code,
-        render: (value: unknown, row: PermissionDetail) => (
+        render: (_value: unknown, row: PermissionPageItem) => (
           <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-sm font-mono">{row.code}</code>
         ),
       },
@@ -146,7 +130,7 @@ export default function PermissionDataPage() {
         label: "狀態",
         sortable: true,
         width: "80px",
-        render: (value: unknown, row: PermissionDetail) => {
+        render: (_value: unknown, row: PermissionPageItem) => {
           return (
             <span
               className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
@@ -176,7 +160,7 @@ export default function PermissionDataPage() {
         key: "description",
         label: "描述",
         width: "300px",
-        render: (value: unknown, row: PermissionDetail) => (
+        render: (_value: unknown, row: PermissionPageItem) => (
           <span className="text-gray-600 dark:text-gray-400 truncate max-w-xs">{row.description || "-"}</span>
         ),
       },
@@ -212,7 +196,7 @@ export default function PermissionDataPage() {
     setCurrentPage(1);
   };
 
-  const handleRowSelect = (selectedRows: PermissionDetail[], selectedKeys: string[]) => {
+  const handleRowSelect = (_selectedRows: PermissionPageItem[], selectedKeys: string[]) => {
     setSelectedKeys(selectedKeys);
   };
 
@@ -221,7 +205,7 @@ export default function PermissionDataPage() {
     openRestoreModal();
   }, [selectedKeys, openRestoreModal]);
 
-  const handleSingleRestore = async (row: PermissionDetail) => {
+  const handleSingleRestore = async (row: PermissionPageItem) => {
     setRestoreIds([row.id]);
     openRestoreModal();
   };
@@ -283,6 +267,7 @@ export default function PermissionDataPage() {
         () => {
           setFormMode("create");
           setEditing(null);
+          setEditingFormValues(null);
           openModal();
         },
         {
@@ -309,13 +294,13 @@ export default function PermissionDataPage() {
   }, [openModal, fetchPages, searchFilters, showDeleted, selectedKeys, handleBulkRestore]);
 
   // Row actions
-  const rowActions: DataTableRowAction<PermissionDetail>[] = useMemo(
+  const rowActions: DataTableRowAction<PermissionPageItem>[] = useMemo(
     () => [
       {
         key: "view",
         label: "檢視",
         icon: <MdVisibility />,
-        onClick: (row: PermissionDetail) => {
+        onClick: (row: PermissionPageItem) => {
           setViewing(row);
           openViewModal();
         },
@@ -324,10 +309,36 @@ export default function PermissionDataPage() {
         key: "edit",
         label: "編輯",
         icon: <MdEdit />,
-        onClick: (row: PermissionDetail) => {
-          setFormMode("edit");
-          setEditing(row);
-          openModal();
+        onClick: async (row: PermissionPageItem) => {
+          try {
+            setSubmitting(true);
+            // 獲取完整的權限詳情（包含 resourceId 和 verbId）
+            const response = await permissionService.getById(row.id);
+            if (response.success) {
+              const detail: ApiPermissionDetail = response.data;
+              setFormMode("edit");
+              setEditing(row);
+              // 轉換為表單值格式
+              setEditingFormValues({
+                id: detail.id,
+                displayName: detail.displayName,
+                code: detail.code,
+                resourceId: detail.resource.id,
+                verbId: detail.verb.id,
+                isActive: detail.isActive,
+                description: detail.description || "",
+                remark: detail.remark || "",
+              });
+              openModal();
+            } else {
+              alert("載入權限詳情失敗，請稍後再試");
+            }
+          } catch (e) {
+            console.error("Error fetching permission detail:", e);
+            alert("載入權限詳情失敗，請稍後再試");
+          } finally {
+            setSubmitting(false);
+          }
         },
         visible: !showDeleted, // 僅在正常模式下顯示
       },
@@ -336,7 +347,7 @@ export default function PermissionDataPage() {
         label: "還原",
         icon: <MdRestore />,
         variant: "primary",
-        onClick: async (row: PermissionDetail) => {
+        onClick: async (row: PermissionPageItem) => {
           handleSingleRestore(row);
         },
         visible: showDeleted, // 僅在回收桶模式下顯示
@@ -346,7 +357,7 @@ export default function PermissionDataPage() {
         label: showDeleted ? "永久刪除" : "刪除",
         icon: <MdDelete />,
         variant: "danger",
-        onClick: (row: PermissionDetail) => {
+        onClick: (row: PermissionPageItem) => {
           setEditing(row);
           openDeleteModal();
         },
@@ -404,7 +415,7 @@ export default function PermissionDataPage() {
 
   return (
     <>
-      <DataPage<PermissionDetail>
+      <DataPage<PermissionPageItem>
         data={pagedData}
         columns={columns}
         loading={loading}
@@ -427,7 +438,13 @@ export default function PermissionDataPage() {
         onClose={closeModal}
         className="max-w-[800px] w-full mx-4 p-6"
       >
-        <PermissionDataForm mode={formMode} defaultValues={editing} onSubmit={handleSubmit} onCancel={closeModal} submitting={submitting} />
+        <PermissionDataForm
+          mode={formMode}
+          defaultValues={editingFormValues}
+          onSubmit={handleSubmit}
+          onCancel={closeModal}
+          submitting={submitting}
+        />
       </Modal>
 
       <Modal

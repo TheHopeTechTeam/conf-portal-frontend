@@ -86,12 +86,14 @@ const UserSearchPopover: React.FC<UserSearchPopoverProps> = ({
       <div className="space-y-4">
         {/* 關鍵字搜尋 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">關鍵字搜尋</label>
           <Input
+            id="keyword"
+            label="關鍵字搜尋"
             type="text"
             value={filters.keyword || ""}
             onChange={(e) => handleFilterChange("keyword", e.target.value)}
             placeholder="搜尋手機號碼、電子郵件、顯示名稱"
+            clearable
           />
         </div>
 
@@ -193,8 +195,9 @@ const UserSearchPopover: React.FC<UserSearchPopoverProps> = ({
 
         {/* 性別篩選 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">性別篩選</label>
           <Select
+            id="gender"
+            label="性別篩選"
             options={[
               { value: "", label: "不限" },
               { value: Gender.Male.toString(), label: "男性" },

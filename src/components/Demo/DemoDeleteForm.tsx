@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import Button from "../ui/button";
+import Checkbox from "../ui/checkbox";
+import TextArea from "../ui/textarea";
 
 interface DemoDeleteFormProps {
   onSubmit: (payload: { reason?: string; permanent?: boolean }) => Promise<void> | void;
@@ -28,21 +30,13 @@ const DemoDeleteForm: React.FC<DemoDeleteFormProps> = ({ onSubmit, onCancel, sub
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex items-center gap-2">
-        <input id="permanent" type="checkbox" checked={permanent} onChange={(e) => setPermanent(e.target.checked)} />
-        <label htmlFor="permanent" className="text-sm text-gray-700 dark:text-gray-300">
-          永久刪除
-        </label>
+        <Checkbox id="permanent" checked={permanent} onChange={(checked) => setPermanent(checked)} label="永久刪除" />
       </div>
 
       {!permanent && (
         <div>
           <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">刪除原因（軟刪除必填）</label>
-          <textarea
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
-            rows={3}
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-          />
+          <TextArea rows={3} value={reason} onChange={(value) => setReason(value)} placeholder="請輸入刪除原因" error={!!error} />
           {error && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{error}</p>}
         </div>
       )}

@@ -1,6 +1,6 @@
-import { Link } from "react-router";
-import Label from "@/components/ui/label";
+import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
+import { Link } from "react-router";
 
 export default function ResetPasswordForm() {
   return (
@@ -28,17 +28,14 @@ export default function ResetPasswordForm() {
             <div className="space-y-5">
               {/* <!-- Email --> */}
               <div>
-                <Label>
-                  Email<span className="text-error-500">*</span>
-                </Label>
-                <Input type="email" id="email" name="email" placeholder="Enter your email" />
+                <Input id="email" label="Email" type="email" name="email" placeholder="Enter your email" required />
               </div>
 
               {/* <!-- Button --> */}
               <div>
-                <button className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
+                <Button variant="primary" size="md" className="w-full" btnType="submit">
                   Send Reset Link
-                </button>
+                </Button>
               </div>
             </div>
           </form>

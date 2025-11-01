@@ -1,30 +1,28 @@
-import { useEffect, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { MdClose } from "react-icons/md";
 
-interface ModalProps {
+interface ModalFormProps {
   isOpen: boolean;
   onClose: () => void;
   className?: string;
   children: React.ReactNode;
-  showCloseButton?: boolean; // New prop to control close button visibility
-  isFullscreen?: boolean; // Default to false for backwards compatibility
-  title?: string; // Optional title for the modal
+  showCloseButton?: boolean;
+  title?: string;
   footer?: React.ReactNode; // Footer content (e.g., buttons)
-  footerAlign?: "left" | "right"; // Footer alignment, defaults to "right"
+  footerAlign?: "left" | "right";
+  onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void | Promise<void>;
 }
 
-export const Modal: React.FC<ModalProps> = ({
-  isOpen,
-  onClose,
-  children,
-  className,
-  showCloseButton = true, // Default to true for backwards compatibility
-  isFullscreen = false,
-  title,
-  footer,
-  footerAlign = "right",
-}) => {
+export interface ModalFormHandle {
+  submit: () => void;
+}
+
+export const ModalForm = forwardRef<ModalFormHandle, ModalFormProps>(function ModalForm(
+  { isOpen, onClose, children, className, showCloseButton = true, title, footer, footerAlign = "right", onSubmit },
+  ref
+) {
   const modalRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -54,9 +52,15 @@ export const Modal: React.FC<ModalProps> = ({
     };
   }, [isOpen]);
 
+  useImperativeHandle(ref, () => ({
+    submit: () => {
+      formRef.current?.requestSubmit();
+    },
+  }));
+
   if (!isOpen) return null;
 
-  const contentClasses = isFullscreen ? "w-full h-full" : "relative w-full rounded-3xl bg-white dark:bg-gray-900";
+  const contentClasses = "relative w-full rounded-3xl bg-white dark:bg-gray-900";
 
   // 如果有 footer，使用 flex 布局，讓 body 可滾動，footer 固定在底部
   const hasFooter = !!footer;
@@ -64,7 +68,7 @@ export const Modal: React.FC<ModalProps> = ({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-99999">
-      {!isFullscreen && <div className="fixed inset-0 h-full w-full bg-gray-400/60" onClick={onClose}></div>}
+      <div className="fixed inset-0 h-full w-full bg-gray-400/60" onClick={onClose}></div>
       <div ref={modalRef} className={`${contentClasses} ${contentWrapperClasses} ${className}`} onClick={(e) => e.stopPropagation()}>
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between pb-2 shrink-0">
@@ -79,9 +83,11 @@ export const Modal: React.FC<ModalProps> = ({
             )}
           </div>
         )}
-        <div className={hasFooter ? "flex-1 overflow-y-auto min-h-0" : ""}>{children}</div>
+        <form ref={formRef} onSubmit={onSubmit} className={hasFooter ? "flex-1 overflow-y-auto min-h-0 p-2" : ""}>
+          {children}
+        </form>
         {footer && <div className={`flex gap-3 pt-4 shrink-0 ${footerAlign === "left" ? "justify-start" : "justify-end"}`}>{footer}</div>}
       </div>
     </div>
   );
-};
+});

@@ -1,5 +1,13 @@
+import { resourceService, type ResourceMenuItem } from "@/api/services/resourceService";
+import { verbService, type VerbItem } from "@/api/services/verbService";
+import { resolveIcon } from "@/utils/icon-resolver";
 import { useEffect, useState } from "react";
 import Button from "../ui/button";
+import Checkbox from "../ui/checkbox";
+import ComboBox from "../ui/combobox";
+import Input from "../ui/input";
+import { Select } from "../ui/select";
+import TextArea from "../ui/textarea";
 
 export interface PermissionFormValues {
   id?: string;
@@ -31,7 +39,32 @@ const PermissionDataForm: React.FC<PermissionDataFormProps> = ({ mode, defaultVa
     remark: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [resources, setResources] = useState<ResourceMenuItem[]>([]);
+  const [verbs, setVerbs] = useState<VerbItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
+  // 載入資源和動詞清單
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [rr, vr] = await Promise.all([resourceService.getResources(false), verbService.list()]);
+        if (rr.success) {
+          setResources(rr.data.items || []);
+        }
+        if (vr.success) {
+          setVerbs(vr.data.items || []);
+        }
+      } catch (e) {
+        console.error("Error loading resources/verbs:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void loadData();
+  }, []);
+
+  // 更新表單值
   useEffect(() => {
     if (defaultValues) {
       setValues({
@@ -98,70 +131,85 @@ const PermissionDataForm: React.FC<PermissionDataFormProps> = ({ mode, defaultVa
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-            顯示名稱 <span className="text-red-500">*</span>
-          </label>
-          <input
+          <Input
+            id="displayName"
+            label="顯示名稱"
             type="text"
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
-            placeholder="權限顯示名稱"
+            placeholder="請輸入顯示名稱"
             value={values.displayName}
             onChange={(e) => setValues((v) => ({ ...v, displayName: e.target.value }))}
+            error={errors.displayName}
+            hint="例如：建立使用者"
+            required
+            clearable
           />
-          {errors.displayName && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.displayName}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-            代碼 <span className="text-red-500">*</span>
-          </label>
-          <input
+          <Input
+            id="code"
+            label="代碼"
             type="text"
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
-            placeholder="user:create"
+            placeholder="請輸入代碼"
             value={values.code}
             onChange={(e) => setValues((v) => ({ ...v, code: e.target.value }))}
+            error={errors.code}
+            hint="例如：user:create"
+            required
+            clearable
           />
-          {errors.code && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.code}</p>}
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-            資源 <span className="text-red-500">*</span>
-          </label>
-          <select
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            value={values.resourceId}
-            onChange={(e) => setValues((v) => ({ ...v, resourceId: e.target.value }))}
-          >
-            <option value="">請選擇資源</option>
-            {/* TODO: Load resources from API */}
-            <option value="user">用戶管理</option>
-            <option value="role">角色管理</option>
-            <option value="permission">權限管理</option>
-          </select>
-          {errors.resourceId && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.resourceId}</p>}
+          <ComboBox<string>
+            id="resourceId"
+            label="資源"
+            options={
+              loading
+                ? []
+                : resources
+                    .filter((r) => r.pid != null)
+                    .map((r) => ({
+                      value: r.id,
+                      label: r.name,
+                      icon: r.icon ? resolveIcon(r.icon, { className: "size-4" }).icon : undefined,
+                    }))
+            }
+            value={values.resourceId || null}
+            onChange={(value) => setValues((v) => ({ ...v, resourceId: value || "" }))}
+            placeholder={loading ? "載入中..." : "請選擇或搜尋資源"}
+            disabled={loading}
+            error={errors.resourceId}
+            required
+            clearable
+          />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-            動作 <span className="text-red-500">*</span>
-          </label>
-          <select
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          <Select
+            id="verbId"
+            label="動作"
+            options={
+              loading
+                ? [{ value: "", label: "載入中..." }]
+                : [
+                    { value: null, label: "請選擇動作", disabled: true },
+                    ...verbs.map((v) => ({
+                      value: v.id,
+                      label: v.displayName || v.action,
+                    })),
+                  ]
+            }
             value={values.verbId}
-            onChange={(e) => setValues((v) => ({ ...v, verbId: e.target.value }))}
-          >
-            <option value="">請選擇動作</option>
-            {/* TODO: Load verbs from API */}
-            <option value="create">創建</option>
-            <option value="read">讀取</option>
-            <option value="update">更新</option>
-            <option value="delete">刪除</option>
-          </select>
-          {errors.verbId && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.verbId}</p>}
+            onChange={(value) => setValues((v) => ({ ...v, verbId: value as string }))}
+            error={errors.verbId}
+            placeholder="請選擇動作"
+            disabled={loading}
+            required
+            clearable
+          />
         </div>
       </div>
 
@@ -169,41 +217,35 @@ const PermissionDataForm: React.FC<PermissionDataFormProps> = ({ mode, defaultVa
         <div className="space-y-3">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">狀態設定</label>
           <div className="space-y-2">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
-                checked={values.isActive}
-                onChange={(e) => setValues((v) => ({ ...v, isActive: e.target.checked }))}
-              />
-              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">啟用</span>
-            </label>
+            <Checkbox checked={values.isActive} onChange={(checked) => setValues((v) => ({ ...v, isActive: checked }))} label="啟用" />
           </div>
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">描述</label>
-        <textarea
-          className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+        <TextArea
+          id="description"
+          label="描述"
           rows={3}
           placeholder="權限描述"
           value={values.description || ""}
-          onChange={(e) => setValues((v) => ({ ...v, description: e.target.value }))}
+          onChange={(value) => setValues((v) => ({ ...v, description: value }))}
+          error={!!errors.description}
+          hint={errors.description || ""}
         />
-        {errors.description && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.description}</p>}
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">備註</label>
-        <textarea
-          className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+        <TextArea
+          id="remark"
+          label="備註"
           rows={3}
           placeholder="備註資訊"
           value={values.remark || ""}
-          onChange={(e) => setValues((v) => ({ ...v, remark: e.target.value }))}
+          onChange={(value) => setValues((v) => ({ ...v, remark: value }))}
+          error={!!errors.remark}
+          hint={errors.remark || ""}
         />
-        {errors.remark && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.remark}</p>}
       </div>
 
       <div className="flex justify-end gap-3 pt-2">

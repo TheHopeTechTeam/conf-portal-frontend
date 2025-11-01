@@ -1,10 +1,14 @@
 import type React from "react";
 import type { FC } from "react";
+import { MdClose } from "react-icons/md";
+import { cn } from "../../../utils";
+import Label from "../label";
 
 interface InputProps {
   type?: "text" | "number" | "email" | "password" | "date" | "time" | string;
-  id?: string;
+  id: string;
   name?: string;
+  label?: string;
   placeholder?: string;
   value?: string | number | undefined;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -14,14 +18,17 @@ interface InputProps {
   step?: number;
   disabled?: boolean;
   success?: boolean;
-  error?: boolean;
+  error?: string | undefined;
   hint?: string;
+  required?: boolean;
+  clearable?: boolean;
 }
 
 const Input: FC<InputProps> = ({
   type = "text",
   id,
   name,
+  label,
   placeholder,
   value,
   onChange,
@@ -31,39 +38,91 @@ const Input: FC<InputProps> = ({
   step,
   disabled = false,
   success = false,
-  error = false,
+  error,
   hint,
+  required = false,
+  clearable = false,
 }) => {
-  let inputClasses = `h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 ${className}`;
+  // 判斷是否應該顯示清除按鈕
+  // password 類型通常不應該有清除按鈕（但允許覆蓋），其他類型在有值時顯示
+  const shouldShowClear = clearable && value !== null && value !== undefined && value !== "" && type !== "password"; // password 類型默認不顯示清除按鈕
+
+  // 處理清除
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onChange) {
+      const syntheticEvent = {
+        target: { value: "" },
+        currentTarget: { value: "" },
+      } as React.ChangeEvent<HTMLInputElement>;
+      onChange(syntheticEvent);
+    }
+  };
+
+  // 計算右側 padding
+  const rightPadding = shouldShowClear ? "pr-10" : "";
+
+  let inputClasses = cn(
+    "h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30",
+    rightPadding,
+    className
+  );
 
   if (disabled) {
-    inputClasses += ` text-gray-500 border-gray-300 opacity-40 bg-gray-100 cursor-not-allowed dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 opacity-40`;
-  } else if (error) {
-    inputClasses += ` border-error-500 focus:border-error-300 focus:ring-error-500/20 dark:text-error-400 dark:border-error-500 dark:focus:border-error-800`;
+    inputClasses = cn(
+      inputClasses,
+      "text-gray-500 border-gray-300 opacity-40 bg-gray-100 cursor-not-allowed dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+    );
+  } else if (error && error !== undefined) {
+    inputClasses = cn(
+      inputClasses,
+      "border-error-500 focus:border-error-300 focus:ring-error-500/20 dark:text-error-400 dark:border-error-500 dark:focus:border-error-800"
+    );
   } else if (success) {
-    inputClasses += ` border-success-500 focus:border-success-300 focus:ring-success-500/20 dark:text-success-400 dark:border-success-500 dark:focus:border-success-800`;
+    inputClasses = cn(
+      inputClasses,
+      "border-success-500 focus:border-success-300 focus:ring-success-500/20 dark:text-success-400 dark:border-success-500 dark:focus:border-success-800"
+    );
   } else {
-    inputClasses += ` bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:text-white/90 dark:focus:border-brand-800`;
+    inputClasses = cn(
+      inputClasses,
+      "bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:text-white/90 dark:focus:border-brand-800"
+    );
   }
 
   return (
-    <div className="relative">
-      <input
-        type={type}
-        id={id}
-        name={name}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        min={min}
-        max={max}
-        step={step}
-        disabled={disabled}
-        className={inputClasses}
-      />
+    <>
+      {label && <Label htmlFor={id}>{label} {required && <span className="text-red-500">*</span>}</Label>}
+      <div className="relative">
+        <input
+          type={type}
+          id={id}
+          name={name}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          min={min}
+          max={max}
+          step={step}
+          disabled={disabled}
+          className={inputClasses}
+        />
 
-      {hint && <p className={`mt-1.5 text-xs ${error ? "text-error-500" : success ? "text-success-500" : "text-gray-500"}`}>{hint}</p>}
-    </div>
+        {shouldShowClear && (
+          <button
+            type="button"
+            onClick={handleClear}
+            disabled={disabled}
+            className="absolute inset-y-0 right-0 flex items-center pr-3 focus:outline-hidden hover:text-gray-600 dark:hover:text-gray-300"
+            aria-label="Clear input"
+          >
+            <MdClose className="size-4 text-gray-400" />
+          </button>
+        )}
+      </div>
+      {error && <p className="mt-1.5 text-xs text-error-500 dark:text-error-400">{error}</p>}
+      {hint && !error && <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{hint}</p>}
+    </>
   );
 };
 

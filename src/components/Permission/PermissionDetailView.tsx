@@ -1,4 +1,5 @@
 import { permissionService } from "@/api";
+import type { PermissionDetail } from "@/api/types";
 import Checkbox from "@/components/ui/checkbox";
 import Input from "@/components/ui/input";
 import TextArea from "@/components/ui/textarea";
@@ -8,28 +9,8 @@ interface PermissionDetailViewProps {
   permissionId: string;
 }
 
-interface PermissionDetailData {
-  id: string;
-  displayName: string;
-  code: string;
-  resource: {
-    id: string;
-    name: string;
-    key: string;
-    code: string;
-  };
-  verb: {
-    id: string;
-    displayName: string;
-    action: string;
-  };
-  isActive: boolean;
-  description?: string;
-  remark?: string;
-}
-
 const PermissionDetailView: React.FC<PermissionDetailViewProps> = ({ permissionId }) => {
-  const [permissionData, setPermissionData] = useState<PermissionDetailData | null>(null);
+  const [permissionData, setPermissionData] = useState<PermissionDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,7 +21,7 @@ const PermissionDetailView: React.FC<PermissionDetailViewProps> = ({ permissionI
         setError(null);
         const response = await permissionService.getById(permissionId);
         if (response.success) {
-          setPermissionData(response.data as PermissionDetailData);
+          setPermissionData(response.data);
         } else {
           setError(response.message || "載入失敗");
         }
@@ -78,23 +59,19 @@ const PermissionDetailView: React.FC<PermissionDetailViewProps> = ({ permissionI
       {/* 基本資訊 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">顯示名稱</label>
-          <Input id="displayName" type="text" value={permissionData.displayName} disabled />
+          <Input id="displayName" label="顯示名稱" type="text" value={permissionData.displayName} disabled />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">代碼</label>
-          <Input id="code" type="text" value={permissionData.code} disabled />
+          <Input id="code" label="代碼" type="text" value={permissionData.code} disabled />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">資源</label>
-          <Input id="resource" type="text" value={permissionData.resource.name} disabled />
+          <Input id="resource" label="資源" type="text" value={permissionData.resource.name} disabled />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">動作</label>
-          <Input id="verb" type="text" value={permissionData.verb.displayName} disabled />
+          <Input id="verb" label="動作" type="text" value={permissionData.verb.displayName} disabled />
         </div>
       </div>
 
@@ -111,15 +88,15 @@ const PermissionDetailView: React.FC<PermissionDetailViewProps> = ({ permissionI
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">資源詳情</label>
           <div className="space-y-2">
-            <Input id="resourceKey" type="text" value={permissionData.resource.key} disabled />
-            <Input id="resourceCode" type="text" value={permissionData.resource.code} disabled />
+            <Input id="resourceKey" label="Key" type="text" value={permissionData.resource.key} disabled />
+            <Input id="resourceCode" label="Code" type="text" value={permissionData.resource.code} disabled />
           </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">動作詳情</label>
           <div className="space-y-2">
-            <Input id="verbAction" type="text" value={permissionData.verb.action} disabled />
+            <Input id="verbAction" label="Action" type="text" value={permissionData.verb.action} disabled />
           </div>
         </div>
       </div>
@@ -142,8 +119,7 @@ const PermissionDetailView: React.FC<PermissionDetailViewProps> = ({ permissionI
 
       {/* 權限 ID */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">權限 ID</label>
-        <Input id="permissionId" type="text" value={permissionData.id} disabled />
+        <Input id="permissionId" label="權限 ID" type="text" value={permissionData.id} disabled />
       </div>
     </div>
   );

@@ -66,12 +66,14 @@ const PermissionSearchPopover: React.FC<PermissionSearchPopoverProps> = ({
       <div className="space-y-4">
         {/* 關鍵字搜尋 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">關鍵字搜尋</label>
           <Input
+            id="keyword"
+            label="關鍵字搜尋"
             type="text"
             value={filters.keyword || ""}
             onChange={(e) => handleFilterChange("keyword", e.target.value)}
             placeholder="搜尋顯示名稱或代碼"
+            clearable
           />
         </div>
 

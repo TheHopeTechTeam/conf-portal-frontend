@@ -1,6 +1,14 @@
 // 權限服務
 import { API_ENDPOINTS } from "@/api";
-import type { ApiResponse, Permission, PermissionCreate, PermissionDelete, PermissionPage, PermissionUpdate } from "@/api/types";
+import type {
+  ApiResponse,
+  PermissionCreate,
+  PermissionDelete,
+  PermissionDetail,
+  PermissionListItem,
+  PermissionPage,
+  PermissionUpdate,
+} from "@/api/types";
 import { httpClient } from "./httpClient";
 
 interface PermissionQueryParams {
@@ -18,12 +26,12 @@ class PermissionService {
     return httpClient.get<PermissionPage>(API_ENDPOINTS.PERMISSIONS.PAGES, params);
   }
 
-  async list(): Promise<ApiResponse<Permission[]>> {
-    return httpClient.get<Permission[]>(API_ENDPOINTS.PERMISSIONS.LIST);
+  async list(): Promise<ApiResponse<{ items: PermissionListItem[] }>> {
+    return httpClient.get<{ items: PermissionListItem[] }>(API_ENDPOINTS.PERMISSIONS.LIST);
   }
 
-  async getById(id: string): Promise<ApiResponse<Permission>> {
-    return httpClient.get<Permission>(API_ENDPOINTS.PERMISSIONS.DETAIL(id));
+  async getById(id: string): Promise<ApiResponse<PermissionDetail>> {
+    return httpClient.get<PermissionDetail>(API_ENDPOINTS.PERMISSIONS.DETAIL(id));
   }
 
   async create(data: PermissionCreate): Promise<ApiResponse<{ id: string }>> {

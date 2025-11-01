@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import Button from "../ui/button";
+import Checkbox from "../ui/checkbox";
+import Input from "../ui/input";
+import { Select } from "../ui/select";
+import TextArea from "../ui/textarea";
 
 export interface UserFormValues {
   id?: string;
@@ -107,12 +111,12 @@ const UserDataForm: React.FC<UserDataFormProps> = ({ mode, defaultValues, onSubm
           <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
             手機號碼 <span className="text-red-500">*</span>
           </label>
-          <input
+          <Input
             type="tel"
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
             placeholder="+886912345678"
             value={values.phone_number}
             onChange={(e) => setValues((v) => ({ ...v, phone_number: e.target.value }))}
+            error={!!errors.phone_number}
           />
           {errors.phone_number && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.phone_number}</p>}
         </div>
@@ -121,12 +125,12 @@ const UserDataForm: React.FC<UserDataFormProps> = ({ mode, defaultValues, onSubm
           <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
             電子郵件 <span className="text-red-500">*</span>
           </label>
-          <input
+          <Input
             type="email"
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
             placeholder="user@example.com"
             value={values.email}
             onChange={(e) => setValues((v) => ({ ...v, email: e.target.value }))}
+            error={!!errors.email}
           />
           {errors.email && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.email}</p>}
         </div>
@@ -135,28 +139,29 @@ const UserDataForm: React.FC<UserDataFormProps> = ({ mode, defaultValues, onSubm
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">顯示名稱</label>
-          <input
+          <Input
             type="text"
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
             placeholder="用戶顯示名稱"
             value={values.display_name || ""}
             onChange={(e) => setValues((v) => ({ ...v, display_name: e.target.value }))}
+            error={!!errors.display_name}
           />
           {errors.display_name && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.display_name}</p>}
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">性別</label>
-          <select
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          <Select
+            options={[
+              { value: 0, label: "未知" },
+              { value: 1, label: "男性" },
+              { value: 2, label: "女性" },
+              { value: 3, label: "其他" },
+            ]}
             value={values.gender ?? 0}
-            onChange={(e) => setValues((v) => ({ ...v, gender: Number(e.target.value) }))}
-          >
-            <option value={0}>未知</option>
-            <option value={1}>男性</option>
-            <option value={2}>女性</option>
-            <option value={3}>其他</option>
-          </select>
+            onChange={(value) => setValues((v) => ({ ...v, gender: Number(value) }))}
+            placeholder="請選擇性別"
+          />
         </div>
       </div>
 
@@ -164,72 +169,37 @@ const UserDataForm: React.FC<UserDataFormProps> = ({ mode, defaultValues, onSubm
         <div className="space-y-3">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">狀態設定</label>
           <div className="space-y-2">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
-                checked={values.verified}
-                onChange={(e) => setValues((v) => ({ ...v, verified: e.target.checked }))}
-              />
-              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">已驗證</span>
-            </label>
-
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
-                checked={values.is_active}
-                onChange={(e) => setValues((v) => ({ ...v, is_active: e.target.checked }))}
-              />
-              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">啟用</span>
-            </label>
+            <Checkbox checked={values.verified} onChange={(checked) => setValues((v) => ({ ...v, verified: checked }))} label="已驗證" />
+            <Checkbox checked={values.is_active} onChange={(checked) => setValues((v) => ({ ...v, is_active: checked }))} label="啟用" />
           </div>
         </div>
 
         <div className="space-y-3">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">權限設定</label>
           <div className="space-y-2">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
-                checked={values.is_superuser}
-                onChange={(e) => setValues((v) => ({ ...v, is_superuser: e.target.checked }))}
-              />
-              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">超級用戶</span>
-            </label>
-
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
-                checked={values.is_admin}
-                onChange={(e) => setValues((v) => ({ ...v, is_admin: e.target.checked }))}
-              />
-              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">管理員</span>
-            </label>
-
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
-                checked={values.is_ministry}
-                onChange={(e) => setValues((v) => ({ ...v, is_ministry: e.target.checked }))}
-              />
-              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">事工</span>
-            </label>
+            <Checkbox
+              checked={values.is_superuser}
+              onChange={(checked) => setValues((v) => ({ ...v, is_superuser: checked }))}
+              label="超級用戶"
+            />
+            <Checkbox checked={values.is_admin} onChange={(checked) => setValues((v) => ({ ...v, is_admin: checked }))} label="管理員" />
+            <Checkbox
+              checked={values.is_ministry}
+              onChange={(checked) => setValues((v) => ({ ...v, is_ministry: checked }))}
+              label="事工"
+            />
           </div>
         </div>
       </div>
 
       <div>
         <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">備註</label>
-        <textarea
-          className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+        <TextArea
           rows={3}
           placeholder="備註資訊"
           value={values.remark || ""}
-          onChange={(e) => setValues((v) => ({ ...v, remark: e.target.value }))}
+          onChange={(value) => setValues((v) => ({ ...v, remark: value }))}
+          error={!!errors.remark}
         />
         {errors.remark && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.remark}</p>}
       </div>

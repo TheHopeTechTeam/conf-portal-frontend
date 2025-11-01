@@ -78,18 +78,29 @@ export interface PermissionVerb {
   action: string;
 }
 
-export interface Permission {
+// 權限基礎型別
+interface PermissionBase {
   id: string;
   displayName: string;
   code: string;
-  resource: PermissionResource;
-  verb: PermissionVerb;
   isActive: boolean;
   description?: string;
   remark?: string;
 }
 
-export interface PermissionPageItem {
+// 用於 list API - 只包含 resourceId 和 verbId
+export interface PermissionListItem extends PermissionBase {
+  resourceId: string;
+  verbId: string;
+}
+
+// 用於 detail API - 包含完整的 resource 和 verb 對象
+export interface PermissionDetail extends PermissionBase {
+  resource: PermissionResource;
+  verb: PermissionVerb;
+}
+
+export interface PermissionPageItem extends Record<string, unknown> {
   id: string;
   displayName: string;
   code: string;
