@@ -235,6 +235,7 @@ const ResourceDataForm: React.FC<ResourceDataFormProps> = ({ mode, defaultValues
               類型 <span className="text-red-500">*</span>
             </label>
             <Select
+              id="type"
               options={[
                 { value: AdminResourceType.GENERAL, label: "業務功能 (GENERAL)" },
                 { value: AdminResourceType.SYSTEM, label: "系統功能 (SYSTEM)" },
@@ -249,7 +250,7 @@ const ResourceDataForm: React.FC<ResourceDataFormProps> = ({ mode, defaultValues
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               圖示 <span className="text-red-500">*</span>
             </label>
-            <IconInput
+            <Input
               id="icon"
               type="text"
               value={values.icon}
@@ -257,11 +258,10 @@ const ResourceDataForm: React.FC<ResourceDataFormProps> = ({ mode, defaultValues
               placeholder={`請輸入圖示名稱 (如: ${getCommonIconNames("md").slice(0, 3).join(", ")})`}
               icon={dynamicIcon}
               iconPosition="left"
-              error={!!errors.icon || !isIconValid}
-              hint={iconError || `輸入 Material Design 圖示名稱，如: ${getCommonIconNames("md").slice(0, 5).join(", ")}`}
+              error={errors.icon || !isIconValid ? iconError || undefined : undefined}
+              hint={`輸入 Material Design 圖示名稱，如: ${getCommonIconNames("md").slice(0, 5).join(", ")}`}
+              clearable
             />
-            {errors.icon && <p className="text-red-500 text-sm mt-1">{errors.icon}</p>}
-            {iconError && <p className="text-red-500 text-sm mt-1">{iconError}</p>}
           </div>
         </div>
 

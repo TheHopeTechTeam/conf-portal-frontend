@@ -55,33 +55,27 @@ export default function SignInForm() {
                   />
                 </div>
                 <div>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      label="Password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                    <span
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
-                    >
-                      {showPassword ? (
+                  <Input
+                    id="password"
+                    label="Password"
+                    type={showPassword ? "text" : "password"}
+                    icon={
+                      showPassword ? (
                         <MdVisibility className="fill-gray-500 dark:fill-gray-400 size-5" />
                       ) : (
                         <MdVisibilityOff className="fill-gray-500 dark:fill-gray-400 size-5" />
-                      )}
-                    </span>
-                  </div>
+                      )
+                    }
+                    iconPosition="right"
+                    iconClick={() => setShowPassword(!showPassword)}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Checkbox checked={isChecked} onChange={setIsChecked} />
-                    <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">Keep me logged in</span>
-                  </div>
+                  <Checkbox checked={isChecked} onChange={setIsChecked} label="Keep me logged in" />
                   {/* <Link to="/reset-password" className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400">
                     Forgot password?
                   </Link> */}

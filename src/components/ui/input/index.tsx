@@ -20,6 +20,9 @@ interface InputProps {
   success?: boolean;
   error?: string | undefined;
   hint?: string;
+  icon?: React.ReactNode;
+  iconPosition?: "left" | "right";
+  iconClick?: () => void;
   required?: boolean;
   clearable?: boolean;
 }
@@ -40,6 +43,9 @@ const Input: FC<InputProps> = ({
   success = false,
   error,
   hint,
+  icon,
+  iconPosition = "left",
+  iconClick,
   required = false,
   clearable = false,
 }) => {
@@ -90,9 +96,20 @@ const Input: FC<InputProps> = ({
     );
   }
 
+  const iconClasses = `absolute z-30 -translate-y-1/2 top-1/2 ${iconPosition === "left" ? "left-4" : "right-4"} ${
+    iconClick ? "cursor-pointer" : ""
+  }
+  `;
+
+  const inputPadding = icon ? (iconPosition === "left" ? "pl-11" : "pr-11") : "";
+
   return (
     <>
-      {label && <Label htmlFor={id}>{label} {required && <span className="text-red-500">*</span>}</Label>}
+      {label && (
+        <Label htmlFor={id}>
+          {label} {required && <span className="text-red-500">*</span>}
+        </Label>
+      )}
       <div className="relative">
         <input
           type={type}
@@ -105,7 +122,7 @@ const Input: FC<InputProps> = ({
           max={max}
           step={step}
           disabled={disabled}
-          className={inputClasses}
+          className={`${inputPadding} ${inputClasses}`}
         />
 
         {shouldShowClear && (
@@ -118,6 +135,11 @@ const Input: FC<InputProps> = ({
           >
             <MdClose className="size-4 text-gray-400" />
           </button>
+        )}
+        {icon && (
+          <span className={iconClasses} onClick={iconClick}>
+            {icon}
+          </span>
         )}
       </div>
       {error && <p className="mt-1.5 text-xs text-error-500 dark:text-error-400">{error}</p>}

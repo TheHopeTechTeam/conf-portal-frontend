@@ -4,8 +4,9 @@ import Input from "./index";
 
 interface IconInputProps {
   type?: "text" | "number" | "email" | "password" | "date" | "time" | string;
-  id?: string;
+  id: string;
   name?: string;
+  label?: string;
   placeholder?: string;
   value?: string | number | undefined;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -15,10 +16,11 @@ interface IconInputProps {
   step?: number;
   disabled?: boolean;
   success?: boolean;
-  error?: boolean;
+  error?: string | undefined;
   hint?: string;
   icon?: ReactNode;
   iconPosition?: "left" | "right";
+  required?: boolean;
   clearable?: boolean;
 }
 
@@ -26,6 +28,7 @@ const IconInput: FC<IconInputProps> = ({
   type = "text",
   id,
   name,
+  label,
   placeholder,
   value,
   onChange,
@@ -35,10 +38,11 @@ const IconInput: FC<IconInputProps> = ({
   step,
   disabled = false,
   success = false,
-  error = false,
+  error,
   hint,
   icon,
   iconPosition = "left",
+  required = false,
   clearable = false,
 }) => {
   // 判斷是否顯示清除按鈕
@@ -48,7 +52,7 @@ const IconInput: FC<IconInputProps> = ({
   // 清除按鈕在右側（pr-3），所以圖標需要更靠左一些（約 pr-10）
   const iconRightPosition = shouldShowClear && iconPosition === "right" ? "right-10" : "right-4";
 
-  const iconClasses = `absolute text-gray-500 -translate-y-7 pointer-events-none top-1/2 dark:text-gray-400 ${
+  const iconClasses = `absolute text-gray-500 translate-y-1/6 pointer-events-none top-1/2 dark:text-gray-400 ${
     iconPosition === "left" ? "left-4" : iconRightPosition
   }`;
 
@@ -64,6 +68,7 @@ const IconInput: FC<IconInputProps> = ({
         type={type}
         id={id}
         name={name}
+        label={label}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
@@ -76,6 +81,7 @@ const IconInput: FC<IconInputProps> = ({
         error={error}
         hint={hint}
         clearable={clearable}
+        required={required}
       />
       {icon && <span className={iconClasses}>{icon}</span>}
     </div>
