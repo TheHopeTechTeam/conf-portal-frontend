@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import Button from "../ui/button";
-import Checkbox from "../ui/checkbox";
-import Input from "../ui/input";
-import { Select } from "../ui/select";
-import TextArea from "../ui/textarea";
+import Button from "@/components/ui/button";
+import Checkbox from "@/components/ui/checkbox";
+import Input from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import TextArea from "@/components/ui/textarea";
 
 export interface UserFormValues {
   id?: string;
@@ -108,29 +108,29 @@ const UserDataForm: React.FC<UserDataFormProps> = ({ mode, defaultValues, onSubm
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-            手機號碼 <span className="text-red-500">*</span>
-          </label>
           <Input
-            type="tel"
-            placeholder="+886912345678"
+            id="phone_number"
+            label="手機號碼"
+            placeholder="請輸入手機號碼"
             value={values.phone_number}
             onChange={(e) => setValues((v) => ({ ...v, phone_number: e.target.value }))}
-            error={!!errors.phone_number}
+            error={errors.phone_number || undefined}
+            hint="例如: +886912345678"
+            required
           />
           {errors.phone_number && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.phone_number}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-            電子郵件 <span className="text-red-500">*</span>
-          </label>
           <Input
-            type="email"
-            placeholder="user@example.com"
+            id="email"
+            label="電子郵件"
+            placeholder="請輸入電子郵件"
             value={values.email}
             onChange={(e) => setValues((v) => ({ ...v, email: e.target.value }))}
-            error={!!errors.email}
+            error={errors.email || undefined}
+            hint="例如: user@example.com"
+            required
           />
           {errors.email && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.email}</p>}
         </div>
@@ -138,20 +138,23 @@ const UserDataForm: React.FC<UserDataFormProps> = ({ mode, defaultValues, onSubm
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">顯示名稱</label>
           <Input
+            id="display_name"
+            label="顯示名稱"
             type="text"
             placeholder="用戶顯示名稱"
             value={values.display_name || ""}
             onChange={(e) => setValues((v) => ({ ...v, display_name: e.target.value }))}
-            error={!!errors.display_name}
+            error={errors.display_name || undefined}
           />
           {errors.display_name && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.display_name}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">性別</label>
           <Select
+            id="gender"
+            label="性別"
+            placeholder="請選擇性別"
             options={[
               { value: 0, label: "未知" },
               { value: 1, label: "男性" },
@@ -160,7 +163,6 @@ const UserDataForm: React.FC<UserDataFormProps> = ({ mode, defaultValues, onSubm
             ]}
             value={values.gender ?? 0}
             onChange={(value) => setValues((v) => ({ ...v, gender: Number(value) }))}
-            placeholder="請選擇性別"
           />
         </div>
       </div>
@@ -193,13 +195,14 @@ const UserDataForm: React.FC<UserDataFormProps> = ({ mode, defaultValues, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">備註</label>
         <TextArea
+          id="remark"
+          label="備註"
           rows={3}
           placeholder="備註資訊"
           value={values.remark || ""}
           onChange={(value) => setValues((v) => ({ ...v, remark: value }))}
-          error={!!errors.remark}
+          error={errors.remark || undefined}
         />
         {errors.remark && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.remark}</p>}
       </div>

@@ -67,12 +67,25 @@ export default function PageButtonGroup({
 
   return (
     <div className={containerClass}>
-      {visibleButtons.map((button, index) => (
-        <div key={button.key}>
-          <PageButton button={button} mode={mode} />
-          {showDivider && index < visibleButtons.length - 1 && <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />}
-        </div>
-      ))}
+      {visibleButtons.map((button, index) => {
+        // 如果按鈕有 render 函數，使用 render 函數創建元素
+        if (button.render) {
+          return (
+            <div key={button.key}>
+              {button.render()}
+              {showDivider && index < visibleButtons.length - 1 && <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />}
+            </div>
+          );
+        }
+
+        // 否則使用 PageButton 元件渲染按鈕
+        return (
+          <div key={button.key}>
+            <PageButton button={button} mode={mode} />
+            {showDivider && index < visibleButtons.length - 1 && <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />}
+          </div>
+        );
+      })}
     </div>
   );
 }

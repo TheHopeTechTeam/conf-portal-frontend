@@ -1,11 +1,11 @@
 import { AdminResourceType } from "@/api/services/resourceService";
 import { getCommonIconNames, useIconResolver } from "@/utils/icon-resolver";
 import { useEffect, useState } from "react";
-import Button from "../ui/button";
-import Checkbox from "../ui/checkbox";
-import Input, { IconInput } from "../ui/input";
-import { Select } from "../ui/select";
-import TextArea from "../ui/textarea";
+import Button from "@/components/ui/button";
+import Checkbox from "@/components/ui/checkbox";
+import Input from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import TextArea from "@/components/ui/textarea";
 
 export interface ResourceFormValues {
   id?: string;

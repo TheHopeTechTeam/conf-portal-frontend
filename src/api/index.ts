@@ -9,6 +9,8 @@ export * from "./config";
 // 服務
 export * from "./services/httpClient";
 export { default as httpClient } from "./services/httpClient";
+export * from "./services/fileService";
+export { default as fileService } from "./services/fileService";
 export * from "./services/permissionService";
 export { default as permissionService } from "./services/permissionService";
 export * from "./services/resourceService";

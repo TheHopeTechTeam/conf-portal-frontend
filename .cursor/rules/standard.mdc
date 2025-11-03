@@ -36,8 +36,8 @@ alwaysApply: true
 ## 目錄結構
 
 - 遵循現有的目錄結構：`src/components/`、`src/pages/`、`src/context/`、`src/hooks/` 等。
-- 相關的元件應放在對應的功能目錄下（例如：`components/auth/`、`components/ui/`）。
 - 共用元件應放在 `components/common/` 目錄下。
+- UI 元件應放在 `components/ui/` 目錄下。
 - 頁面元件應放在 `pages/` 目錄下，並按功能分類。
 
 ## 狀態管理

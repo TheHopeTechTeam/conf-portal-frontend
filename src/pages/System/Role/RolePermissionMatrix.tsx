@@ -5,7 +5,7 @@ import type { PermissionListItem } from "@/api/types";
 import Checkbox from "@/components/ui/checkbox";
 import { resolveIcon } from "@/utils/icon-resolver";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Tooltip from "../ui/tooltip";
+import Tooltip from "@/components/ui/tooltip";
 
 type PermissionMatrixProps = {
   value: string[]; // selected permission IDs
@@ -35,14 +35,14 @@ export default function RolePermissionMatrix({ value, onChange, className = "" }
         // 建立輔助索引：resource code/key -> id、verb action -> id
         const resourceIndexByCode: Record<string, string> = {};
         const resourceIndexByName: Record<string, string> = {};
-        (rr.success ? rr.data.items : []).forEach((r: any) => {
+        (rr.success ? rr.data.items : []).forEach((r: ResourceMenuItem) => {
           if (r?.code) resourceIndexByCode[String(r.code).toLowerCase()] = r.id;
           if (r?.key) resourceIndexByCode[String(r.key).toLowerCase()] ||= r.id;
           if (r?.name) resourceIndexByName[String(r.name).toLowerCase()] = r.id;
         });
         const verbIndexByAction: Record<string, string> = {};
         const verbIndexByName: Record<string, string> = {};
-        (vr.success ? vr.data.items : []).forEach((v: any) => {
+        (vr.success ? vr.data.items : []).forEach((v: VerbItem) => {
           if (v?.action) verbIndexByAction[String(v.action).toLowerCase()] = v.id;
           if (v?.displayName) verbIndexByName[String(v.displayName).toLowerCase()] = v.id;
         });
@@ -100,15 +100,15 @@ export default function RolePermissionMatrix({ value, onChange, className = "" }
     const roots: TreeNode[] = [];
     resourceList.forEach((r) => {
       const node = byId[r.id];
-      const pid = (r as any).pid || r.parent?.id;
+      const pid = r.pid || r.parent?.id;
       if (pid && byId[pid]) byId[pid].children.push(node);
       else roots.push(node);
     });
     // 照資源管理方式排序：先依 sequence（越小越前），再依 name
     const sortNodes = (nodes: TreeNode[]) => {
       nodes.sort((a, b) => {
-        const sa = (a as any).sequence ?? 0;
-        const sb = (b as any).sequence ?? 0;
+        const sa = a.sequence ?? 0;
+        const sb = b.sequence ?? 0;
         if (sa !== sb) return sa - sb;
         return (a.name || "").localeCompare(b.name || "");
       });
@@ -347,7 +347,7 @@ export default function RolePermissionMatrix({ value, onChange, className = "" }
               return (
                 <div key={node.id} className="flex items-center justify-start px-4 py-3 text-sm">
                   <div className={`flex shrink-0 items-center w-50 ${depth > 0 ? "pl-4" : ""}`}>
-                    {resolveIcon((node as any).icon || "", { className: "size-4" }).icon}
+                    {resolveIcon(node.icon || "", { className: "size-4" }).icon}
                     <Tooltip content={node.code} placement="bottom">
                       <span className="pl-2">{node.name}</span>
                     </Tooltip>
@@ -378,7 +378,7 @@ export default function RolePermissionMatrix({ value, onChange, className = "" }
                       // 子資源：顯示具體的權限 checkbox
                       const pid = verbToPerm[v.id];
                       const checked = !!pid && value.includes(pid);
-                      const fallbackCode = `${(node as any).code || (node as any).key || ""}:${v.action}`;
+                      const fallbackCode = `${node.code || node.key || ""}:${v.action}`;
                       const codeText = pid ? permInfoById[pid]?.code || "" : fallbackCode;
                       return (
                         <div key={v.id} className="flex-1 items-center justify-start shrink-0 w-60">

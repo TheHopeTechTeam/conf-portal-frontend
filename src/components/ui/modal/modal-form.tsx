@@ -7,6 +7,7 @@ interface ModalFormProps {
   className?: string;
   children: React.ReactNode;
   showCloseButton?: boolean;
+  isFullscreen?: boolean; // Default to false for backwards compatibility
   title?: string;
   footer?: React.ReactNode; // Footer content (e.g., buttons)
   footerAlign?: "left" | "right";
@@ -18,7 +19,7 @@ export interface ModalFormHandle {
 }
 
 export const ModalForm = forwardRef<ModalFormHandle, ModalFormProps>(function ModalForm(
-  { isOpen, onClose, children, className, showCloseButton = true, title, footer, footerAlign = "right", onSubmit },
+  { isOpen, onClose, children, className, showCloseButton = true, isFullscreen = false, title, footer, footerAlign = "right", onSubmit },
   ref
 ) {
   const modalRef = useRef<HTMLDivElement>(null);
@@ -60,15 +61,15 @@ export const ModalForm = forwardRef<ModalFormHandle, ModalFormProps>(function Mo
 
   if (!isOpen) return null;
 
-  const contentClasses = "relative w-full rounded-3xl bg-white dark:bg-gray-900";
+  const contentClasses = isFullscreen ? "w-full h-full" : "relative w-full rounded-3xl max-h-[90vh] ";
 
   // 如果有 footer，使用 flex 布局，讓 body 可滾動，footer 固定在底部
   const hasFooter = !!footer;
-  const contentWrapperClasses = hasFooter ? "flex flex-col max-h-[90vh]" : "";
+  const contentWrapperClasses = hasFooter ? "flex flex-col bg-white dark:bg-gray-900" : "";
 
   return (
     <div className="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-99999">
-      <div className="fixed inset-0 h-full w-full bg-gray-400/60" onClick={onClose}></div>
+      {!isFullscreen && <div className="fixed inset-0 h-full w-full bg-gray-400/60" onClick={onClose}></div>}
       <div ref={modalRef} className={`${contentClasses} ${contentWrapperClasses} ${className}`} onClick={(e) => e.stopPropagation()}>
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between pb-2 shrink-0">

@@ -5,7 +5,8 @@ import { authRoutes } from "./modules/auth";
 import { dashboardRoutes } from "./modules/dashboard";
 import { demoRoutes } from "./modules/demo";
 import { errorRoutes } from "./modules/errors";
-import { systemRoutes } from "./modules/system";
+import { generalMenusRoutes } from "./modules/Menus";
+import { systemMenuRoutes } from "./modules/System";
 
 // 全局初始化標誌
 let isRoutesInitialized = false;
@@ -22,7 +23,7 @@ export function initializeRoutes(): void {
   }
 
   // 註冊所有模組路由（開發環境額外加入 demo 模組）
-  const modules = [authRoutes, dashboardRoutes, systemRoutes, errorRoutes];
+  const modules = [authRoutes, dashboardRoutes, errorRoutes, systemMenuRoutes, generalMenusRoutes];
   if (process.env.NODE_ENV === "development") {
     modules.push(demoRoutes);
   }

@@ -11,7 +11,7 @@ import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MdCheck, MdClose, MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
 import { TbCircleLetterSFilled } from "react-icons/tb";
-import RestoreForm from "../DataPage/RestoreForm";
+import RestoreForm from "@/components/DataPage/RestoreForm";
 import UserDataForm, { type UserFormValues } from "./UserDataForm";
 import UserDeleteForm from "./UserDeleteForm";
 import UserDetailView from "./UserDetailView";

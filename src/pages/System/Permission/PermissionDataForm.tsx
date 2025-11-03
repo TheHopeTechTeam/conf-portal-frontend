@@ -2,12 +2,12 @@ import { resourceService, type ResourceMenuItem } from "@/api/services/resourceS
 import { verbService, type VerbItem } from "@/api/services/verbService";
 import { resolveIcon } from "@/utils/icon-resolver";
 import { useEffect, useState } from "react";
-import Button from "../ui/button";
-import Checkbox from "../ui/checkbox";
-import ComboBox from "../ui/combobox";
-import Input from "../ui/input";
-import { Select } from "../ui/select";
-import TextArea from "../ui/textarea";
+import Button from "@/components/ui/button";
+import Checkbox from "@/components/ui/checkbox";
+import ComboBox from "@/components/ui/combobox";
+import Input from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import TextArea from "@/components/ui/textarea";
 
 export interface PermissionFormValues {
   id?: string;

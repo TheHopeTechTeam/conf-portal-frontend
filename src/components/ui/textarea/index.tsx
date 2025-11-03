@@ -10,7 +10,7 @@ interface TextareaProps {
   onChange?: (value: string) => void;
   className?: string;
   disabled?: boolean;
-  error?: boolean;
+  error?: string | undefined;
   hint?: string;
   required?: boolean;
 }
@@ -24,7 +24,7 @@ const TextArea: React.FC<TextareaProps> = ({
   onChange,
   className = "",
   disabled = false,
-  error = false,
+  error = undefined,
   hint = "",
   required = false,
 }) => {
@@ -38,7 +38,7 @@ const TextArea: React.FC<TextareaProps> = ({
 
   if (disabled) {
     textareaClasses += ` bg-gray-100 opacity-50 text-gray-500 border-gray-300 cursor-not-allowed opacity40 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700`;
-  } else if (error) {
+  } else if (error && error !== undefined) {
     textareaClasses += ` bg-transparent border-gray-300 focus:border-error-300 focus:ring-3 focus:ring-error-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-error-800`;
   } else {
     textareaClasses += ` bg-transparent text-gray-900 dark:text-gray-300 text-gray-900 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800`;
@@ -46,7 +46,11 @@ const TextArea: React.FC<TextareaProps> = ({
 
   return (
     <>
-      {label && <Label htmlFor={id}>{label} {required && <span className="text-red-500">*</span>}</Label>}
+      {label && (
+        <Label htmlFor={id}>
+          {label} {required && <span className="text-red-500">*</span>}
+        </Label>
+      )}
       <div className="relative">
         <textarea
           id={id}
@@ -58,7 +62,8 @@ const TextArea: React.FC<TextareaProps> = ({
           className={textareaClasses}
         />
       </div>
-      {hint && <p className={`mt-2 text-sm ${error ? "text-error-500" : "text-gray-500 dark:text-gray-400"}`}>{hint}</p>}
+      {error && <p className="mt-1.5 text-xs text-error-500 dark:text-error-400">{error}</p>}
+      {hint && !error && <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{hint}</p>}
     </>
   );
 };

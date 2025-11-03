@@ -1,22 +1,44 @@
+import React from "react";
 import Blank from "@/pages/Blank";
 import Dashboard from "@/pages/Dashboard";
-import ResourceManagement from "@/pages/System/ResourceManagement";
-import UserManagement from "@/pages/System/UserManagement";
-import RoleManagement from "@/pages/System/RoleManagement";
-import PermissionManagement from "@/pages/System/PermissionManagement";
-import React from "react";
+import ConferenceManagement from "@/pages/Menus/Conference/ConferenceManagement";
+import FileManagement from "@/pages/Menus/File/FileManagement";
+import WorkshopManagement from "@/pages/Menus/Workshop/WorkshopManagement";
+import PermissionManagement from "@/pages/System/Permission/PermissionManagement";
+import ResourceManagement from "@/pages/System/Resource/ResourceManagement";
+import RoleManagement from "@/pages/System/Role/RoleManagement";
+import UserManagement from "@/pages/System/User/UserManagement";
 
 // 註冊可路由的元件，鍵值對應後端資源的 key
 const componentRegistry: Record<string, React.ComponentType> = {
   // Dashboard - 主要首頁
   DASHBOARD: Dashboard,
-  // General
-  CONFERENCE: Blank,
+  // Menus
+  // CONFERENCE	/conference
+  CONFERENCE_BASIC: ConferenceManagement,
+  CONFERENCE_EVENT_SCHEDULE: Blank,
+  CONFERENCE_INSTRUCTOR: Blank,
+  // WORKSHOP /workshop
+  WORKSHOP_BASIC: WorkshopManagement,
+  WORKSHOP_REGISTRATION: Blank,
+  // CONTENT /content
+  CONTENT_FAQ: Blank,
+  CONTENT_FILE: FileManagement,
+  CONTENT_INSTRUCTOR: Blank,
+  CONTENT_LOCATION: Blank,
+  CONTENT_TESTIMONY: Blank,
+  // SUPPORT /support
+  SUPPORT_FEEDBACK: Blank,
   // System
   SYSTEM_USER: UserManagement,
   SYSTEM_RESOURCE: ResourceManagement,
   SYSTEM_PERMISSION: PermissionManagement,
   SYSTEM_ROLE: RoleManagement,
+  SYSTEM_FCM_DEVICE: Blank,
+  SYSTEM_LOG: Blank,
+  // COMMS /comms
+  COMMS_NOTIFICATION: Blank,
+  COMMS_NOTIFICATION_HISTORY: Blank,
 };
 
 function normalizeKey(key: string): string {

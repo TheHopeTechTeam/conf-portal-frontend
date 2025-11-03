@@ -8,7 +8,6 @@ export const dashboardRoutes: ModuleRoute = {
     title: "Dashboard",
     description: "Main dashboard page",
     icon: <MdDashboard />,
-    order: 1,
   },
   routes: [
     {

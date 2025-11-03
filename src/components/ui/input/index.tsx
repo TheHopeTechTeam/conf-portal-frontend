@@ -149,4 +149,3 @@ const Input: FC<InputProps> = ({
 };
 
 export default Input;
-export { default as IconInput } from "./IconInput";

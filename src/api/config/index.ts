@@ -2,7 +2,7 @@
 
 // 環境變數
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
-const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || "10000");
+const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || "90000"); // 90 seconds
 
 // API 前綴
 const ADMIN_API_PREFIX = "/api/v1/admin";

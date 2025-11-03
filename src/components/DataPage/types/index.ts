@@ -208,6 +208,7 @@ export interface PageButtonType {
     popover: PopoverType;
   }) => ReactNode;
   popover?: PopoverType;
+  render?: () => ReactNode;
 }
 
 /**

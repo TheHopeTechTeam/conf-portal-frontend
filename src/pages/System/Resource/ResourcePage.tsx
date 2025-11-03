@@ -1,11 +1,11 @@
 import { resourceService } from "@/api";
 import type { ResourceMenuItem } from "@/api/services/resourceService";
+import RestoreForm from "@/components/DataPage/RestoreForm";
+import { Modal } from "@/components/ui/modal";
 import { useResourceManagement } from "@/hooks/useResourceManagement";
 import { useResourcePermissions } from "@/hooks/useResourcePermissions";
 import type { ResourceTreeNode } from "@/types/resource";
 import { useCallback, useState } from "react";
-import RestoreForm from "../DataPage/RestoreForm";
-import { Modal } from "../ui/modal";
 import { ResourceContextMenu } from "./ResourceContextMenu";
 import ResourceDataForm, { type ResourceFormValues } from "./ResourceDataForm";
 import ResourceDeleteForm from "./ResourceDeleteForm";
@@ -13,7 +13,7 @@ import ResourceDetailView from "./ResourceDetailView";
 import { ResourceToolbar } from "./ResourceToolbar";
 import { ResourceTreeView } from "./ResourceTreeView";
 
-export default function ResourcePageNew() {
+export default function ResourcePage() {
   const permissions = useResourcePermissions();
 
   // 使用重構後的 hook
@@ -174,7 +174,7 @@ export default function ResourcePageNew() {
         const resp = await resourceService.getResource(resource.id);
         if (resp.success && resp.data) {
           // 設定當前選取資源，讓保存時走更新 API
-          selectResource(resp.data as any);
+          selectResource(resp.data as ResourceMenuItem);
           openModal("edit", resp.data);
         } else {
           // 若取得失敗，退回使用原有資料
@@ -350,7 +350,7 @@ export default function ResourcePageNew() {
       </div>
 
       {/* 資源樹狀結構 */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative max-w-full overflow-x-auto overflow-y-auto custom-scrollbar rounded-xl">
         <ResourceTreeView
           treeData={treeData}
           selectedResource={selectedResource}

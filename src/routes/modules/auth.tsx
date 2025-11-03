@@ -11,7 +11,7 @@ export const authRoutes: ModuleRoute = {
     title: "Authentication",
     description: "Authentication related pages",
     icon: <MdLock />,
-    order: 5,
+    order: 0,
   },
   routes: [
     {
