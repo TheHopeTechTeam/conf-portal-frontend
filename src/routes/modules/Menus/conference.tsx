@@ -23,14 +23,4 @@ export const conferenceRoutes: AppRoute[] = [
       breadcrumb: ["Menus", "Conference", "Events"],
     },
   },
-  {
-    path: "/conference/instructors",
-    element: <Blank />,
-    meta: {
-      title: "Conference Instructors",
-      description: "Conference instructors page",
-      requiresAuth: true,
-      breadcrumb: ["Menus", "Conference", "Instructors"],
-    },
-  },
 ];

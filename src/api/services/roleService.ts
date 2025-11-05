@@ -32,7 +32,7 @@ export interface RolePagesResponse {
   items?: RolePageItem[];
 }
 
-export interface RoleCreateDto {
+export interface RoleCreate {
   code: string;
   name?: string;
   isActive?: boolean;
@@ -41,14 +41,14 @@ export interface RoleCreateDto {
   permissions?: string[]; // permission IDs
 }
 
-export type RoleUpdateDto = RoleCreateDto;
+export type RoleUpdate = RoleCreate;
 
-export interface RoleDeleteDto {
+export interface RoleDelete {
   reason?: string;
   permanent?: boolean;
 }
 
-export interface RolePermissionAssignDto {
+export interface RolePermissionAssign {
   permissionIds: string[];
 }
 
@@ -68,15 +68,15 @@ class RoleService {
     return httpClient.get<RolePageItem>(API_ENDPOINTS.ROLES.DETAIL(id));
   }
 
-  async create(payload: RoleCreateDto) {
+  async create(payload: RoleCreate) {
     return httpClient.post<{ id: string }>(API_ENDPOINTS.ROLES.CREATE, payload);
   }
 
-  async update(id: string, payload: RoleUpdateDto) {
+  async update(id: string, payload: RoleUpdate) {
     return httpClient.put<void>(API_ENDPOINTS.ROLES.UPDATE(id), payload);
   }
 
-  async remove(id: string, payload: RoleDeleteDto) {
+  async remove(id: string, payload: RoleDelete) {
     return httpClient.request<void>({ method: "DELETE", url: API_ENDPOINTS.ROLES.DELETE(id), data: payload });
   }
 
@@ -84,7 +84,7 @@ class RoleService {
     return httpClient.put<void>(API_ENDPOINTS.ROLES.RESTORE(id));
   }
 
-  async assignPermissions(id: string, payload: RolePermissionAssignDto) {
+  async assignPermissions(id: string, payload: RolePermissionAssign) {
     return httpClient.post<void>(API_ENDPOINTS.ROLES.ASSIGN_PERMISSIONS(id), payload);
   }
 }

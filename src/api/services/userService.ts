@@ -1,6 +1,6 @@
 import { httpClient } from "@/api";
 
-export interface UserDetailDto {
+export interface UserDetail {
   id: string;
   phone_number: string;
   email: string;
@@ -17,7 +17,7 @@ export interface UserDetailDto {
   remark?: string;
 }
 
-export interface UserCreateDto {
+export interface UserCreate {
   phone_number: string;
   email: string;
   verified?: boolean;
@@ -30,14 +30,14 @@ export interface UserCreateDto {
   remark?: string;
 }
 
-export interface UserUpdateDto extends UserCreateDto {}
+export type UserUpdate = UserCreate;
 
-export interface UserDeleteDto {
+export interface UserDelete {
   reason?: string;
   permanent?: boolean;
 }
 
-export interface UserBulkDeleteDto {
+export interface UserBulkDelete {
   ids: string[];
 }
 
@@ -46,7 +46,7 @@ export interface UserPagesResponse {
   pageSize?: number; // API 可能返回 pageSize 或 page_size
   page_size?: number; // API 可能返回 pageSize 或 page_size
   total: number;
-  items?: UserDetailDto[];
+  items?: UserDetail[];
 }
 
 export const userService = {
@@ -66,18 +66,18 @@ export const userService = {
   },
 
   async getById(id: string) {
-    return httpClient.get<UserDetailDto>(`/api/v1/admin/user/${id}`);
+    return httpClient.get<UserDetail>(`/api/v1/admin/user/${id}`);
   },
 
-  async create(payload: UserCreateDto) {
+  async create(payload: UserCreate) {
     return httpClient.post<{ id: string }>("/api/v1/admin/user/", payload);
   },
 
-  async update(id: string, payload: UserUpdateDto) {
+  async update(id: string, payload: UserUpdate) {
     return httpClient.put<void>(`/api/v1/admin/user/${id}`, payload);
   },
 
-  async remove(id: string, payload: UserDeleteDto) {
+  async remove(id: string, payload: UserDelete) {
     return httpClient.request<void>({ method: "DELETE", url: `/api/v1/admin/user/${id}`, data: payload });
   },
 

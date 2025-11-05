@@ -1,4 +1,4 @@
-import { roleService, type RoleCreateDto, type RolePageItem, type RolePagesResponse, type RoleUpdateDto } from "@/api/services/roleService";
+import { roleService, type RoleCreate, type RolePageItem, type RolePagesResponse, type RoleUpdate } from "@/api/services/roleService";
 import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
@@ -348,9 +348,9 @@ export default function RoleDataPage() {
           try {
             setSubmitting(true);
             if (formMode === "create") {
-              await roleService.create(values as RoleCreateDto);
+              await roleService.create(values as RoleCreate);
             } else if (formMode === "edit" && editing?.id) {
-              await roleService.update(editing.id, values as RoleUpdateDto);
+              await roleService.update(editing.id, values as RoleUpdate);
             }
             closeModal();
             await fetchPages();
