@@ -1,6 +1,7 @@
 import Blank from "@/pages/Blank";
-import { AppRoute } from "@/types/route";
 import FileManagement from "@/pages/Menus/File/FileManagement";
+import TestimonyManagement from "@/pages/Menus/Testimony/TestimonyManagement";
+import { AppRoute } from "@/types/route";
 
 export const contentRoutes: AppRoute[] = [
   {
@@ -45,7 +46,7 @@ export const contentRoutes: AppRoute[] = [
   },
   {
     path: "/content/testimonies",
-    element: <Blank />,
+    element: <TestimonyManagement />,
     meta: {
       title: "Testimony Management",
       description: "Content testimony management page",

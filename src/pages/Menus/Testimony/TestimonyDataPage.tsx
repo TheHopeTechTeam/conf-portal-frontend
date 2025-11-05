@@ -1,4 +1,4 @@
-import { feedbackService, FeedbackStatus, type FeedbackDetail } from "@/api/services/feedbackService";
+import { testimonyService, type TestimonyDetail } from "@/api/services/testimonyService";
 import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
@@ -8,80 +8,34 @@ import { PopoverPosition } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MdEdit, MdVisibility } from "react-icons/md";
-import FeedbackDetailView from "./FeedbackDetailView";
-import FeedbackSearchPopover, { type FeedbackSearchFilters } from "./FeedbackSearchPopover";
-import FeedbackStatusUpdateForm from "./FeedbackStatusUpdateForm";
+import { MdCheck, MdClose, MdVisibility } from "react-icons/md";
+import TestimonyDetailView from "./TestimonyDetailView";
+import TestimonySearchPopover, { type TestimonySearchFilters } from "./TestimonySearchPopover";
 
-interface FeedbackPagesResponse {
+interface TestimonyPagesResponse {
   page: number; // 0-based from backend
   pageSize?: number;
   total: number;
-  items?: FeedbackDetail[];
+  items?: TestimonyDetail[];
 }
 
-const getStatusText = (status: FeedbackStatus) => {
-  switch (status) {
-    case FeedbackStatus.PENDING:
-      return "待處理";
-    case FeedbackStatus.REVIEW:
-      return "審查中";
-    case FeedbackStatus.DISCUSSION:
-      return "討論中";
-    case FeedbackStatus.ACCEPTED:
-      return "已接受";
-    case FeedbackStatus.DONE:
-      return "已完成";
-    case FeedbackStatus.REJECTED:
-      return "已拒絕";
-    case FeedbackStatus.ARCHIVED:
-      return "已歸檔";
-    default:
-      return "未知";
-  }
-};
-
-const getStatusColor = (status: FeedbackStatus) => {
-  switch (status) {
-    case FeedbackStatus.PENDING:
-      return "text-yellow-600 dark:text-yellow-400";
-    case FeedbackStatus.REVIEW:
-      return "text-blue-600 dark:text-blue-400";
-    case FeedbackStatus.DISCUSSION:
-      return "text-purple-600 dark:text-purple-400";
-    case FeedbackStatus.ACCEPTED:
-      return "text-green-600 dark:text-green-400";
-    case FeedbackStatus.DONE:
-      return "text-green-700 dark:text-green-300";
-    case FeedbackStatus.REJECTED:
-      return "text-red-600 dark:text-red-400";
-    case FeedbackStatus.ARCHIVED:
-      return "text-gray-600 dark:text-gray-400";
-    default:
-      return "text-gray-500 dark:text-gray-400";
-  }
-};
-
-export default function FeedbackDataPage() {
+export default function TestimonyDataPage() {
   const [currentPage, setCurrentPage] = useState(1); // 1-based for UI
   const [pageSize, setPageSize] = useState(10);
-  const [searchFilters, setSearchFilters] = useState<FeedbackSearchFilters>({});
-  const [appliedFilters, setAppliedFilters] = useState<FeedbackSearchFilters>({});
+  const [searchFilters, setSearchFilters] = useState<TestimonySearchFilters>({});
+  const [appliedFilters, setAppliedFilters] = useState<TestimonySearchFilters>({});
   const [showDeleted, setShowDeleted] = useState(false);
   const [orderBy, setOrderBy] = useState<string>();
   const [descending, setDescending] = useState<boolean>();
 
-  const [items, setItems] = useState<FeedbackDetail[]>([]);
+  const [items, setItems] = useState<TestimonyDetail[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
 
   // Modal state
   const { isOpen: isViewOpen, openModal: openViewModal, closeModal: closeViewModal } = useModal(false);
-  const { isOpen: isStatusUpdateOpen, openModal: openStatusUpdateModal, closeModal: closeStatusUpdateModal } = useModal(false);
-  const [viewing, setViewing] = useState<FeedbackDetail | null>(null);
-  const [statusUpdating, setStatusUpdating] = useState<FeedbackDetail | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [viewing, setViewing] = useState<TestimonyDetail | null>(null);
 
   const clearSelectionRef = useRef<(() => void) | null>(null);
 
@@ -119,12 +73,12 @@ export default function FeedbackDataPage() {
         orderBy: orderBy && orderBy.trim() !== "" ? orderBy : undefined,
         descending: orderBy && orderBy.trim() !== "" ? descending : undefined,
         keyword: appliedFilters.keyword || undefined,
-        status: appliedFilters.status,
+        share: appliedFilters.share,
         deleted: showDeleted || undefined,
       } as Record<string, unknown>;
 
-      const res = await feedbackService.getPages(params);
-      const data = res.data as FeedbackPagesResponse;
+      const res = await testimonyService.getPages(params);
+      const data = res.data as TestimonyPagesResponse;
       setItems(data.items || []);
       setTotal(data.total);
       // Backend page is 0-based; map back to 1-based UI if changed externally
@@ -133,7 +87,7 @@ export default function FeedbackDataPage() {
       const responsePageSize = data.pageSize || 10;
       setPageSize(responsePageSize);
     } catch (e) {
-      console.error("Error fetching feedback pages:", e);
+      console.error("Error fetching testimony pages:", e);
       // Simplified error surfacing for demo
       alert("載入失敗，請稍後重試");
     } finally {
@@ -142,7 +96,7 @@ export default function FeedbackDataPage() {
   }, []);
 
   // Columns definition
-  const columns: DataTableColumn<FeedbackDetail>[] = useMemo(
+  const columns: DataTableColumn<TestimonyDetail>[] = useMemo(
     () => [
       {
         key: "name",
@@ -152,24 +106,34 @@ export default function FeedbackDataPage() {
         tooltip: (row) => row.name,
       },
       {
-        key: "email",
-        label: "電子郵件",
+        key: "phoneNumber",
+        label: "電話號碼",
         sortable: true,
-        width: "250px",
-        tooltip: (row) => row.email || "",
+        width: "150px",
+        tooltip: (row) => row.phoneNumber || "",
         render: (value: unknown) => {
-          const email = value as string | undefined;
-          return email || <span className="text-gray-400">未提供</span>;
+          const phoneNumber = value as string | undefined;
+          return phoneNumber || <span className="text-gray-400">未提供</span>;
         },
       },
       {
-        key: "status",
-        label: "狀態",
+        key: "share",
+        label: "允許分享",
         sortable: true,
         width: "100px",
         render: (value: unknown) => {
-          const status = value as FeedbackStatus;
-          return <span className={getStatusColor(status)}>{getStatusText(status)}</span>;
+          const share = value as boolean;
+          return (
+            <span
+              className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
+                share
+                  ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400"
+                  : "bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400"
+              }`}
+            >
+              {share ? <MdCheck size={16} /> : <MdClose size={16} />}
+            </span>
+          );
         },
       },
       {
@@ -249,7 +213,7 @@ export default function FeedbackDataPage() {
     setCurrentPage(1);
   };
 
-  const handleRowSelect = (selectedRows: FeedbackDetail[], selectedKeys: string[]) => {
+  const handleRowSelect = (selectedRows: TestimonyDetail[], selectedKeys: string[]) => {
     setSelectedKeys(selectedKeys);
   };
 
@@ -267,7 +231,7 @@ export default function FeedbackDataPage() {
       trigger: ReactNode;
       popover: PopoverType;
     }) => (
-      <FeedbackSearchPopover
+      <TestimonySearchPopover
         filters={searchFilters}
         onFiltersChange={setSearchFilters}
         onSearch={(filters) => {
@@ -290,7 +254,7 @@ export default function FeedbackDataPage() {
 
     const buttons = [
       CommonPageButton.SEARCH(searchPopoverCallback, {
-        popover: { title: "搜尋意見回饋", position: PopoverPosition.BottomLeft, width: "500px" },
+        popover: { title: "搜尋見證", position: PopoverPosition.BottomLeft, width: "500px" },
       }),
       CommonPageButton.REFRESH(() => {
         fetchPages();
@@ -307,48 +271,21 @@ export default function FeedbackDataPage() {
     return buttons;
   }, [fetchPages, searchFilters, showDeleted]);
 
-  // Row actions
-  const rowActions: DataTableRowAction<FeedbackDetail>[] = useMemo(
+  // Row actions - 只有查看功能，不支持更新或删除
+  const rowActions: DataTableRowAction<TestimonyDetail>[] = useMemo(
     () => [
       {
         key: "view",
         label: "檢視",
         icon: <MdVisibility />,
-        onClick: (row: FeedbackDetail) => {
+        onClick: (row: TestimonyDetail) => {
           setViewing(row);
           openViewModal();
         },
       },
-      {
-        key: "update",
-        label: "更新",
-        icon: <MdEdit />,
-        onClick: (row: FeedbackDetail) => {
-          setStatusUpdating(row);
-          openStatusUpdateModal();
-        },
-        visible: !showDeleted, // 僅在正常模式下顯示
-      },
     ],
-    [openViewModal, openStatusUpdateModal, showDeleted]
+    [openViewModal]
   );
-
-  // Status update handler
-  const handleStatusUpdate = async (data: { status: FeedbackStatus; description?: string; remark?: string }) => {
-    if (!statusUpdating?.id) return;
-    try {
-      setSubmitting(true);
-      await feedbackService.update(statusUpdating.id, data);
-      closeStatusUpdateModal();
-      // Refresh list by calling fetchPages directly
-      await fetchPages();
-    } catch (e) {
-      console.error(e);
-      alert("更新失敗，請稍後再試");
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const pagedData = useMemo(() => {
     const data = {
@@ -362,7 +299,7 @@ export default function FeedbackDataPage() {
 
   return (
     <>
-      <DataPage<FeedbackDetail>
+      <DataPage<TestimonyDetail>
         data={pagedData}
         columns={columns}
         loading={loading}
@@ -379,21 +316,8 @@ export default function FeedbackDataPage() {
         }}
       />
 
-      <Modal title="意見回饋詳細資料" isOpen={isViewOpen} onClose={closeViewModal} className="max-w-[900px] w-full mx-4 p-6">
-        {viewing && <FeedbackDetailView feedbackId={viewing.id} />}
-      </Modal>
-
-      <Modal title="更新意見回饋" isOpen={isStatusUpdateOpen} onClose={closeStatusUpdateModal} className="max-w-[600px] w-full mx-4 p-6">
-        {statusUpdating && (
-          <FeedbackStatusUpdateForm
-            currentStatus={statusUpdating.status}
-            currentDescription={statusUpdating.description}
-            currentRemark={statusUpdating.remark}
-            onSubmit={handleStatusUpdate}
-            onCancel={closeStatusUpdateModal}
-            submitting={submitting}
-          />
-        )}
+      <Modal title="見證詳細資料" isOpen={isViewOpen} onClose={closeViewModal} className="max-w-[900px] w-full mx-4 p-6">
+        {viewing && <TestimonyDetailView testimonyId={viewing.id} />}
       </Modal>
     </>
   );

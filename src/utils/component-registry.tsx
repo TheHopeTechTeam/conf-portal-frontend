@@ -3,6 +3,7 @@ import Dashboard from "@/pages/Dashboard";
 import ConferenceManagement from "@/pages/Menus/Conference/ConferenceManagement";
 import FeedbackManagement from "@/pages/Menus/Feedback/FeedbackManagement";
 import FileManagement from "@/pages/Menus/File/FileManagement";
+import TestimonyManagement from "@/pages/Menus/Testimony/TestimonyManagement";
 import WorkshopManagement from "@/pages/Menus/Workshop/WorkshopManagement";
 import PermissionManagement from "@/pages/System/Permission/PermissionManagement";
 import ResourceManagement from "@/pages/System/Resource/ResourceManagement";
@@ -26,7 +27,7 @@ const componentRegistry: Record<string, React.ComponentType> = {
   CONTENT_FILE: FileManagement,
   CONTENT_INSTRUCTOR: Blank,
   CONTENT_LOCATION: Blank,
-  CONTENT_TESTIMONY: Blank,
+  CONTENT_TESTIMONY: TestimonyManagement,
   // SUPPORT /support
   SUPPORT_FEEDBACK: FeedbackManagement,
   // System
@@ -58,5 +59,4 @@ export function resolveRouteElementByKey(key: string): React.ReactElement {
   return React.createElement(Blank);
 }
 
-export type { };
-
+export type {};
