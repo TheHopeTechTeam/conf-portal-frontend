@@ -128,7 +128,7 @@ const FaqDataForm: React.FC<FaqDataFormProps> = ({ mode, defaultValues, onSubmit
           placeholder="請選擇分類"
           options={categoryOptions}
           value={values.categoryId}
-          onChange={(value) => setValues((v) => ({ ...v, categoryId: value || "" }))}
+          onChange={(value) => setValues((v) => ({ ...v, categoryId: typeof value === "string" ? value : Array.isArray(value) ? String(value[0] || "") : String(value || "") }))}
           error={errors.categoryId || undefined}
           required
           disabled={loadingCategories}

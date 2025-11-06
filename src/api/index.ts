@@ -21,8 +21,6 @@ export { default as roleService } from "./services/roleService";
 // Hooks
 export * from "./hooks/useApi";
 export * from "./hooks/usePermissions";
-export * from "./hooks/useResources";
-export * from "./hooks/useRoles";
 
 // 重新匯出常用型別
 export type {

@@ -3,6 +3,7 @@ import type { AuthError, LoginCredentials, LoginResponse, User } from "../../typ
 import { API_ENDPOINTS } from "../config";
 import type { ApiResponse } from "../types";
 import { httpClient } from "./httpClient";
+import { IS_SKIP_AUTH } from "@/config/env";
 
 // 後端回應型別（管理員認證 API）
 interface AdminInfoResponse {
@@ -222,7 +223,7 @@ class AuthService {
   // 檢查認證狀態
   isAuthenticated(): boolean {
     // 開發模式：如果設定了跳過認證的環境變數，直接返回 true
-    if (process.env.NODE_ENV === "development" && import.meta.env.VITE_SKIP_AUTH === "true") {
+    if (IS_SKIP_AUTH) {
       return true;
     }
 
@@ -234,7 +235,7 @@ class AuthService {
   // 取得 token（包含過期判斷與來源優先順序：session -> local）
   getToken(): string | null {
     // 開發模式：如果設定了跳過認證的環境變數，返回開發者 token
-    if (process.env.NODE_ENV === "development" && import.meta.env.VITE_SKIP_AUTH === "true") {
+    if (IS_SKIP_AUTH) {
       return "dev_token_skip_auth_mode";
     }
 

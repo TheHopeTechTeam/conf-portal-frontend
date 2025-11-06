@@ -1,10 +1,9 @@
 import { resourceService } from "@/api";
-import type { ResourceMenuItem } from "@/api/services/resourceService";
 import RestoreForm from "@/components/DataPage/RestoreForm";
 import { Modal } from "@/components/ui/modal";
 import { useResourceManagement } from "@/hooks/useResourceManagement";
 import { useResourcePermissions } from "@/hooks/useResourcePermissions";
-import type { ResourceTreeNode } from "@/types/resource";
+import type { ResourceFormData, ResourceMenuItem, ResourceTreeNode } from "@/types/resource";
 import { useCallback, useState } from "react";
 import { ResourceContextMenu } from "./ResourceContextMenu";
 import ResourceDataForm, { type ResourceFormValues } from "./ResourceDataForm";
@@ -174,8 +173,10 @@ export default function ResourcePage() {
         const resp = await resourceService.getResource(resource.id);
         if (resp.success && resp.data) {
           // 設定當前選取資源，讓保存時走更新 API
-          selectResource(resp.data as ResourceMenuItem);
-          openModal("edit", resp.data);
+          const resourceData = resp.data as ResourceMenuItem;
+          const resourceWithVisible = { ...resourceData, is_visible: (resourceData as any).is_visible ?? true } as ResourceMenuItem;
+          selectResource(resourceWithVisible);
+          openModal("edit", resourceWithVisible);
         } else {
           // 若取得失敗，退回使用原有資料
           selectResource(resource);
@@ -292,7 +293,7 @@ export default function ResourcePage() {
     async (values: ResourceFormValues) => {
       setSubmitting(true);
       try {
-        await saveResource(values);
+        await saveResource(values as ResourceFormData);
         closeModal();
       } catch (e) {
         console.error("儲存資源失敗:", e);
@@ -354,7 +355,7 @@ export default function ResourcePage() {
         <ResourceTreeView
           treeData={treeData}
           selectedResource={selectedResource}
-          onSelect={selectResource}
+          onSelect={(resource) => selectResource(resource as ResourceMenuItem)}
           onContextMenu={handleContextMenu}
           expandedNodes={expandedNodes}
           onToggleExpand={toggleExpand}
@@ -412,12 +413,12 @@ export default function ResourcePage() {
                   name: editing.name,
                   key: editing.key,
                   code: editing.code,
-                  icon: editing.icon,
-                  path: editing.path,
+                  icon: editing.icon || "",
+                  path: editing.path || "",
                   type: editing.type,
-                  is_visible: editing.is_visible,
-                  description: editing.description,
-                  remark: editing.remark,
+                  is_visible: editing.is_visible ?? true,
+                  description: editing.description || "",
+                  remark: editing.remark || "",
                   // 編輯子資源需要帶入 pid；若詳情沒有 pid，回退使用 parent.id
                   pid: (editing as any).pid ?? (editing as any).parent?.id ?? undefined,
                 }

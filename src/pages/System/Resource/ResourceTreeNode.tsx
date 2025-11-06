@@ -1,4 +1,4 @@
-import type { ResourceMenuItem } from "@/api/services/resourceService";
+import type { ResourceMenuItem } from "@/types/resource";
 import type { ResourceTreeNode as ResourceTreeNodeType } from "@/types/resource";
 import { resolveIcon } from "@/utils/icon-resolver";
 import { MdChevronRight } from "react-icons/md";
@@ -61,7 +61,7 @@ export const ResourceTreeNode: React.FC<ResourceTreeNodeProps> = ({
         </div>
 
         {/* 圖示 */}
-        <div className={`flex-shrink-0 flex w-20 ${level === 0 ? "pl-6" : "pl-10"}`}>{resolveIcon(node.icon).icon}</div>
+        <div className={`flex-shrink-0 flex w-20 ${level === 0 ? "pl-6" : "pl-10"}`}>{resolveIcon(node.icon || "").icon}</div>
 
         {/* 資源名稱 */}
         <div className="flex-shrink-0 w-80 min-w-0">

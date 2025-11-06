@@ -1,4 +1,5 @@
 import { httpClient } from "@/api";
+import type { AxiosProgressEvent } from "axios";
 import type {
   BatchFileUploadResponse,
   BulkDeleteRequest,
@@ -42,9 +43,9 @@ export const fileService = {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-      onUploadProgress: (evt: ProgressEvent) => {
+      onUploadProgress: (evt: AxiosProgressEvent) => {
         if (!onProgress) return;
-        const total = (evt as any).total ?? file.size ?? 0;
+        const total = evt.total ?? file.size ?? 0;
         if (total > 0) {
           const percent = Math.round((evt.loaded * 100) / total);
           onProgress(Math.max(0, Math.min(100, percent)));

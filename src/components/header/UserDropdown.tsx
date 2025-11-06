@@ -1,9 +1,8 @@
+import { Dropdown } from "@/components/ui/dropdown/Dropdown";
+import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
-import { MdAccountCircle, MdKeyboardArrowDown, MdLogout, MdPerson, MdSettings } from "react-icons/md";
+import { MdAccountCircle, MdKeyboardArrowDown, MdLogout } from "react-icons/md";
 import { useNavigate } from "react-router";
-import { useAuth } from "../../context/AuthContext";
-import { Dropdown } from "../ui/dropdown/Dropdown";
-import { DropdownItem } from "../ui/dropdown/DropdownItem";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);

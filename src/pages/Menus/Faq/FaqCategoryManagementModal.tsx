@@ -1,19 +1,19 @@
 import { faqCategoryService, type FaqCategoryBase, type FaqCategoryCreate, type FaqCategoryDetail } from "@/api/services/faqService";
 import type { DataTableColumn, DataTableRowAction } from "@/components/DataPage";
+import { CommonPageButton } from "@/components/DataPage";
 import DataTable from "@/components/DataPage/DataTable";
 import DataTableToolbar from "@/components/DataPage/DataTableToolbar";
+import DeleteForm from "@/components/DataPage/DeleteForm";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
-import { CommonPageButton } from "@/components/DataPage";
-import { Modal } from "@/components/ui/modal";
+import RestoreForm from "@/components/DataPage/RestoreForm";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
+import { Modal } from "@/components/ui/modal";
 import TextArea from "@/components/ui/textarea";
-import { DateUtil } from "@/utils/dateUtil";
 import Tooltip from "@/components/ui/tooltip";
+import { DateUtil } from "@/utils/dateUtil";
 import { useEffect, useMemo, useState } from "react";
-import { MdAdd, MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
-import DeleteForm from "@/components/DataPage/DeleteForm";
-import RestoreForm from "@/components/DataPage/RestoreForm";
+import { MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
 
 interface FaqCategoryManagementModalProps {
   isOpen: boolean;
@@ -182,7 +182,7 @@ const FaqCategoryManagementModal: React.FC<FaqCategoryManagementModalProps> = ({
     }
   };
 
-  const handleRowSelect = (selectedRows: FaqCategoryBase[], selectedKeys: string[]) => {
+  const handleRowSelect = (_selectedRows: FaqCategoryBase[], selectedKeys: string[]) => {
     setSelectedKeys(selectedKeys);
   };
 

@@ -110,7 +110,7 @@ export class DateUtil {
    * @returns 是否為有效日期
    */
   static isValid(date: unknown): boolean {
-    return moment(date).isValid();
+    return moment(date as string | number | Date).isValid();
   }
 
   /**

@@ -36,16 +36,17 @@ export const useResourceManagement = () => {
         pid: r.pid,
         name: r.name,
         key: r.key,
+        code: r.code,
         icon: r.icon,
         path: r.path,
         type: r.type,
         description: r.description,
         sequence: r.sequence ?? 0,
-        is_deleted: r.is_deleted,
+        is_deleted: r.is_deleted ?? false,
         children: [],
         level: 1,
         is_group: false,
-        group_type: null,
+        group_type: undefined,
       });
     });
     idToNode.forEach((node) => {
@@ -71,7 +72,7 @@ export const useResourceManagement = () => {
       const res = await resourceService.getResources(showDeleted);
 
       if (res.success) {
-        setResources(res.data.items);
+        setResources(res.data.items as ResourceMenuItem[]);
       } else {
         setError(res.message || "載入資源失敗");
       }
@@ -187,16 +188,16 @@ export const useResourceManagement = () => {
           siblings = resources.filter((r) => r.pid === resource.pid);
         }
 
-        const sortedSiblings = siblings.sort((a, b) => a.sequence - b.sequence);
+        const sortedSiblings = siblings.sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0));
         const currentIndex = sortedSiblings.findIndex((r) => r.id === id);
 
         if (currentIndex > 0) {
           const prevResource = sortedSiblings[currentIndex - 1];
           const changeData: ResourceChangeSequenceData = {
             id: id,
-            sequence: resource.sequence,
+            sequence: resource.sequence ?? 0,
             another_id: prevResource.id,
-            another_sequence: prevResource.sequence,
+            another_sequence: prevResource.sequence ?? 0,
           };
           await resourceService.changeSequence(changeData);
           await fetchResources();
@@ -225,16 +226,16 @@ export const useResourceManagement = () => {
           siblings = resources.filter((r) => r.pid === resource.pid);
         }
 
-        const sortedSiblings = siblings.sort((a, b) => a.sequence - b.sequence);
+        const sortedSiblings = siblings.sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0));
         const currentIndex = sortedSiblings.findIndex((r) => r.id === id);
 
         if (currentIndex < sortedSiblings.length - 1) {
           const nextResource = sortedSiblings[currentIndex + 1];
           const changeData: ResourceChangeSequenceData = {
             id: id,
-            sequence: resource.sequence,
+            sequence: resource.sequence ?? 0,
             another_id: nextResource.id,
-            another_sequence: nextResource.sequence,
+            another_sequence: nextResource.sequence ?? 0,
           };
           await resourceService.changeSequence(changeData);
           await fetchResources();
@@ -256,14 +257,14 @@ export const useResourceManagement = () => {
       // 如果是根節點（pid 為 null），需要分開判斷 Menu 和 System
       if (!resource.pid) {
         const sameTypeRoots = resources.filter((r) => !r.pid && r.type === resource.type);
-        const sortedRoots = sameTypeRoots.sort((a, b) => a.sequence - b.sequence);
+        const sortedRoots = sameTypeRoots.sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0));
         const currentIndex = sortedRoots.findIndex((r) => r.id === id);
         return currentIndex > 0;
       }
 
       // 非根節點按原邏輯處理
       const siblings = resources.filter((r) => r.pid === resource.pid);
-      const sortedSiblings = siblings.sort((a, b) => a.sequence - b.sequence);
+      const sortedSiblings = siblings.sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0));
       const currentIndex = sortedSiblings.findIndex((r) => r.id === id);
       return currentIndex > 0;
     },
@@ -278,14 +279,14 @@ export const useResourceManagement = () => {
       // 如果是根節點（pid 為 null），需要分開判斷 Menu 和 System
       if (!resource.pid) {
         const sameTypeRoots = resources.filter((r) => !r.pid && r.type === resource.type);
-        const sortedRoots = sameTypeRoots.sort((a, b) => a.sequence - b.sequence);
+        const sortedRoots = sameTypeRoots.sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0));
         const currentIndex = sortedRoots.findIndex((r) => r.id === id);
         return currentIndex < sortedRoots.length - 1;
       }
 
       // 非根節點按原邏輯處理
       const siblings = resources.filter((r) => r.pid === resource.pid);
-      const sortedSiblings = siblings.sort((a, b) => a.sequence - b.sequence);
+      const sortedSiblings = siblings.sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0));
       const currentIndex = sortedSiblings.findIndex((r) => r.id === id);
       return currentIndex < sortedSiblings.length - 1;
     },

@@ -11,7 +11,7 @@ import type {
 } from "@/api/types";
 import { httpClient } from "./httpClient";
 
-interface PermissionQueryParams {
+interface PermissionQueryParams extends Record<string, unknown> {
   page?: number;
   page_size?: number;
   order_by?: string;

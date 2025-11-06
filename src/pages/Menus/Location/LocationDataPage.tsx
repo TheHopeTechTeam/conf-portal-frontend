@@ -227,7 +227,7 @@ export default function LocationDataPage() {
     setCurrentPage(1);
   };
 
-  const handleRowSelect = (selectedRows: LocationItem[], selectedKeys: string[]) => {
+  const handleRowSelect = (_selectedRows: LocationItem[], selectedKeys: string[]) => {
     setSelectedKeys(selectedKeys);
   };
 

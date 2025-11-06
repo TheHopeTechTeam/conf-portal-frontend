@@ -173,7 +173,7 @@ export default function UserDataPage() {
         label: "已驗證",
         sortable: true,
         width: "70px",
-        render: (value: unknown, row: UserDetail) => {
+        render: (_value: unknown, row: UserDetail) => {
           return (
             <span
               className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
@@ -192,7 +192,7 @@ export default function UserDataPage() {
         label: "啟用",
         sortable: true,
         width: "70px",
-        render: (value: unknown, row: UserDetail) => {
+        render: (_value: unknown, row: UserDetail) => {
           return (
             <span
               className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
@@ -211,7 +211,7 @@ export default function UserDataPage() {
         label: "管理員",
         sortable: true,
         width: "100px",
-        render: (value: unknown, row: UserDetail) => {
+        render: (_value: unknown, row: UserDetail) => {
           return (
             <div className="flex items-center gap-1">
               <span
@@ -237,7 +237,7 @@ export default function UserDataPage() {
         label: "服事",
         sortable: true,
         width: "70px",
-        render: (value: unknown, row: UserDetail) => {
+        render: (_value: unknown, row: UserDetail) => {
           return (
             <span
               className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
@@ -315,7 +315,7 @@ export default function UserDataPage() {
     setCurrentPage(1);
   };
 
-  const handleRowSelect = (selectedRows: UserDetail[], selectedKeys: string[]) => {
+  const handleRowSelect = (_selectedRows: UserDetail[], selectedKeys: string[]) => {
     setSelectedKeys(selectedKeys);
   };
 

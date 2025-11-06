@@ -353,7 +353,7 @@ const FilePage = () => {
         footer={
           <>
             <Button variant="outline" size="sm" onClick={handleCloseUploadModal} disabled={uploading}>
-              取消
+              關閉
             </Button>
             <Button variant="primary" size="sm" onClick={() => fileUploadModalFormRef.current?.submit()} disabled={uploading}>
               {uploading ? "上傳中..." : "上傳"}

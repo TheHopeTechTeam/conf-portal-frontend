@@ -3,17 +3,18 @@ import { AdminResourceType } from "../api/services/resourceService";
 // 資源菜單項目（與 API 回應對應）
 export interface ResourceMenuItem {
   id: string;
-  pid: string | null | undefined;
+  pid?: string | null;
   name: string;
   key: string;
   code: string;
-  icon?: string;
-  path?: string;
+  icon?: string | null;
+  path?: string | null;
   type: AdminResourceType;
-  description?: string;
-  remark?: string;
-  sequence: number;
-  is_deleted: boolean;
+  description?: string | null;
+  remark?: string | null;
+  sequence?: number;
+  is_deleted?: boolean;
+  is_visible?: boolean;
   is_group?: boolean; // 是否為分組項目
   group_type?: "MENU" | "SYSTEM"; // 分組類型
 }
@@ -66,11 +67,11 @@ export interface ResourceTreeNode {
   name: string;
   key: string;
   code: string;
-  icon?: string;
-  path?: string;
+  icon?: string | null;
+  path?: string | null;
   type: AdminResourceType;
-  description?: string;
-  remark?: string;
+  description?: string | null;
+  remark?: string | null;
   sequence: number;
   is_deleted: boolean;
   children: ResourceTreeNode[];
@@ -87,9 +88,10 @@ export interface ResourceFormData {
   icon: string;
   path: string;
   type: AdminResourceType;
-  description: string;
-  remark: string;
+  description?: string;
+  remark?: string;
   pid?: string;
+  is_visible?: boolean;
 }
 
 // 表單驗證錯誤

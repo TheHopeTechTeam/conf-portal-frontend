@@ -1,9 +1,8 @@
+import Button from "@/components/ui/button";
+import Input from "@/components/ui/input";
+import { Modal } from "@/components/ui/modal";
+import { useModal } from "@/hooks/useModal";
 import { MdAccountCircle } from "react-icons/md";
-import { useModal } from "../../hooks/useModal";
-import Input from "../form/input/InputField";
-import Label from "../form/Label";
-import Button from "../ui/button";
-import { Modal } from "../ui/modal";
 
 export default function UserMetaCard() {
   const { isOpen, openModal, closeModal } = useModal();
@@ -115,23 +114,19 @@ export default function UserMetaCard() {
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                   <div>
-                    <Label>Facebook</Label>
-                    <Input type="text" value="https://www.facebook.com/PimjoHQ" />
+                    <Input id="meta-facebook" type="text" label="Facebook" value="https://www.facebook.com/PimjoHQ" onChange={() => {}} />
                   </div>
 
                   <div>
-                    <Label>X.com</Label>
-                    <Input type="text" value="https://x.com/PimjoHQ" />
+                    <Input id="meta-x" type="text" label="X.com" value="https://x.com/PimjoHQ" onChange={() => {}} />
                   </div>
 
                   <div>
-                    <Label>Linkedin</Label>
-                    <Input type="text" value="https://www.linkedin.com/company/pimjo" />
+                    <Input id="meta-linkedin" type="text" label="Linkedin" value="https://www.linkedin.com/company/pimjo" onChange={() => {}} />
                   </div>
 
                   <div>
-                    <Label>Instagram</Label>
-                    <Input type="text" value="https://instagram.com/PimjoHQ" />
+                    <Input id="meta-instagram" type="text" label="Instagram" value="https://instagram.com/PimjoHQ" onChange={() => {}} />
                   </div>
                 </div>
               </div>
@@ -140,28 +135,23 @@ export default function UserMetaCard() {
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>First Name</Label>
-                    <Input type="text" value="Musharof" />
+                    <Input id="meta-first-name" type="text" label="First Name" value="Musharof" onChange={() => {}} />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Last Name</Label>
-                    <Input type="text" value="Chowdhury" />
+                    <Input id="meta-last-name" type="text" label="Last Name" value="Chowdhury" onChange={() => {}} />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Email Address</Label>
-                    <Input type="text" value="randomuser@pimjo.com" />
+                    <Input id="meta-email" type="text" label="Email Address" value="randomuser@pimjo.com" onChange={() => {}} />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Phone</Label>
-                    <Input type="text" value="+09 363 398 46" />
+                    <Input id="meta-phone" type="text" label="Phone" value="+09 363 398 46" onChange={() => {}} />
                   </div>
 
                   <div className="col-span-2">
-                    <Label>Bio</Label>
-                    <Input type="text" value="Team Manager" />
+                    <Input id="meta-bio" type="text" label="Bio" value="Team Manager" onChange={() => {}} />
                   </div>
                 </div>
               </div>

@@ -36,7 +36,7 @@ const DemoDeleteForm: React.FC<DemoDeleteFormProps> = ({ onSubmit, onCancel, sub
       {!permanent && (
         <div>
           <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">刪除原因（軟刪除必填）</label>
-          <TextArea rows={3} value={reason} onChange={(value) => setReason(value)} placeholder="請輸入刪除原因" error={!!error} />
+          <TextArea id="demo-delete-reason" rows={3} value={reason} onChange={(value) => setReason(value)} placeholder="請輸入刪除原因" error={error || undefined} />
           {error && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{error}</p>}
         </div>
       )}

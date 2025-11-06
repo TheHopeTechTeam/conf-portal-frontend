@@ -31,13 +31,11 @@ export default function TestimonyDataPage() {
   const [items, setItems] = useState<TestimonyDetail[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
 
   // Modal state
   const { isOpen: isViewOpen, openModal: openViewModal, closeModal: closeViewModal } = useModal(false);
   const [viewing, setViewing] = useState<TestimonyDetail | null>(null);
 
-  const clearSelectionRef = useRef<(() => void) | null>(null);
 
   // Fetch function - 使用 useRef 避免不必要的重新創建
   const fetchPagesRef = useRef({
@@ -60,8 +58,6 @@ export default function TestimonyDataPage() {
   };
 
   const fetchPages = useCallback(async () => {
-    // 在 fetchPages 之前清除選中狀態
-    clearSelectionRef.current?.();
 
     const { currentPage, pageSize, orderBy, descending, appliedFilters, showDeleted } = fetchPagesRef.current;
 
@@ -213,9 +209,6 @@ export default function TestimonyDataPage() {
     setCurrentPage(1);
   };
 
-  const handleRowSelect = (selectedRows: TestimonyDetail[], selectedKeys: string[]) => {
-    setSelectedKeys(selectedKeys);
-  };
 
   // Toolbar buttons
   const toolbarButtons = useMemo(() => {
@@ -311,10 +304,6 @@ export default function TestimonyDataPage() {
         onSort={handleSort}
         onPageChange={handlePageChange}
         onItemsPerPageChange={handleItemsPerPageChange}
-        onRowSelect={handleRowSelect}
-        onClearSelectionRef={(clearFn) => {
-          clearSelectionRef.current = clearFn;
-        }}
       />
 
       <Modal title="見證詳細資料" isOpen={isViewOpen} onClose={closeViewModal} className="max-w-[900px] w-full mx-4 p-6">

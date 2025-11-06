@@ -1,8 +1,7 @@
-import { useModal } from "../../hooks/useModal";
-import Input from "../form/input/InputField";
-import Label from "../form/Label";
-import Button from "../ui/button";
-import { Modal } from "../ui/modal";
+import Button from "@/components/ui/button";
+import Input from "@/components/ui/input";
+import { Modal } from "@/components/ui/modal";
+import { useModal } from "@/hooks/useModal";
 
 export default function UserAddressCard() {
   const { isOpen, openModal, closeModal } = useModal();
@@ -67,23 +66,19 @@ export default function UserAddressCard() {
             <div className="px-2 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                 <div>
-                  <Label>Country</Label>
-                  <Input type="text" value="United States" />
+                  <Input id="address-country" type="text" label="Country" value="United States" onChange={() => {}} />
                 </div>
 
                 <div>
-                  <Label>City/State</Label>
-                  <Input type="text" value="Arizona, United States." />
+                  <Input id="address-city-state" type="text" label="City/State" value="Arizona, United States." onChange={() => {}} />
                 </div>
 
                 <div>
-                  <Label>Postal Code</Label>
-                  <Input type="text" value="ERT 2489" />
+                  <Input id="address-postal-code" type="text" label="Postal Code" value="ERT 2489" onChange={() => {}} />
                 </div>
 
                 <div>
-                  <Label>TAX ID</Label>
-                  <Input type="text" value="AS4568384" />
+                  <Input id="address-tax-id" type="text" label="TAX ID" value="AS4568384" onChange={() => {}} />
                 </div>
               </div>
             </div>

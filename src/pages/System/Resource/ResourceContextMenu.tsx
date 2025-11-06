@@ -1,4 +1,4 @@
-import type { ResourceMenuItem } from "@/api/services/resourceService";
+import type { ResourceMenuItem } from "@/types/resource";
 import { useEffect, useRef, useState } from "react";
 import { MdAdd, MdArrowDownward, MdArrowUpward, MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
 
@@ -43,13 +43,6 @@ export const ResourceContextMenu: React.FC<ResourceContextMenuProps> = ({
   canMoveUp,
   canMoveDown,
 }) => {
-  if (!visible || !resource) {
-    return null;
-  }
-
-  // 在回收桶模式下，未刪除的根資源：僅顯示「查看資料」
-  const showOnlyViewInTrashForRoot = canRestore && !resource.is_deleted && !resource.pid;
-
   // 限制菜單位置在可視區域內
   const menuRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ left: number; top: number }>({ left: x, top: y });
@@ -76,6 +69,13 @@ export const ResourceContextMenu: React.FC<ResourceContextMenuProps> = ({
 
     setPos({ left, top });
   }, [visible, x, y]);
+
+  if (!visible || !resource) {
+    return null;
+  }
+
+  // 在回收桶模式下，未刪除的根資源：僅顯示「查看資料」
+  const showOnlyViewInTrashForRoot = canRestore && !resource.is_deleted && !resource.pid;
 
   return (
     <div

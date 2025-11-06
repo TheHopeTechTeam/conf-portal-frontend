@@ -1,8 +1,9 @@
 import { MdDeveloperMode, MdWarning } from "react-icons/md";
+import { IS_SKIP_AUTH } from "@/config/env";
 
 export default function DevModeIndicator() {
   // 檢查是否為開發模式且啟用了跳過認證
-  const isDevMode = process.env.NODE_ENV === "development" && import.meta.env.VITE_SKIP_AUTH === "true";
+  const isDevMode = IS_SKIP_AUTH;
 
   if (!isDevMode) {
     return null;
@@ -21,7 +22,7 @@ export default function DevModeIndicator() {
 
 // 開發模式狀態 Hook
 export function useDevMode() {
-  const isDevMode = process.env.NODE_ENV === "development" && import.meta.env.VITE_SKIP_AUTH === "true";
+  const isDevMode = IS_SKIP_AUTH;
 
   return {
     isDevMode,

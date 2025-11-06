@@ -1,4 +1,4 @@
-import type { ResourceMenuItem } from "@/api/services/resourceService";
+import type { ResourceMenuItem } from "@/types/resource";
 import { AdminResourceType } from "@/api/services/resourceService";
 import type { ResourceTreeNode } from "@/types/resource";
 import React from "react";

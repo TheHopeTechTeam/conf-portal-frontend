@@ -72,7 +72,7 @@ const FeedbackStatusUpdateForm: React.FC<FeedbackStatusUpdateFormProps> = ({
           label="描述"
           placeholder="請輸入描述"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(value) => setDescription(value)}
           rows={3}
         />
       </div>
@@ -83,16 +83,16 @@ const FeedbackStatusUpdateForm: React.FC<FeedbackStatusUpdateFormProps> = ({
           label="備註"
           placeholder="請輸入備註"
           value={remark}
-          onChange={(e) => setRemark(e.target.value)}
+          onChange={(value) => setRemark(value)}
           rows={3}
         />
       </div>
 
       <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
+        <Button btnType="button" variant="outline" onClick={onCancel} disabled={submitting}>
           取消
         </Button>
-        <Button type="submit" variant="primary" disabled={submitting || !hasChanges}>
+        <Button btnType="submit" variant="primary" disabled={submitting || !hasChanges}>
           {submitting ? "更新中..." : "更新"}
         </Button>
       </div>

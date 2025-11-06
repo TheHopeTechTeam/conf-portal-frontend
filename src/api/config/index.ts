@@ -1,8 +1,9 @@
 // API 配置檔案
+import { ENV_CONFIG } from "@/config/env";
 
 // 環境變數
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
-const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || "90000"); // 90 seconds
+const API_BASE_URL = ENV_CONFIG.API_BASE_URL;
+const API_TIMEOUT = ENV_CONFIG.API_TIMEOUT; // 90 seconds
 
 // API 前綴
 const ADMIN_API_PREFIX = "/api/v1/admin";
@@ -42,7 +43,7 @@ export const API_ENDPOINTS = {
     CHECK_MULTIPLE: "/permissions/check-multiple",
   },
 
-  // 動詞（Verb）管理
+  // 操作（Verb）管理
   VERBS: {
     LIST: `${ADMIN_API_PREFIX}/verb/list`,
   },

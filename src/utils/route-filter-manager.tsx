@@ -1,11 +1,11 @@
 // 路由過濾管理器 - 負責啟動時的路由過濾和動態路由重建
+import type { ResourceMenuItem } from "@/api/services/resourceService";
+import { FullPageLoading } from "@/components/common/LoadingSpinner";
+import AppLayout from "@/layout/AppLayout";
+import { getAllRoutes } from "@/routes";
+import type { Permission, Role, User } from "@/types/auth";
+import type { AppRoute } from "@/types/route";
 import { createBrowserRouter, Navigate } from "react-router";
-import type { ResourceMenuItem } from "../api/services/resourceService";
-import { FullPageLoading } from "../components/common/LoadingSpinner";
-import AppLayout from "../layout/AppLayout";
-import { getAllRoutes } from "../routes";
-import type { Permission, Role, User } from "../types/auth";
-import type { AppRoute } from "../types/route";
 import { resolveRouteElementByKey } from "./component-registry";
 import { resolveIcon } from "./icon-resolver";
 import { filterRoutesByAuth, getPublicRoutes } from "./route-filter";
@@ -53,7 +53,7 @@ class RouteFilterManager {
         element: resolveRouteElementByKey(it.key),
         meta: {
           title: it.name,
-          icon: resolveIcon(it.icon || undefined).icon,
+          icon: resolveIcon(it.icon || "").icon,
           requiresAuth: true,
           order: it.sequence ? Math.floor(it.sequence) : undefined,
         },

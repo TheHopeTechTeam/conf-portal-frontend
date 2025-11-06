@@ -1,3 +1,4 @@
+import { IS_DEV } from "@/config/env";
 import type { Permission, Role, User } from "../types/auth";
 import type { AppRoute } from "../types/route";
 
@@ -15,7 +16,7 @@ function canAccessRoute(route: AppRoute, options: RouteFilterOptions): boolean {
   const { meta } = route;
 
   // 非開發環境過濾 devOnly 路由
-  if (meta?.devOnly && process.env.NODE_ENV !== "development") {
+  if (meta?.devOnly && !IS_DEV) {
     return false;
   }
 

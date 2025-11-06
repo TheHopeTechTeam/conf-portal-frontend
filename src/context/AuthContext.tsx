@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext, useEffect, useReducer } from "react";
 import { authService } from "../api/services/authService";
 import type { AuthState, LoginCredentials, User } from "../types/auth";
+import { IS_SKIP_AUTH } from "@/config/env";
 
 // 認證 Action 型別
 type AuthAction =
@@ -88,7 +89,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const initializeAuth = async () => {
       // 開發模式：如果設定了跳過認證的環境變數，直接設定為已認證
-      if (process.env.NODE_ENV === "development" && import.meta.env.VITE_SKIP_AUTH === "true") {
+      if (IS_SKIP_AUTH) {
         const devUser = authService.getUser();
         const devToken = authService.getToken();
         if (devUser && devToken) {

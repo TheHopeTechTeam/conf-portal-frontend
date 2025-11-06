@@ -1,4 +1,5 @@
 import { AppRoute, ModuleRoute, RouteRegistry } from "../types/route";
+import { IS_DEV } from "@/config/env";
 
 class RouteRegistryManager {
   private registry: RouteRegistry = {};
@@ -139,7 +140,7 @@ class RouteRegistryManager {
     routes.forEach((route) => {
       if (this.registeredPaths.has(route.path)) {
         // 在開發環境下，只顯示警告而不拋出錯誤
-        if (process.env.NODE_ENV === "development") {
+        if (IS_DEV) {
           console.warn(`Route path "${route.path}" is already registered. This might be due to React Strict Mode.`);
         } else {
           throw new Error(`Route path "${route.path}" is already registered`);
@@ -204,7 +205,7 @@ class RouteRegistryManager {
    * 獲取開發環境的額外路由
    */
   getDevRoutes(): AppRoute[] {
-    if (process.env.NODE_ENV === "development") {
+    if (IS_DEV) {
       // 開發環境可以添加額外的路由
       return [];
     }

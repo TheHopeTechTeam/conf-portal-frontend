@@ -1,3 +1,4 @@
+import { IS_DEV } from "@/config/env";
 import { DEMO_NAV } from "@/const/demo";
 import { useMemo } from "react";
 import { AdminResourceType, type ResourceMenuItem } from "../api/services/resourceService";
@@ -44,7 +45,7 @@ export function useNavigationItems(): {
 
         const item: NavigationItem = {
           name: it.name,
-          icon: resolveIcon(it.icon || undefined).icon,
+          icon: resolveIcon(it.icon || "").icon,
           path: it.path,
           order: it.sequence ? Math.floor(it.sequence) : 999,
         };
@@ -96,7 +97,7 @@ export function useNavigationItems(): {
     main.push(...generalHierarchy);
 
     // 開發環境下加入 Demo 選項到主選單
-    if (process.env.NODE_ENV === "development" && DEMO_NAV.length > 0) {
+    if (IS_DEV && DEMO_NAV.length > 0) {
       // 將所有 Demo 導航包成父級（放在 System 區塊）
       const parentOrder = Math.min(...DEMO_NAV.map((n) => n.order ?? 999));
       system.push({

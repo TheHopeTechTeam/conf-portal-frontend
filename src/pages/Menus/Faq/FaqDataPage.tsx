@@ -229,7 +229,7 @@ export default function FaqDataPage() {
     setCurrentPage(1);
   };
 
-  const handleRowSelect = (selectedRows: FaqItem[], selectedKeys: string[]) => {
+  const handleRowSelect = (_selectedRows: FaqItem[], selectedKeys: string[]) => {
     setSelectedKeys(selectedKeys);
   };
 

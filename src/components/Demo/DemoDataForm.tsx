@@ -56,25 +56,31 @@ const DemoDataForm: React.FC<DemoDataFormProps> = ({ mode, defaultValues, onSubm
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">名稱</label>
-        <Input type="text" value={values.name} onChange={(e) => setValues((v) => ({ ...v, name: e.target.value }))} error={!!errors.name} />
-        {errors.name && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.name}</p>}
+        <Input
+          id="demo-name"
+          label="名稱"
+          type="text"
+          value={values.name}
+          onChange={(e) => setValues((v) => ({ ...v, name: e.target.value }))}
+          error={errors.name}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">年齡</label>
           <Input
+            id="demo-age"
             type="number"
             value={values.age ?? ""}
+            label="年齡"
             onChange={(e) => setValues((v) => ({ ...v, age: e.target.value === "" ? undefined : Number(e.target.value) }))}
-            error={!!errors.age}
+            error={errors.age}
           />
-          {errors.age && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.age}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">性別</label>
           <Select
+            id="demo-gender"
+            label="性別"
             options={[
               { value: Gender.Unknown, label: "未知" },
               { value: Gender.Male, label: "男性" },
@@ -88,8 +94,7 @@ const DemoDataForm: React.FC<DemoDataFormProps> = ({ mode, defaultValues, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">備註</label>
-        <TextArea rows={3} value={values.remark || ""} onChange={(value) => setValues((v) => ({ ...v, remark: value }))} />
+        <TextArea id="demo-remark" rows={3} label="備註" value={values.remark || ""} onChange={(value) => setValues((v) => ({ ...v, remark: value }))} />
       </div>
 
       <div className="flex justify-end gap-3 pt-2">

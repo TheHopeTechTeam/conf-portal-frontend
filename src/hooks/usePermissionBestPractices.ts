@@ -184,7 +184,6 @@ export function usePermissionBestPractices() {
     hasAllRoles,
   };
 }
-
 // 權限檢查的高階 Hook
 export function usePermissionGuard() {
   const permissionChecks = usePermissionBestPractices();

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import type { Permission, Role } from "../types/auth";
+import type { Permission, Role } from "@/types/auth";
+import { useCallback, useState } from "react";
 
 interface PermissionData {
   permissions: Permission[];
@@ -33,32 +33,28 @@ export function usePermissionData(): UsePermissionDataReturn {
     setData((prev) => ({ ...prev, lastUpdated: Date.now() }));
   }, []);
 
-  const checkPermission = useCallback((permission: string): boolean => {
+  const checkPermission = useCallback((_permission: string): boolean => {
     return false;
   }, []);
 
-  const checkRole = useCallback((role: string): boolean => {
+  const checkRole = useCallback((_role: string): boolean => {
     return false;
   }, []);
 
-  const hasAnyPermission = useCallback((permissions: string[]): boolean => {
+  const hasAnyPermission = useCallback((_permissions: string[]): boolean => {
     return false;
   }, []);
 
-  const hasAllPermissions = useCallback((permissions: string[]): boolean => {
+  const hasAllPermissions = useCallback((_permissions: string[]): boolean => {
     return false;
   }, []);
 
-  const hasAnyRole = useCallback((roles: string[]): boolean => {
+  const hasAnyRole = useCallback((_roles: string[]): boolean => {
     return false;
   }, []);
 
-  const hasAllRoles = useCallback((roles: string[]): boolean => {
+  const hasAllRoles = useCallback((_roles: string[]): boolean => {
     return false;
-  }, []);
-
-  useEffect(() => {
-    // No-op initialization
   }, []);
 
   return {

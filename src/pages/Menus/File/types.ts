@@ -79,7 +79,7 @@ export interface BulkDeleteResponse {
 export type SortOrder = "name_asc" | "name_desc" | "date_asc" | "date_desc" | "size_asc" | "size_desc";
 
 // 檔案分頁查詢參數
-export interface FilePagesParams {
+export interface FilePagesParams extends Record<string, unknown> {
   page?: number;
   pageSize?: number;
   keyword?: string;

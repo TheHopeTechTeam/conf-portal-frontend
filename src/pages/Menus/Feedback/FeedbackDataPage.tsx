@@ -74,7 +74,6 @@ export default function FeedbackDataPage() {
   const [items, setItems] = useState<FeedbackDetail[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
 
   // Modal state
   const { isOpen: isViewOpen, openModal: openViewModal, closeModal: closeViewModal } = useModal(false);
@@ -82,8 +81,6 @@ export default function FeedbackDataPage() {
   const [viewing, setViewing] = useState<FeedbackDetail | null>(null);
   const [statusUpdating, setStatusUpdating] = useState<FeedbackDetail | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
-  const clearSelectionRef = useRef<(() => void) | null>(null);
 
   // Fetch function - 使用 useRef 避免不必要的重新創建
   const fetchPagesRef = useRef({
@@ -106,9 +103,6 @@ export default function FeedbackDataPage() {
   };
 
   const fetchPages = useCallback(async () => {
-    // 在 fetchPages 之前清除選中狀態
-    clearSelectionRef.current?.();
-
     const { currentPage, pageSize, orderBy, descending, appliedFilters, showDeleted } = fetchPagesRef.current;
 
     setLoading(true);
@@ -249,10 +243,6 @@ export default function FeedbackDataPage() {
     setCurrentPage(1);
   };
 
-  const handleRowSelect = (selectedRows: FeedbackDetail[], selectedKeys: string[]) => {
-    setSelectedKeys(selectedKeys);
-  };
-
   // Toolbar buttons
   const toolbarButtons = useMemo(() => {
     // 使用 popoverCallback 模式，使用統一的 trigger 樣式
@@ -374,10 +364,6 @@ export default function FeedbackDataPage() {
         onSort={handleSort}
         onPageChange={handlePageChange}
         onItemsPerPageChange={handleItemsPerPageChange}
-        onRowSelect={handleRowSelect}
-        onClearSelectionRef={(clearFn) => {
-          clearSelectionRef.current = clearFn;
-        }}
       />
 
       <Modal title="意見回饋詳細資料" isOpen={isViewOpen} onClose={closeViewModal} className="max-w-[900px] w-full mx-4 p-6">

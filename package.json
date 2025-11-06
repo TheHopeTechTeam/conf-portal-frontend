@@ -6,8 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:stg": "tsc -b && vite build --mode staging",
+    "build:prod": "tsc -b && vite build --mode production",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:stg": "vite preview --mode staging",
+    "preview:prod": "vite preview --mode production"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.15",

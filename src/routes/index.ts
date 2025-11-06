@@ -1,4 +1,5 @@
 import { routeRegistry } from "../utils/route-registry";
+import { IS_DEV } from "@/config/env";
 
 // 導入所有路由模組
 import { authRoutes } from "./modules/auth";
@@ -24,7 +25,7 @@ export function initializeRoutes(): void {
 
   // 註冊所有模組路由（開發環境額外加入 demo 模組）
   const modules = [authRoutes, dashboardRoutes, errorRoutes, systemMenuRoutes, generalMenusRoutes];
-  if (process.env.NODE_ENV === "development") {
+  if (IS_DEV) {
     modules.push(demoRoutes);
   }
   routeRegistry.registerModules(modules);
@@ -33,7 +34,7 @@ export function initializeRoutes(): void {
   console.log("已註冊模組:", routeRegistry.getAllModules());
 
   // 開發環境下顯示詳細信息
-  if (process.env.NODE_ENV === "development") {
+  if (IS_DEV) {
     console.log("總路由數量:", routeRegistry.getAllRoutes().length);
     console.log("需要認證的路由數量:", routeRegistry.getAuthRequiredRoutes().length);
 

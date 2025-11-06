@@ -230,7 +230,7 @@ const PermissionDataForm: React.FC<PermissionDataFormProps> = ({ mode, defaultVa
           placeholder="權限描述"
           value={values.description || ""}
           onChange={(value) => setValues((v) => ({ ...v, description: value }))}
-          error={!!errors.description}
+          error={errors.description}
           hint={errors.description || ""}
         />
       </div>
@@ -243,7 +243,7 @@ const PermissionDataForm: React.FC<PermissionDataFormProps> = ({ mode, defaultVa
           placeholder="備註資訊"
           value={values.remark || ""}
           onChange={(value) => setValues((v) => ({ ...v, remark: value }))}
-          error={!!errors.remark}
+          error={errors.remark}
           hint={errors.remark || ""}
         />
       </div>
