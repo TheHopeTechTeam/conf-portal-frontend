@@ -1,21 +1,20 @@
 import { useApi } from "@/api";
 import fileService from "@/api/services/fileService";
-import LoadingSpinner from "@/components/common/LoadingSpinner";
 import DataTableFooter from "@/components/DataPage/DataTableFooter";
 import DataTableToolbar from "@/components/DataPage/DataTableToolbar";
 import { CommonPageButton } from "@/components/DataPage/PageButtonTypes";
 import type { PageButtonType } from "@/components/DataPage/types";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import Button from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { ModalForm, type ModalFormHandle } from "@/components/ui/modal/modal-form";
 import { Select } from "@/components/ui/select";
 import { useModal } from "@/hooks/useModal";
-import { useCallback, useMemo, useRef, useState } from "react";
-import { MdCheckBox, MdCheckBoxOutlineBlank, MdUpload } from "react-icons/md";
-import FileDeleteForm from "./FileDeleteForm";
-import FileGrid from "./FileGrid";
-import FileUploadForm, { type FileUploadFormHandle } from "./FileUploadForm";
-import type { FileGridItem, FileItem, SortOrder } from "./types";
+import FileGrid from "@/pages/Menus/File/FileGrid";
+import FileUploadForm, { type FileUploadFormHandle } from "@/pages/Menus/File/FileUploadForm";
+import type { FileGridItem, FileItem, SortOrder } from "@/pages/Menus/File/types";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MdUpload } from "react-icons/md";
 
 // 將 FileGridItem 轉換為 FileItem
 const convertFileGridItemToFileItem = (item: FileGridItem): FileItem => {
@@ -47,21 +46,37 @@ const convertSortOrderToApiParams = (sortOrder: SortOrder): { order_by: string; 
   }
 };
 
-const FilePage = () => {
+export interface FileSelectionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (selectedFiles: FileItem[]) => void;
+  multiple?: boolean; // 是否多選，默認 true
+  initialSelectedIds?: string[]; // 初始選中的文件 ID 列表
+}
+
+const FileSelectionModal: React.FC<FileSelectionModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  multiple = true,
+  initialSelectedIds = [],
+}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
-  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>(initialSelectedIds);
   const [sortOrder, setSortOrder] = useState<SortOrder>("date_desc");
-  // const [keyword, setKeyword] = useState<string>(""); // 保留用於未來搜尋功能
   const itemsPerPageOptions = [25, 50, 75, 100];
+
+  // 當 initialSelectedIds 或 isOpen 改變時，更新 selectedKeys
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedKeys(initialSelectedIds);
+    }
+  }, [initialSelectedIds, isOpen]);
 
   // 上傳 Modal 狀態
   const { isOpen: isUploadModalOpen, openModal: openUploadModal, closeModal: closeUploadModal } = useModal();
   const [uploading, setUploading] = useState(false);
-
-  // 刪除 Modal 狀態
-  const { isOpen: isDeleteModalOpen, openModal: openDeleteModal, closeModal: closeDeleteModal } = useModal();
-  const [deleting, setDeleting] = useState(false);
 
   // Form refs
   const fileUploadFormRef = useRef<FileUploadFormHandle>(null);
@@ -73,7 +88,6 @@ const FilePage = () => {
     return {
       page: currentPage - 1, // 後端從 0 開始
       page_size: itemsPerPage,
-      // keyword: keyword || undefined, // 保留用於未來搜尋功能
       ...sortParams,
     };
   }, [currentPage, itemsPerPage, sortOrder]);
@@ -85,11 +99,11 @@ const FilePage = () => {
     execute: refetchFiles,
   } = useApi(() => fileService.getPages(apiParams), {
     enableCache: false,
-    autoExecute: true,
+    autoExecute: isOpen, // 只在 Modal 打開時執行
     dependencies: [apiParams],
   });
 
-  // 關閉上傳 Modal 後再刷新列表，避免初始化順序問題
+  // 關閉上傳 Modal 後再刷新列表
   const handleCloseUploadModal = useCallback(async () => {
     closeUploadModal();
     await refetchFiles();
@@ -106,8 +120,6 @@ const FilePage = () => {
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-    // 滾動到頂部
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   const handleItemsPerPageChange = useCallback((newItemsPerPage: number) => {
@@ -117,80 +129,33 @@ const FilePage = () => {
 
   // 處理檔案選取
   const handleFileSelect = (fileId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedKeys((prev) => [...prev, fileId]);
+    if (multiple) {
+      // 多選模式
+      if (checked) {
+        setSelectedKeys((prev) => [...prev, fileId]);
+      } else {
+        setSelectedKeys((prev) => prev.filter((id) => id !== fileId));
+      }
     } else {
-      setSelectedKeys((prev) => prev.filter((id) => id !== fileId));
+      // 單選模式
+      if (checked) {
+        setSelectedKeys([fileId]);
+      } else {
+        setSelectedKeys([]);
+      }
     }
   };
 
-  // 檢查當前頁面是否全選
-  const isAllSelected = useMemo(() => {
-    if (files.length === 0) return false;
-    return files.every((file) => selectedKeys.includes(file.id));
-  }, [files, selectedKeys]);
+  // 處理確認選擇
+  const handleConfirm = useCallback(() => {
+    const selectedFiles = files.filter((file) => selectedKeys.includes(file.id));
+    onConfirm(selectedFiles);
+    onClose();
+  }, [files, selectedKeys, onConfirm, onClose]);
 
-  // 處理全選/取消全選
-  const handleSelectAll = useCallback(() => {
-    if (isAllSelected) {
-      // 取消全選（只取消當前頁面的選取）
-      const currentPageIds = files.map((file) => file.id);
-      setSelectedKeys((prev) => prev.filter((id) => !currentPageIds.includes(id)));
-    } else {
-      // 全選當前頁面
-      const currentPageIds = files.map((file) => file.id);
-      setSelectedKeys((prev) => {
-        const newKeys = [...prev];
-        currentPageIds.forEach((id) => {
-          if (!newKeys.includes(id)) {
-            newKeys.push(id);
-          }
-        });
-        return newKeys;
-      });
-    }
-  }, [isAllSelected, files]);
-
-  // 處理批量刪除（打開 Modal）
-  const handleBatchDelete = useCallback(() => {
-    if (selectedKeys.length === 0) {
-      // TODO: 顯示提示訊息
-      console.log("請先選擇要刪除的檔案");
-      return;
-    }
-    openDeleteModal();
-  }, [selectedKeys.length, openDeleteModal]);
-
-  // 執行批量刪除
-  const handleDeleteConfirm = useCallback(async () => {
-    if (selectedKeys.length === 0) return;
-
-    try {
-      setDeleting(true);
-      const response = await fileService.bulkDelete({ ids: selectedKeys });
-      if (response.success) {
-        console.log(`成功刪除 ${response.data.success_count} 個檔案`);
-        if (response.data.failed_items && response.data.failed_items.length > 0) {
-          console.warn("部分檔案刪除失敗:", response.data.failed_items);
-          // TODO: 顯示失敗的檔案資訊
-        }
-        setSelectedKeys([]);
-        closeDeleteModal();
-        // 重新載入檔案列表
-        await refetchFiles();
-      }
-    } catch (error) {
-      console.error("刪除檔案失敗:", error);
-      // TODO: 顯示錯誤訊息
-    } finally {
-      setDeleting(false);
-    }
-  }, [selectedKeys, refetchFiles, closeDeleteModal]);
-
-  // 處理檔案上傳（併發 3 個，顯示單檔進度）
+  // 處理檔案上傳
   const handleFileUpload = useCallback(async () => {
     if (!fileUploadFormRef.current?.validate()) {
-      // TODO: 顯示提示訊息
       console.log("請先選擇要上傳的檔案");
       return;
     }
@@ -202,17 +167,27 @@ const FilePage = () => {
       setUploading(true);
       const CONCURRENCY = 3;
       let nextIndex = 0;
+      const uploadedFileIds: string[] = [];
 
       const uploadOneAtIndex = async (index: number) => {
         const file = files[index];
         fileUploadFormRef.current?.setUploadStatus(index, "uploading");
         try {
           const res = await fileService.uploadOne(file, (p) => fileUploadFormRef.current?.setUploadProgress(index, p));
+          console.log("上傳響應:", res); // 調試用
           if (res.success) {
-            const duplicate = res.data?.duplicate === true;
-            const message = duplicate ? "檔案已存在，已引用現有檔案" : "上傳完成";
-            fileUploadFormRef.current?.setUploadStatus(index, "success", undefined, message);
+            const fileId = res.data?.id;
+            if (fileId) {
+              const duplicate = res.data?.duplicate === true;
+              const message = duplicate ? "檔案已存在，已引用現有檔案" : "上傳完成";
+              fileUploadFormRef.current?.setUploadStatus(index, "success", undefined, message);
+              uploadedFileIds.push(fileId);
+            } else {
+              console.error("上傳響應缺少文件 ID:", res);
+              fileUploadFormRef.current?.setUploadStatus(index, "error", "上傳響應缺少文件 ID");
+            }
           } else {
+            console.error("上傳失敗:", res);
             fileUploadFormRef.current?.setUploadStatus(index, "error", res.message || "上傳失敗");
           }
         } catch (err: unknown) {
@@ -233,13 +208,28 @@ const FilePage = () => {
 
       const workers = Array.from({ length: Math.min(CONCURRENCY, files.length) }, () => worker());
       await Promise.all(workers);
+
+      // 上傳完成後，刷新文件列表並自動選中新上傳的文件
+      if (uploadedFileIds.length > 0) {
+        await refetchFiles();
+        // 自動選中新上傳的文件
+        setSelectedKeys((prev) => {
+          const newKeys = [...prev];
+          uploadedFileIds.forEach((id) => {
+            if (!newKeys.includes(id)) {
+              newKeys.push(id);
+            }
+          });
+          return newKeys;
+        });
+        // 不關閉上傳 Modal，讓用戶可以繼續上傳
+      }
     } catch (error) {
       console.error("上傳失敗:", error);
-      // TODO: 顯示錯誤訊息
     } finally {
       setUploading(false);
     }
-  }, [closeUploadModal, refetchFiles]);
+  }, [refetchFiles]);
 
   // Toolbar 按鈕
   const toolbarButtons: PageButtonType[] = useMemo(() => {
@@ -253,7 +243,7 @@ const FilePage = () => {
       { value: "size_asc", label: "大小 (小到大)" },
     ];
 
-    return [
+    const buttons: PageButtonType[] = [
       {
         key: "upload",
         text: "上傳檔案",
@@ -263,21 +253,9 @@ const FilePage = () => {
         size: "md",
         onClick: openUploadModal,
       },
-      {
-        key: "selectAll",
-        text: isAllSelected ? "取消全選" : "全選",
-        icon: isAllSelected ? <MdCheckBox className="size-4" /> : <MdCheckBoxOutlineBlank className="size-4" />,
-        align: "left",
-        disabled: files.length === 0,
-        size: "md",
-        onClick: handleSelectAll,
-      },
-      CommonPageButton.BULK_DELETE(handleBatchDelete, {
-        align: "left",
-        tooltip: "批量刪除",
-        size: "md",
-        disabled: selectedKeys.length === 0,
-      }),
+    ];
+
+    buttons.push(
       CommonPageButton.REFRESH(() => {
         refetchFiles();
       }),
@@ -305,43 +283,72 @@ const FilePage = () => {
             />
           </div>
         ),
-      },
-    ];
-  }, [selectedKeys.length, handleBatchDelete, sortOrder, openUploadModal, refetchFiles, isAllSelected, handleSelectAll, files.length]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-[400px] rounded-xl bg-white dark:bg-white/[0.03]">
-        <LoadingSpinner />
-      </div>
+      }
     );
-  }
+
+    return buttons;
+  }, [sortOrder, openUploadModal, refetchFiles]);
+
+  // 當 Modal 關閉時重置選中狀態
+  const handleClose = useCallback(() => {
+    setSelectedKeys(initialSelectedIds);
+    onClose();
+  }, [initialSelectedIds, onClose]);
 
   return (
     <>
-      <div className="flex flex-col rounded-xl bg-white dark:bg-white/[0.03] h-full">
-        {/* Toolbar */}
-        <DataTableToolbar buttons={toolbarButtons} />
-        <div className="flex-1 min-h-0">
-          <div className="h-full flex flex-col">
-            <div className="grow max-w-full overflow-x-auto overflow-y-auto custom-scrollbar border-x border-b border-gray-100 dark:border-white/[0.05]">
-              {/* 圖片網格 */}
-              <FileGrid files={files} selectedKeys={selectedKeys} onSelect={handleFileSelect} />
-            </div>
+      <Modal
+        title="選擇圖片"
+        isOpen={isOpen}
+        onClose={handleClose}
+        className="max-w-[90vw] w-full max-h-[90vh] mx-4 p-6 bg-white dark:bg-gray-900 flex flex-col"
+      >
+        <div className="flex flex-col flex-1 min-h-0 max-h-[calc(90vh-120px)]">
+          {/* Toolbar - 固定 */}
+          <div className="shrink-0">
+            <DataTableToolbar buttons={toolbarButtons} />
+          </div>
 
-            {/* 分頁元件 */}
-            <DataTableFooter
-              currentPage={currentPage}
-              totalPages={totalPages}
-              rowsPerPage={itemsPerPage}
-              totalEntries={totalEntries}
-              pageSizeOptions={itemsPerPageOptions}
-              onPageChange={handlePageChange}
-              onRowsPerPageChange={handleItemsPerPageChange}
-            />
+          {/* 內容區域 - 可滾動 */}
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+            {loading ? (
+              <div className="flex items-center justify-center h-full rounded-xl bg-white dark:bg-white/[0.03]">
+                <LoadingSpinner />
+              </div>
+            ) : (
+              <>
+                {/* FileGrid 容器 - 可滾動 */}
+                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto custom-scrollbar border-x border-b border-gray-100 dark:border-white/[0.05] bg-white dark:bg-gray-900">
+                  <FileGrid files={files} selectedKeys={selectedKeys} onSelect={handleFileSelect} />
+                </div>
+
+                {/* 分頁元件 - 固定 */}
+                <div className="shrink-0">
+                  <DataTableFooter
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    rowsPerPage={itemsPerPage}
+                    totalEntries={totalEntries}
+                    pageSizeOptions={itemsPerPageOptions}
+                    onPageChange={handlePageChange}
+                    onRowsPerPageChange={handleItemsPerPageChange}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Footer - 固定 */}
+          <div className="shrink-0 flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
+            <Button variant="outline" onClick={handleClose}>
+              取消
+            </Button>
+            <Button variant="primary" onClick={handleConfirm} disabled={selectedKeys.length === 0}>
+              確認選擇 ({selectedKeys.length})
+            </Button>
           </div>
         </div>
-      </div>
+      </Modal>
 
       {/* 上傳檔案 Modal */}
       <ModalForm
@@ -368,13 +375,8 @@ const FilePage = () => {
       >
         <FileUploadForm ref={fileUploadFormRef} />
       </ModalForm>
-
-      {/* 刪除檔案 Modal */}
-      <Modal title="確認刪除檔案" isOpen={isDeleteModalOpen} onClose={closeDeleteModal} className="max-w-[560px] w-full mx-4 p-6">
-        <FileDeleteForm fileCount={selectedKeys.length} onSubmit={handleDeleteConfirm} onCancel={closeDeleteModal} submitting={deleting} />
-      </Modal>
     </>
   );
 };
 
-export default FilePage;
+export default FileSelectionModal;

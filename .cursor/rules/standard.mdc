@@ -17,6 +17,7 @@ alwaysApply: true
 - 有使用到 html、ReactNode、JSX.Element 的檔案以 tsx 結尾。
 - 專案有設定 path alias，使用 @ 代表 src 目錄。
 - 所有 function 都使用 arrow function 語法。
+- 不要使用 DOM API 直接操作 DOM 元素，請使用 React 的 API 來操作 DOM 元素。
 
 ## TypeScript
 

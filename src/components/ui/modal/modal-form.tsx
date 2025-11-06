@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { MdClose } from "react-icons/md";
+import { modalStackManager } from "./modalStack";
 
 interface ModalFormProps {
   isOpen: boolean;
@@ -23,21 +24,45 @@ export const ModalForm = forwardRef<ModalFormHandle, ModalFormProps>(function Mo
   ref
 ) {
   const modalRef = useRef<HTMLDivElement>(null);
+  const modalIdRef = useRef<ReturnType<typeof modalStackManager.register> | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  // 注册/取消注册 Modal 到栈中
+  useEffect(() => {
+    if (isOpen) {
+      modalIdRef.current = modalStackManager.register();
+    } else if (modalIdRef.current) {
+      modalStackManager.unregister(modalIdRef.current);
+      modalIdRef.current = null;
+    }
+
+    return () => {
+      if (modalIdRef.current) {
+        modalStackManager.unregister(modalIdRef.current);
+        modalIdRef.current = null;
+      }
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
+      if (event.key === "Escape" && modalIdRef.current) {
+        // 只关闭最上层的 Modal
+        if (modalStackManager.isTopModal(modalIdRef.current)) {
+          event.stopPropagation();
+          event.preventDefault();
+          onClose();
+        }
       }
     };
 
     if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
+      // 使用捕获阶段，确保最上层的 Modal 先处理事件
+      document.addEventListener("keydown", handleEscape, true);
     }
 
     return () => {
-      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("keydown", handleEscape, true);
     };
   }, [isOpen, onClose]);
 

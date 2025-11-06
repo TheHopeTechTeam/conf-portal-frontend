@@ -1,8 +1,10 @@
 import Blank from "@/pages/Blank";
 import Dashboard from "@/pages/Dashboard";
 import ConferenceManagement from "@/pages/Menus/Conference/ConferenceManagement";
+import FaqManagement from "@/pages/Menus/Faq/FaqManagement";
 import FeedbackManagement from "@/pages/Menus/Feedback/FeedbackManagement";
 import FileManagement from "@/pages/Menus/File/FileManagement";
+import LocationManagement from "@/pages/Menus/Location/LocationManagement";
 import TestimonyManagement from "@/pages/Menus/Testimony/TestimonyManagement";
 import WorkshopManagement from "@/pages/Menus/Workshop/WorkshopManagement";
 import PermissionManagement from "@/pages/System/Permission/PermissionManagement";
@@ -23,10 +25,10 @@ const componentRegistry: Record<string, React.ComponentType> = {
   WORKSHOP_BASIC: WorkshopManagement,
   WORKSHOP_REGISTRATION: Blank,
   // CONTENT /content
-  CONTENT_FAQ: Blank,
+  CONTENT_FAQ: FaqManagement,
   CONTENT_FILE: FileManagement,
   CONTENT_INSTRUCTOR: Blank,
-  CONTENT_LOCATION: Blank,
+  CONTENT_LOCATION: LocationManagement,
   CONTENT_TESTIMONY: TestimonyManagement,
   // SUPPORT /support
   SUPPORT_FEEDBACK: FeedbackManagement,

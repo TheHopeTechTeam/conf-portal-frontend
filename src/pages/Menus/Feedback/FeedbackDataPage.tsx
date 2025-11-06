@@ -366,6 +366,7 @@ export default function FeedbackDataPage() {
         data={pagedData}
         columns={columns}
         loading={loading}
+        singleSelect
         orderBy={orderBy}
         descending={descending}
         buttons={toolbarButtons}

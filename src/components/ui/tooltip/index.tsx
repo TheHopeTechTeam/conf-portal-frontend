@@ -112,7 +112,7 @@ export default function Tooltip({
         }`}
       >
         <div className="relative">
-          <div className={`drop-shadow-4xl whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium ${bubbleClass}`}>{content}</div>
+          <div className={`drop-shadow-4xl whitespace-nowrap rounded-lg px-3 py-3 text-xs font-medium ${bubbleClass}`}>{content}</div>
           <div className={`absolute ${pos.arrow} h-3 w-4 rotate-45 ${arrowBg}`}></div>
         </div>
       </div>

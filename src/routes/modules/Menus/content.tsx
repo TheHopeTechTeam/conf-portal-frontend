@@ -1,12 +1,14 @@
 import Blank from "@/pages/Blank";
+import FaqManagement from "@/pages/Menus/Faq/FaqManagement";
 import FileManagement from "@/pages/Menus/File/FileManagement";
+import LocationManagement from "@/pages/Menus/Location/LocationManagement";
 import TestimonyManagement from "@/pages/Menus/Testimony/TestimonyManagement";
 import { AppRoute } from "@/types/route";
 
 export const contentRoutes: AppRoute[] = [
   {
     path: "/content/faq",
-    element: <Blank />,
+    element: <FaqManagement />,
     meta: {
       title: "FAQ Management",
       description: "Content FAQ management page",
@@ -36,7 +38,7 @@ export const contentRoutes: AppRoute[] = [
   },
   {
     path: "/content/locations",
-    element: <Blank />,
+    element: <LocationManagement />,
     meta: {
       title: "Location Management",
       description: "Content location management page",

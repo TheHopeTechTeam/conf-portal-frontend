@@ -54,6 +54,7 @@ const FileGrid = ({ files, selectedKeys, onSelect }: FileGridProps) => {
                 name: file.name,
                 size: file.size,
               }}
+              enableImagePreview={false}
             />
           </div>
         );

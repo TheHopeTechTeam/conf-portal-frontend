@@ -42,18 +42,18 @@ export const getRecycleButtonClassName = (active: boolean): string => {
 // 內建按鈕圖標（使用 react-icons/md）
 export const getPageButtonIcon = (type: PageButtonTypeKey): ReactNode => {
   const icons: Record<PageButtonTypeKey, ReactNode> = {
-    [PAGE_BUTTON_TYPES.ADD]: <MdAdd className="w-4 h-4" />,
+    [PAGE_BUTTON_TYPES.ADD]: <MdAdd className="size-4" />,
     [PAGE_BUTTON_TYPES.REFRESH]: <MdRefresh className="w-4 h-4" />,
-    [PAGE_BUTTON_TYPES.SEARCH]: <MdSearch className="w-4 h-4" />,
-    [PAGE_BUTTON_TYPES.BULK_DELETE]: <MdDelete className="w-4 h-4" />,
-    [PAGE_BUTTON_TYPES.RECYCLE]: <MdOutlineRecycling className="w-4 h-4" />,
-    [PAGE_BUTTON_TYPES.RESTORE]: <MdRestore className="w-4 h-4" />,
-    [PAGE_BUTTON_TYPES.DOWNLOAD]: <MdDownload className="w-4 h-4" />,
-    [PAGE_BUTTON_TYPES.EDIT]: <MdEdit className="w-4 h-4" />,
-    [PAGE_BUTTON_TYPES.DELETE]: <MdDelete className="w-4 h-4" />,
-    [PAGE_BUTTON_TYPES.VIEW]: <MdVisibility className="w-4 h-4" />,
-    [PAGE_BUTTON_TYPES.COPY]: <MdContentCopy className="w-4 h-4" />,
-    [PAGE_BUTTON_TYPES.EXPORT]: <MdFileDownload className="w-4 h-4" />,
+    [PAGE_BUTTON_TYPES.SEARCH]: <MdSearch className="size-4" />,
+    [PAGE_BUTTON_TYPES.BULK_DELETE]: <MdDelete className="size-4" />,
+    [PAGE_BUTTON_TYPES.RECYCLE]: <MdOutlineRecycling className="size-4" />,
+    [PAGE_BUTTON_TYPES.RESTORE]: <MdRestore className="size-4" />,
+    [PAGE_BUTTON_TYPES.DOWNLOAD]: <MdDownload className="size-4" />,
+    [PAGE_BUTTON_TYPES.EDIT]: <MdEdit className="size-4" />,
+    [PAGE_BUTTON_TYPES.DELETE]: <MdDelete className="size-4" />,
+    [PAGE_BUTTON_TYPES.VIEW]: <MdVisibility className="size-4" />,
+    [PAGE_BUTTON_TYPES.COPY]: <MdContentCopy className="size-4" />,
+    [PAGE_BUTTON_TYPES.EXPORT]: <MdFileDownload className="size-4" />,
   };
 
   return icons[type];
