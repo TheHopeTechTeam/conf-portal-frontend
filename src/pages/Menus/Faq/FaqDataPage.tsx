@@ -114,7 +114,7 @@ export default function FaqDataPage() {
         key: "question",
         label: "問題",
         sortable: true,
-        width: "300px",
+        width: "w-72",
         render: (value: unknown) => {
           const question = value as string;
           return <span className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{question}</span>;
@@ -124,7 +124,7 @@ export default function FaqDataPage() {
         key: "categoryName",
         label: "分類",
         sortable: false,
-        width: "150px",
+        width: "w-36",
         render: (value: unknown) => {
           const categoryName = value as string | undefined;
           return categoryName || <span className="text-gray-400">未分類</span>;
@@ -134,7 +134,7 @@ export default function FaqDataPage() {
         key: "relatedLink",
         label: "相關連結",
         sortable: false,
-        width: "200px",
+        width: "w-48",
         render: (value: unknown) => {
           const relatedLink = value as string | undefined;
           if (!relatedLink) return <span className="text-gray-400">無</span>;
@@ -156,7 +156,7 @@ export default function FaqDataPage() {
         key: "remark",
         label: "備註",
         sortable: false,
-        width: "200px",
+        width: "w-48",
         render: (value: unknown) => {
           const remark = value as string | undefined;
           if (!remark) return <span className="text-gray-400">無</span>;
@@ -171,7 +171,7 @@ export default function FaqDataPage() {
         key: "createdAt",
         label: "建立時間",
         sortable: true,
-        width: "120px",
+        width: "w-32",
         render: (value: unknown) => {
           if (!value) return null;
           const friendlyTime = DateUtil.friendlyDate(value);
@@ -187,7 +187,7 @@ export default function FaqDataPage() {
         key: "updatedAt",
         label: "更新時間",
         sortable: true,
-        width: "120px",
+        width: "w-32",
         render: (value: unknown) => {
           if (!value) return null;
           const friendlyTime = DateUtil.friendlyDate(value);

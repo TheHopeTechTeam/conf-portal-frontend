@@ -4,6 +4,7 @@ import ConferenceManagement from "@/pages/Menus/Conference/ConferenceManagement"
 import FaqManagement from "@/pages/Menus/Faq/FaqManagement";
 import FeedbackManagement from "@/pages/Menus/Feedback/FeedbackManagement";
 import FileManagement from "@/pages/Menus/File/FileManagement";
+import InstructorManagement from "@/pages/Menus/Instructor/InstructorManagement";
 import LocationManagement from "@/pages/Menus/Location/LocationManagement";
 import TestimonyManagement from "@/pages/Menus/Testimony/TestimonyManagement";
 import WorkshopManagement from "@/pages/Menus/Workshop/WorkshopManagement";
@@ -25,12 +26,12 @@ const componentRegistry: Record<string, React.ComponentType> = {
   WORKSHOP_BASIC: WorkshopManagement,
   WORKSHOP_REGISTRATION: Blank,
   // CONTENT /content
-  CONTENT_FAQ: FaqManagement,
   CONTENT_FILE: FileManagement,
-  CONTENT_INSTRUCTOR: Blank,
+  CONTENT_INSTRUCTOR: InstructorManagement,
   CONTENT_LOCATION: LocationManagement,
   CONTENT_TESTIMONY: TestimonyManagement,
   // SUPPORT /support
+  SUPPORT_FAQ: FaqManagement,
   SUPPORT_FEEDBACK: FeedbackManagement,
   // System
   SYSTEM_USER: UserManagement,

@@ -112,14 +112,14 @@ export default function LocationDataPage() {
         key: "name",
         label: "地點名稱",
         sortable: false,
-        width: "200px",
+        width: "w-48",
         tooltip: (row) => row.name,
       },
       {
         key: "roomNumber",
         label: "房間號碼",
         sortable: false,
-        width: "120px",
+        width: "w-32",
         render: (value: unknown) => {
           const roomNumber = value as string | undefined;
           return roomNumber || <span className="text-gray-400">無</span>;
@@ -129,7 +129,7 @@ export default function LocationDataPage() {
         key: "floor",
         label: "樓層",
         sortable: false,
-        width: "100px",
+        width: "w-24",
         render: (value: unknown) => {
           const floor = value as string | undefined;
           return floor || <span className="text-gray-400">無</span>;
@@ -139,7 +139,7 @@ export default function LocationDataPage() {
         key: "address",
         label: "地址",
         sortable: false,
-        width: "250px",
+        width: "w-60",
         render: (value: unknown) => {
           const address = value as string | undefined;
           if (!address) return <span className="text-gray-400">無</span>;
@@ -154,7 +154,7 @@ export default function LocationDataPage() {
         key: "remark",
         label: "備註",
         sortable: false,
-        width: "200px",
+        width: "w-48",
         render: (value: unknown) => {
           const remark = value as string | undefined;
           if (!remark) return <span className="text-gray-400">無</span>;
@@ -169,7 +169,7 @@ export default function LocationDataPage() {
         key: "createdAt",
         label: "建立時間",
         sortable: true,
-        width: "120px",
+        width: "w-32",
         render: (value: unknown) => {
           if (!value) return null;
           const friendlyTime = DateUtil.friendlyDate(value);
@@ -185,7 +185,7 @@ export default function LocationDataPage() {
         key: "updatedAt",
         label: "更新時間",
         sortable: true,
-        width: "120px",
+        width: "w-32",
         render: (value: unknown) => {
           if (!value) return null;
           const friendlyTime = DateUtil.friendlyDate(value);

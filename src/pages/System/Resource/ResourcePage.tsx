@@ -1,10 +1,11 @@
-import { resourceService } from "@/api";
+import { resourceService, type ResourceMenuItem as ApiResourceMenuItem } from "@/api";
 import RestoreForm from "@/components/DataPage/RestoreForm";
 import { Modal } from "@/components/ui/modal";
 import { useResourceManagement } from "@/hooks/useResourceManagement";
 import { useResourcePermissions } from "@/hooks/useResourcePermissions";
 import type { ResourceFormData, ResourceMenuItem, ResourceTreeNode } from "@/types/resource";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import ResourceChangeParentForm from "./ResourceChangeParentForm";
 import { ResourceContextMenu } from "./ResourceContextMenu";
 import ResourceDataForm, { type ResourceFormValues } from "./ResourceDataForm";
 import ResourceDeleteForm from "./ResourceDeleteForm";
@@ -54,6 +55,7 @@ export default function ResourcePage() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isRestoreOpen, setIsRestoreOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isChangeParentOpen, setIsChangeParentOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [editing, setEditing] = useState<ResourceMenuItem | null>(null);
   const [parentResource, setParentResource] = useState<{ id: string; name: string } | null>(null);
@@ -147,6 +149,11 @@ export default function ResourcePage() {
     setEditing(null);
   }, []);
 
+  const closeChangeParentModal = useCallback(() => {
+    setIsChangeParentOpen(false);
+    setEditing(null);
+  }, []);
+
   // 處理新增根資源
   const handleAddRootResource = useCallback(() => {
     // 新增時清除選取，確保走建立流程
@@ -173,8 +180,11 @@ export default function ResourcePage() {
         const resp = await resourceService.getResource(resource.id);
         if (resp.success && resp.data) {
           // 設定當前選取資源，讓保存時走更新 API
-          const resourceData = resp.data as ResourceMenuItem;
-          const resourceWithVisible = { ...resourceData, is_visible: (resourceData as any).is_visible ?? true } as ResourceMenuItem;
+          const resourceData = resp.data as ApiResourceMenuItem;
+          const resourceWithVisible: ResourceMenuItem = {
+            ...resourceData,
+            is_visible: resourceData.is_visible ?? true,
+          };
           selectResource(resourceWithVisible);
           openModal("edit", resourceWithVisible);
         } else {
@@ -182,7 +192,7 @@ export default function ResourcePage() {
           selectResource(resource);
           openModal("edit", resource);
         }
-      } catch (e) {
+      } catch {
         // 發生錯誤時，也使用原有資料
         selectResource(resource);
         openModal("edit", resource);
@@ -288,6 +298,41 @@ export default function ResourcePage() {
     [moveDown, hideContextMenu]
   );
 
+  // 處理切換父資源
+  const handleChangeParent = useCallback(
+    (resource: ResourceMenuItem) => {
+      setEditing(resource);
+      setIsChangeParentOpen(true);
+      hideContextMenu();
+    },
+    [hideContextMenu]
+  );
+
+  // 處理切換父資源確認
+  const handleChangeParentConfirm = useCallback(
+    async (parentId: string) => {
+      if (!editing) return;
+
+      setSubmitting(true);
+      try {
+        await resourceService.changeParent(editing.id, { pid: parentId });
+        await fetchResources();
+        closeChangeParentModal();
+      } catch (e) {
+        console.error("切換父資源失敗:", e);
+        alert("切換父資源失敗，請稍後再試");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [editing, fetchResources, closeChangeParentModal]
+  );
+
+  // 獲取根節點資源列表（未刪除的根節點）
+  const rootResources = useMemo(() => {
+    return resources.filter((r) => !r.pid && !r.is_deleted);
+  }, [resources]);
+
   // 處理表單提交
   const handleSubmit = useCallback(
     async (values: ResourceFormValues) => {
@@ -385,6 +430,7 @@ export default function ResourcePage() {
         onAddChild={handleAddChild}
         onMoveUp={handleMoveUp}
         onMoveDown={handleMoveDown}
+        onChangeParent={handleChangeParent}
         canView
         canEdit={permissions.canModify}
         canDelete={permissions.canDelete}
@@ -392,6 +438,7 @@ export default function ResourcePage() {
         canAddChild={permissions.canModify}
         canMoveUp={canMoveUp}
         canMoveDown={canMoveDown}
+        canChangeParent={permissions.canModify}
       />
 
       {/* 點擊外部關閉 Context Menu */}
@@ -420,7 +467,7 @@ export default function ResourcePage() {
                   description: editing.description || "",
                   remark: editing.remark || "",
                   // 編輯子資源需要帶入 pid；若詳情沒有 pid，回退使用 parent.id
-                  pid: (editing as any).pid ?? (editing as any).parent?.id ?? undefined,
+                  pid: editing.pid ?? (editing as ApiResourceMenuItem).parent?.id ?? undefined,
                 }
               : null
           }
@@ -455,6 +502,19 @@ export default function ResourcePage() {
       {/* 查看 Modal */}
       <Modal title="資源詳細資料" isOpen={isViewOpen} onClose={closeViewModal} className="max-w-[900px] w-full mx-4 p-6">
         {editing && <ResourceDetailView resourceId={editing.id} />}
+      </Modal>
+
+      {/* 切換父資源 Modal */}
+      <Modal title="切換父資源" isOpen={isChangeParentOpen} onClose={closeChangeParentModal} className="max-w-[500px] w-full mx-4 p-6">
+        {editing && (
+          <ResourceChangeParentForm
+            rootResources={rootResources}
+            currentResource={editing}
+            onSubmit={handleChangeParentConfirm}
+            onCancel={closeChangeParentModal}
+            submitting={submitting}
+          />
+        )}
       </Modal>
     </div>
   );

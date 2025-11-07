@@ -98,14 +98,14 @@ export default function TestimonyDataPage() {
         key: "name",
         label: "姓名",
         sortable: true,
-        width: "150px",
+        width: "w-36",
         tooltip: (row) => row.name,
       },
       {
         key: "phoneNumber",
         label: "電話號碼",
         sortable: true,
-        width: "150px",
+        width: "w-36",
         tooltip: (row) => row.phoneNumber || "",
         render: (value: unknown) => {
           const phoneNumber = value as string | undefined;
@@ -116,7 +116,7 @@ export default function TestimonyDataPage() {
         key: "share",
         label: "允許分享",
         sortable: true,
-        width: "100px",
+        width: "w-24",
         render: (value: unknown) => {
           const share = value as boolean;
           return (
@@ -136,7 +136,7 @@ export default function TestimonyDataPage() {
         key: "remark",
         label: "備註",
         sortable: false,
-        width: "200px",
+        width: "w-48",
         render: (value: unknown) => {
           const remark = value as string | undefined;
           if (!remark) return <span className="text-gray-400">無</span>;
@@ -151,7 +151,7 @@ export default function TestimonyDataPage() {
         key: "createdAt",
         label: "建立時間",
         sortable: true,
-        width: "120px",
+        width: "w-32",
         render: (value: unknown) => {
           if (!value) return null;
           const friendlyTime = DateUtil.friendlyDate(value);
@@ -167,7 +167,7 @@ export default function TestimonyDataPage() {
         key: "updatedAt",
         label: "更新時間",
         sortable: true,
-        width: "120px",
+        width: "w-32",
         render: (value: unknown) => {
           if (!value) return null;
           const friendlyTime = DateUtil.friendlyDate(value);

@@ -1,29 +1,37 @@
-import { permissionService } from "@/api";
-import type { PermissionDetail as ApiPermissionDetail, PermissionPageItem } from "@/api/types";
+import { instructorService, type InstructorDetail, type InstructorItem } from "@/api/services/instructorService";
 import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import RestoreForm from "@/components/DataPage/RestoreForm";
 import { Modal } from "@/components/ui/modal";
+import Tooltip from "@/components/ui/tooltip";
 import { PopoverPosition } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
+import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MdCheck, MdClose, MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
-import PermissionDataForm, { type PermissionFormValues } from "./PermissionDataForm";
-import PermissionDeleteForm from "./PermissionDeleteForm";
-import PermissionDetailView from "./PermissionDetailView";
-import PermissionSearchPopover, { type PermissionSearchFilters } from "./PermissionSearchPopover";
+import { MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
+import InstructorDataForm, { type InstructorFormValues } from "./InstructorDataForm";
+import InstructorDeleteForm from "./InstructorDeleteForm";
+import InstructorDetailView from "./InstructorDetailView";
+import InstructorSearchPopover, { type InstructorSearchFilters } from "./InstructorSearchPopover";
 
-export default function PermissionDataPage() {
+interface InstructorPagesResponse {
+  page: number; // 0-based from backend
+  pageSize?: number;
+  total: number;
+  items?: InstructorItem[];
+}
+
+export default function InstructorDataPage() {
   const [currentPage, setCurrentPage] = useState(1); // 1-based for UI
   const [pageSize, setPageSize] = useState(10);
-  const [searchFilters, setSearchFilters] = useState<PermissionSearchFilters>({});
-  const [appliedFilters, setAppliedFilters] = useState<PermissionSearchFilters>({});
+  const [searchFilters, setSearchFilters] = useState<InstructorSearchFilters>({});
+  const [appliedFilters, setAppliedFilters] = useState<InstructorSearchFilters>({});
   const [showDeleted, setShowDeleted] = useState(false);
   const [orderBy, setOrderBy] = useState<string>();
   const [descending, setDescending] = useState<boolean>();
 
-  const [items, setItems] = useState<PermissionPageItem[]>([]);
+  const [items, setItems] = useState<InstructorItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
@@ -34,9 +42,8 @@ export default function PermissionDataPage() {
   const { isOpen: isViewOpen, openModal: openViewModal, closeModal: closeViewModal } = useModal(false);
   const { isOpen: isRestoreOpen, openModal: openRestoreModal, closeModal: closeRestoreModal } = useModal(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
-  const [editing, setEditing] = useState<PermissionPageItem | null>(null);
-  const [editingFormValues, setEditingFormValues] = useState<PermissionFormValues | null>(null);
-  const [viewing, setViewing] = useState<PermissionPageItem | null>(null);
+  const [editing, setEditing] = useState<InstructorDetail | null>(null);
+  const [viewing, setViewing] = useState<InstructorItem | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [restoreIds, setRestoreIds] = useState<string[]>([]);
 
@@ -72,103 +79,113 @@ export default function PermissionDataPage() {
     try {
       const params = {
         page: Math.max(0, currentPage - 1),
-        page_size: pageSize,
-        order_by: orderBy && orderBy.trim() !== "" ? orderBy : undefined,
+        pageSize: pageSize,
+        orderBy: orderBy && orderBy.trim() !== "" ? orderBy : undefined,
         descending: orderBy && orderBy.trim() !== "" ? descending : undefined,
         keyword: appliedFilters.keyword || undefined,
-        is_active: appliedFilters.isActive,
         deleted: showDeleted || undefined,
       } as Record<string, unknown>;
 
-      const response = await permissionService.pages(params);
-      if (response.success) {
-        const data = response.data;
-        console.log("API Response:", data);
-        setItems(data.items || []);
-        setTotal(data.total);
-        // Backend page is 0-based; map back to 1-based UI if changed externally
-        setCurrentPage(data.page + 1);
-        // 處理 API 可能返回 pageSize 或 page_size 的情況
-        const responsePageSize = data.page_size || 10;
-        console.log("pageSize from API:", responsePageSize);
-        setPageSize(responsePageSize);
-      } else {
-        console.error("Failed to fetch permissions:", response.message);
-        setItems([]);
-        setTotal(0);
-      }
+      const res = await instructorService.getPages(params);
+      const data = res.data as InstructorPagesResponse;
+      setItems(data.items || []);
+      setTotal(data.total);
+      // Backend page is 0-based; map back to 1-based UI if changed externally
+      setCurrentPage(data.page + 1);
+      // 處理 API 可能返回 pageSize 的情況
+      const responsePageSize = data.pageSize || 10;
+      setPageSize(responsePageSize);
     } catch (e) {
-      console.error("Error fetching permission pages:", e);
+      console.error("Error fetching instructor pages:", e);
       // Simplified error surfacing for demo
       alert("載入失敗，請稍後重試");
     } finally {
       setLoading(false);
     }
-  }, []); // 移除 clearSelection 依賴
+  }, []);
 
   // Columns definition
-  const columns: DataTableColumn<PermissionPageItem>[] = useMemo(
+  const columns: DataTableColumn<InstructorItem>[] = useMemo(
     () => [
       {
-        key: "displayName",
-        label: "顯示名稱",
-        width: "w-48",
-        tooltip: (row) => row.displayName,
+        key: "name",
+        label: "姓名",
+        sortable: false,
+        width: "max-w-56",
+        tooltip: true,
+        tooltipWidth: "max-w-56",
       },
       {
-        key: "code",
-        label: "代碼",
-        sortable: true,
-        width: "w-48",
-        tooltip: (row) => row.code,
-        render: (_value: unknown, row: PermissionPageItem) => (
-          <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-sm font-mono">{row.code}</code>
-        ),
+        key: "title",
+        label: "職稱",
+        sortable: false,
+        width: "max-w-40",
+        tooltip: true,
+        tooltipWidth: "max-w-40",
+        render: (value: unknown) => {
+          const title = value as string | undefined;
+          return title || <span className="text-gray-400">無</span>;
+        },
       },
       {
-        key: "isActive",
-        label: "狀態",
+        key: "bio",
+        label: "簡介",
+        sortable: false,
+        width: "w-auto",
+        tooltip: true,
+        tooltipWidth: "max-w-96",
+        render: (value: unknown) => {
+          const bio = value as string | undefined;
+          return bio || <span className="text-gray-400">無</span>;
+        },
+      },
+      {
+        key: "remark",
+        label: "備註",
+        sortable: false,
+        width: "w-48",
+        tooltip: true,
+        tooltipWidth: "max-w-48",
+        render: (value: unknown) => {
+          const remark = value as string | undefined;
+          return remark || <span className="text-gray-400">無</span>;
+        },
+      },
+      {
+        key: "createdAt",
+        label: "建立時間",
         sortable: true,
-        width: "w-20",
-        render: (_value: unknown, row: PermissionPageItem) => {
+        width: "w-32",
+        render: (value: unknown) => {
+          if (!value) return null;
+          const friendlyTime = DateUtil.friendlyDate(value);
+          const shortTime = DateUtil.format(value);
           return (
-            <span
-              className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
-                row.isActive
-                  ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400"
-                  : "bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400"
-              }`}
-            >
-              {row.isActive ? <MdCheck size={16} /> : <MdClose size={16} />}
-            </span>
+            <Tooltip content={shortTime}>
+              <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help">{friendlyTime}</span>
+            </Tooltip>
           );
         },
       },
       {
-        key: "resourceName",
-        label: "資源",
-        width: "w-36",
-        tooltip: (row) => row.resourceName,
-      },
-      {
-        key: "verbName",
-        label: "動作",
-        width: "w-24",
-        tooltip: (row) => row.verbName,
-      },
-      {
-        key: "description",
-        label: "描述",
-        width: "w-72",
-        render: (_value: unknown, row: PermissionPageItem) => (
-          <span className="text-gray-600 dark:text-gray-400 truncate max-w-xs">{row.description || "-"}</span>
-        ),
+        key: "updatedAt",
+        label: "更新時間",
+        sortable: true,
+        width: "w-32",
+        render: (value: unknown) => {
+          if (!value) return null;
+          const friendlyTime = DateUtil.friendlyDate(value);
+          const shortTime = DateUtil.format(value);
+          return (
+            <Tooltip content={shortTime}>
+              <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help">{friendlyTime}</span>
+            </Tooltip>
+          );
+        },
       },
     ],
     []
   );
-
-  // Toolbar buttons
 
   // Trigger fetch on dependencies change
   useEffect(() => {
@@ -196,7 +213,7 @@ export default function PermissionDataPage() {
     setCurrentPage(1);
   };
 
-  const handleRowSelect = (_selectedRows: PermissionPageItem[], selectedKeys: string[]) => {
+  const handleRowSelect = (_selectedRows: InstructorItem[], selectedKeys: string[]) => {
     setSelectedKeys(selectedKeys);
   };
 
@@ -205,15 +222,10 @@ export default function PermissionDataPage() {
     openRestoreModal();
   }, [selectedKeys, openRestoreModal]);
 
-  const handleSingleRestore = async (row: PermissionPageItem) => {
-    setRestoreIds([row.id]);
-    openRestoreModal();
-  };
-
   const handleRestoreConfirm = async (ids: string[]) => {
     try {
       setSubmitting(true);
-      await permissionService.restore(ids);
+      await instructorService.restore(ids);
       await fetchPages();
       closeRestoreModal();
     } catch (e) {
@@ -222,6 +234,11 @@ export default function PermissionDataPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleSingleRestore = async (row: InstructorItem) => {
+    setRestoreIds([row.id]);
+    openRestoreModal();
   };
 
   // Toolbar buttons
@@ -238,7 +255,7 @@ export default function PermissionDataPage() {
       trigger: ReactNode;
       popover: PopoverType;
     }) => (
-      <PermissionSearchPopover
+      <InstructorSearchPopover
         filters={searchFilters}
         onFiltersChange={setSearchFilters}
         onSearch={(filters) => {
@@ -261,13 +278,12 @@ export default function PermissionDataPage() {
 
     const buttons = [
       CommonPageButton.SEARCH(searchPopoverCallback, {
-        popover: { title: "搜尋權限", position: PopoverPosition.BottomLeft, width: "400px" },
+        popover: { title: "搜尋講者", position: PopoverPosition.BottomLeft, width: "500px" },
       }),
       CommonPageButton.ADD(
         () => {
           setFormMode("create");
           setEditing(null);
-          setEditingFormValues(null);
           openModal();
         },
         {
@@ -294,13 +310,13 @@ export default function PermissionDataPage() {
   }, [openModal, fetchPages, searchFilters, showDeleted, selectedKeys, handleBulkRestore]);
 
   // Row actions
-  const rowActions: DataTableRowAction<PermissionPageItem>[] = useMemo(
+  const rowActions: DataTableRowAction<InstructorItem>[] = useMemo(
     () => [
       {
         key: "view",
         label: "檢視",
         icon: <MdVisibility />,
-        onClick: (row: PermissionPageItem) => {
+        onClick: (row: InstructorItem) => {
           setViewing(row);
           openViewModal();
         },
@@ -309,35 +325,15 @@ export default function PermissionDataPage() {
         key: "edit",
         label: "編輯",
         icon: <MdEdit />,
-        onClick: async (row: PermissionPageItem) => {
+        onClick: async (row: InstructorItem) => {
           try {
-            setSubmitting(true);
-            // 獲取完整的權限詳情（包含 resourceId 和 verbId）
-            const response = await permissionService.getById(row.id);
-            if (response.success) {
-              const detail: ApiPermissionDetail = response.data;
-              setFormMode("edit");
-              setEditing(row);
-              // 轉換為表單值格式
-              setEditingFormValues({
-                id: detail.id,
-                displayName: detail.displayName,
-                code: detail.code,
-                resourceId: detail.resource.id,
-                verbId: detail.verb.id,
-                isActive: detail.isActive,
-                description: detail.description || "",
-                remark: detail.remark || "",
-              });
-              openModal();
-            } else {
-              alert("載入權限詳情失敗，請稍後再試");
-            }
+            const response = await instructorService.getById(row.id);
+            setEditing(response.data);
+            setFormMode("edit");
+            openModal();
           } catch (e) {
-            console.error("Error fetching permission detail:", e);
-            alert("載入權限詳情失敗，請稍後再試");
-          } finally {
-            setSubmitting(false);
+            console.error("Error fetching instructor detail:", e);
+            alert("載入講者詳情失敗，請稍後重試");
           }
         },
         visible: !showDeleted, // 僅在正常模式下顯示
@@ -347,7 +343,7 @@ export default function PermissionDataPage() {
         label: "還原",
         icon: <MdRestore />,
         variant: "primary",
-        onClick: async (row: PermissionPageItem) => {
+        onClick: async (row: InstructorItem) => {
           handleSingleRestore(row);
         },
         visible: showDeleted, // 僅在回收桶模式下顯示
@@ -357,23 +353,29 @@ export default function PermissionDataPage() {
         label: showDeleted ? "永久刪除" : "刪除",
         icon: <MdDelete />,
         variant: "danger",
-        onClick: (row: PermissionPageItem) => {
-          setEditing(row);
-          openDeleteModal();
+        onClick: async (row: InstructorItem) => {
+          try {
+            const response = await instructorService.getById(row.id);
+            setEditing(response.data);
+            openDeleteModal();
+          } catch (e) {
+            console.error("Error fetching instructor detail:", e);
+            alert("載入講者詳情失敗，請稍後重試");
+          }
         },
       },
     ],
-    [openModal, openDeleteModal, openViewModal, showDeleted, fetchPages]
+    [openModal, openDeleteModal, openViewModal, showDeleted, fetchPages, handleSingleRestore]
   );
 
   // Submit handlers
-  const handleSubmit = async (values: PermissionFormValues) => {
+  const handleSubmit = async (values: InstructorFormValues) => {
     try {
       setSubmitting(true);
       if (formMode === "create") {
-        await permissionService.create(values);
+        await instructorService.create(values);
       } else if (formMode === "edit" && editing?.id) {
-        await permissionService.update(editing.id, values);
+        await instructorService.update(editing.id, values);
       }
       closeModal();
       // Refresh list by calling fetchPages directly
@@ -390,7 +392,7 @@ export default function PermissionDataPage() {
     try {
       setSubmitting(true);
       if (!editing?.id) return;
-      await permissionService.remove(editing.id, { reason, permanent: !!permanent });
+      await instructorService.remove(editing.id, { reason, permanent: !!permanent });
       closeDeleteModal();
       // Refresh list by calling fetchPages directly
       await fetchPages();
@@ -409,13 +411,31 @@ export default function PermissionDataPage() {
       total,
       items,
     };
-    console.log("pagedData:", data);
     return data;
   }, [currentPage, pageSize, total, items]);
 
+  // Convert InstructorDetail to InstructorFormValues
+  const editingFormValues = useMemo<InstructorFormValues | null>(() => {
+    if (!editing) return null;
+
+    // 从 files 中提取 fileIds
+    const fileIds = editing.files?.map((file) => file.id) || [];
+
+    return {
+      id: editing.id,
+      name: editing.name,
+      title: editing.title,
+      bio: editing.bio,
+      remark: editing.remark,
+      description: editing.description,
+      fileIds: fileIds.length > 0 ? fileIds : undefined,
+      files: editing.files, // 传递完整的文件信息，以便在编辑表单中显示图片
+    };
+  }, [editing]);
+
   return (
     <>
-      <DataPage<PermissionPageItem>
+      <DataPage<InstructorItem>
         data={pagedData}
         columns={columns}
         loading={loading}
@@ -433,12 +453,12 @@ export default function PermissionDataPage() {
       />
 
       <Modal
-        title={formMode === "create" ? "新增權限" : "編輯權限"}
+        title={formMode === "create" ? "新增講者" : "編輯講者"}
         isOpen={isOpen}
         onClose={closeModal}
-        className="max-w-[800px] w-full mx-4 p-6"
+        className="max-w-[900px] w-full mx-4 p-6"
       >
-        <PermissionDataForm
+        <InstructorDataForm
           mode={formMode}
           defaultValues={editingFormValues}
           onSubmit={handleSubmit}
@@ -448,26 +468,26 @@ export default function PermissionDataPage() {
       </Modal>
 
       <Modal
-        title={showDeleted ? "確認永久刪除權限" : "確認刪除權限"}
+        title={showDeleted ? "確認永久刪除講者" : "確認刪除講者"}
         isOpen={isDeleteOpen}
         onClose={closeDeleteModal}
         className="max-w-[560px] w-full mx-4 p-6"
       >
-        <PermissionDeleteForm onSubmit={handleDelete} onCancel={closeDeleteModal} submitting={submitting} isPermanent={showDeleted} />
+        <InstructorDeleteForm onSubmit={handleDelete} onCancel={closeDeleteModal} submitting={submitting} isPermanent={showDeleted} />
       </Modal>
 
-      <Modal title="還原權限" isOpen={isRestoreOpen} onClose={closeRestoreModal} className="max-w-[500px] w-full mx-4 p-6">
+      <Modal title="還原講者" isOpen={isRestoreOpen} onClose={closeRestoreModal} className="max-w-[500px] w-full mx-4 p-6">
         <RestoreForm
           ids={restoreIds}
-          entityName="權限"
+          entityName="講者"
           onSubmit={handleRestoreConfirm}
           onCancel={closeRestoreModal}
           submitting={submitting}
         />
       </Modal>
 
-      <Modal title="權限詳細資料" isOpen={isViewOpen} onClose={closeViewModal} className="max-w-[800px] w-full mx-4 p-6">
-        {viewing && <PermissionDetailView permissionId={viewing.id} />}
+      <Modal title="講者詳細資料" isOpen={isViewOpen} onClose={closeViewModal} className="max-w-[900px] w-full mx-4 p-6">
+        {viewing && <InstructorDetailView instructorId={viewing.id} />}
       </Modal>
     </>
   );

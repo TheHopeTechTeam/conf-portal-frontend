@@ -77,27 +77,32 @@ export default function RoleDataPage() {
 
   const columns: DataTableColumn<RolePageItem>[] = useMemo(
     () => [
-      { key: "code", label: "代碼", sortable: true, width: 160 },
-      { key: "name", label: "名稱", sortable: true, width: 200 },
+      { key: "code", label: "代碼", sortable: true, width: "w-40" },
+      { key: "name", label: "名稱", sortable: true, width: "w-48" },
       {
         key: "isActive",
         label: "啟用",
         sortable: true,
-        width: 100,
+        width: "w-24",
         render: (val) => (val ? "是" : "否"),
       },
-      { key: "description", label: "描述" },
-      { key: "remark", label: "備註" },
+      {
+        key: "remark",
+        label: "備註",
+        overflow: true,
+        width: "w-48",
+      },
       {
         key: "permissions",
         label: "權限數",
-        width: 100,
+        width: "w-24",
         render: (_, row) => (row.permissions ? row.permissions.length : 0),
       },
       {
         key: "createAt",
         label: "建立時間",
-        width: 180,
+        sortable: true,
+        width: "w-44",
         render: (value: unknown) => {
           if (!value) return null;
           const friendlyTime = DateUtil.friendlyDate(value as string);
@@ -112,7 +117,8 @@ export default function RoleDataPage() {
       {
         key: "updateAt",
         label: "更新時間",
-        width: 180,
+        sortable: true,
+        width: "w-44",
         render: (value: unknown) => {
           if (!value) return null;
           const friendlyTime = DateUtil.friendlyDate(value as string);

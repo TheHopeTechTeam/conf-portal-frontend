@@ -11,6 +11,9 @@ interface TooltipProps {
   theme?: TooltipTheme;
   enterDelay?: number;
   leaveDelay?: number;
+  className?: string;
+  /** Tooltip 内容容器的样式类名（仅应用于 tooltip 气泡，不影响触发元素） */
+  contentClassName?: string;
 }
 
 function getPositionClasses(placement: TooltipPlacement) {
@@ -50,10 +53,11 @@ export default function Tooltip({
   theme = "auto",
   enterDelay = 100,
   leaveDelay = 100,
+  className = "",
+  contentClassName = "",
 }: TooltipProps) {
   const pos = getPositionClasses(placement);
   const { theme: currentTheme } = useTheme();
-  const [isVisible, setIsVisible] = React.useState(false);
   const [timeoutId, setTimeoutId] = React.useState<NodeJS.Timeout | null>(null);
 
   // auto: use opposite of current app theme
@@ -71,10 +75,7 @@ export default function Tooltip({
     }
 
     if (enterDelay > 0) {
-      const id = setTimeout(() => setIsVisible(true), enterDelay);
-      setTimeoutId(id);
-    } else {
-      setIsVisible(true);
+      setTimeoutId(setTimeout(() => {}, enterDelay));
     }
   };
 
@@ -85,10 +86,7 @@ export default function Tooltip({
     }
 
     if (leaveDelay > 0) {
-      const id = setTimeout(() => setIsVisible(false), leaveDelay);
-      setTimeoutId(id);
-    } else {
-      setIsVisible(false);
+      setTimeoutId(setTimeout(() => {}, leaveDelay));
     }
   };
 
@@ -104,15 +102,19 @@ export default function Tooltip({
   const arrowBg = isDark ? "bg-[#1E2634]" : "bg-white";
 
   return (
-    <div className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <div className={`relative group ${className}`} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       {children}
       <div
-        className={`absolute z-999 ${pos.container} transition-opacity duration-200 ${
-          isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className={`invisible absolute z-999 group-hover:visible transition-opacity duration-200 ${pos.container} opacity-0 group-hover:opacity-100`}
       >
-        <div className="relative">
-          <div className={`drop-shadow-4xl whitespace-nowrap rounded-lg px-3 py-3 text-xs font-medium ${bubbleClass}`}>{content}</div>
+        <div className={`relative ${contentClassName}`}>
+          <div
+            className={`drop-shadow-4xl rounded-lg px-3 py-3 text-xs font-medium ${
+              contentClassName ? "text-pretty" : "whitespace-nowrap"
+            } ${bubbleClass}`}
+          >
+            {content}
+          </div>
           <div className={`absolute ${pos.arrow} h-3 w-4 rotate-45 ${arrowBg}`}></div>
         </div>
       </div>

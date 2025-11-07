@@ -1,6 +1,6 @@
 import type { ResourceMenuItem } from "@/types/resource";
 import { useEffect, useRef, useState } from "react";
-import { MdAdd, MdArrowDownward, MdArrowUpward, MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
+import { MdAdd, MdArrowDownward, MdArrowUpward, MdDelete, MdEdit, MdRestore, MdVisibility, MdSwapHoriz } from "react-icons/md";
 
 interface ResourceContextMenuProps {
   visible: boolean;
@@ -14,6 +14,7 @@ interface ResourceContextMenuProps {
   onAddChild: (resource: ResourceMenuItem) => void;
   onMoveUp: (resource: ResourceMenuItem) => void;
   onMoveDown: (resource: ResourceMenuItem) => void;
+  onChangeParent: (resource: ResourceMenuItem) => void;
   canView?: boolean;
   canEdit: boolean;
   canDelete: boolean;
@@ -21,6 +22,7 @@ interface ResourceContextMenuProps {
   canAddChild: boolean;
   canMoveUp: (id: string) => boolean;
   canMoveDown: (id: string) => boolean;
+  canChangeParent?: boolean;
 }
 
 export const ResourceContextMenu: React.FC<ResourceContextMenuProps> = ({
@@ -35,6 +37,7 @@ export const ResourceContextMenu: React.FC<ResourceContextMenuProps> = ({
   onAddChild,
   onMoveUp,
   onMoveDown,
+  onChangeParent,
   canView = true,
   canEdit,
   canDelete,
@@ -42,6 +45,7 @@ export const ResourceContextMenu: React.FC<ResourceContextMenuProps> = ({
   canAddChild,
   canMoveUp,
   canMoveDown,
+  canChangeParent = true,
 }) => {
   // 限制菜單位置在可視區域內
   const menuRef = useRef<HTMLDivElement>(null);
@@ -113,6 +117,17 @@ export const ResourceContextMenu: React.FC<ResourceContextMenuProps> = ({
         >
           <MdAdd className="h-4 w-4" />
           新增子資源
+        </button>
+      )}
+
+      {/* 切換父資源 - 只有未刪除的子資源才顯示 */}
+      {!showOnlyViewInTrashForRoot && canChangeParent && canEdit && !resource.is_deleted && resource.pid && (
+        <button
+          onClick={() => onChangeParent(resource)}
+          className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+        >
+          <MdSwapHoriz className="h-4 w-4" />
+          切換父資源
         </button>
       )}
 

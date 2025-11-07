@@ -142,14 +142,15 @@ export default function FeedbackDataPage() {
         key: "name",
         label: "姓名",
         sortable: true,
-        width: "150px",
+        width: "w-40",
         tooltip: (row) => row.name,
       },
       {
         key: "email",
         label: "電子郵件",
         sortable: true,
-        width: "250px",
+        width: "w-60",
+        overflow: true,
         tooltip: (row) => row.email || "",
         render: (value: unknown) => {
           const email = value as string | undefined;
@@ -157,10 +158,19 @@ export default function FeedbackDataPage() {
         },
       },
       {
+        key: "message",
+        label: "訊息",
+        sortable: false,
+        width: "w-auto",
+        overflow: true,
+        tooltip: true,
+        tooltipWidth: "w-auto max-w-[500px]",
+      },
+      {
         key: "status",
         label: "狀態",
         sortable: true,
-        width: "100px",
+        width: "w-24",
         render: (value: unknown) => {
           const status = value as FeedbackStatus;
           return <span className={getStatusColor(status)}>{getStatusText(status)}</span>;
@@ -170,22 +180,20 @@ export default function FeedbackDataPage() {
         key: "remark",
         label: "備註",
         sortable: false,
-        width: "200px",
+        width: "w-36",
+        overflow: true,
+        tooltip: true,
+        tooltipWidth: "w-36",
         render: (value: unknown) => {
           const remark = value as string | undefined;
-          if (!remark) return <span className="text-gray-400">無</span>;
-          return (
-            <Tooltip content={remark}>
-              <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help line-clamp-2">{remark}</span>
-            </Tooltip>
-          );
+          return remark || <span className="text-gray-400">無</span>;
         },
       },
       {
         key: "createdAt",
         label: "建立時間",
         sortable: true,
-        width: "120px",
+        width: "w-36",
         render: (value: unknown) => {
           if (!value) return null;
           const friendlyTime = DateUtil.friendlyDate(value);
@@ -201,7 +209,7 @@ export default function FeedbackDataPage() {
         key: "updatedAt",
         label: "更新時間",
         sortable: true,
-        width: "120px",
+        width: "w-36",
         render: (value: unknown) => {
           if (!value) return null;
           const friendlyTime = DateUtil.friendlyDate(value);

@@ -193,14 +193,14 @@ const FaqCategoryManagementModal: React.FC<FaqCategoryManagementModalProps> = ({
         key: "name",
         label: "分類名稱",
         sortable: false,
-        width: "200px",
+        width: "w-48",
         tooltip: (row) => row.name,
       },
       {
         key: "remark",
         label: "備註",
         sortable: false,
-        width: "200px",
+        width: "w-48",
         tooltip: (row) => row.remark || "",
         render: (value: unknown) => {
           const remark = value as string | undefined;
@@ -216,7 +216,7 @@ const FaqCategoryManagementModal: React.FC<FaqCategoryManagementModalProps> = ({
         key: "sequence",
         label: "排序",
         sortable: false,
-        width: "100px",
+        width: "w-24",
         render: (value: unknown) => {
           const sequence = value as number | undefined;
           return sequence !== undefined ? sequence.toFixed(1) : <span className="text-gray-400">-</span>;
@@ -226,7 +226,7 @@ const FaqCategoryManagementModal: React.FC<FaqCategoryManagementModalProps> = ({
         key: "createdAt",
         label: "建立時間",
         sortable: false,
-        width: "150px",
+        width: "w-36",
         render: (value: unknown) => {
           if (!value) return null;
           const friendlyTime = DateUtil.friendlyDate(value);
@@ -242,7 +242,7 @@ const FaqCategoryManagementModal: React.FC<FaqCategoryManagementModalProps> = ({
         key: "updatedAt",
         label: "更新時間",
         sortable: false,
-        width: "150px",
+        width: "w-36",
         render: (value: unknown) => {
           if (!value) return null;
           const friendlyTime = DateUtil.friendlyDate(value);

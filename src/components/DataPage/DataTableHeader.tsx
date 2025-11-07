@@ -104,24 +104,23 @@ export default function DataTableHeader<T>({
           const isLastColumn = columnIndex === columns.filter((c) => c.visible !== false).length - 1;
           const shouldShowExpandHeader = hasExpandColumn && isLastColumn;
 
+          // 構建對齊相關的 Tailwind CSS 類名
+          const alignClass = column.align === "center" ? "text-center" : column.align === "end" ? "text-right" : "text-left";
+
           return (
             <TableCell
               key={column.key}
               isHeader
-              className={`${firstColumn} px-4 py-3 border-b border-gray-100 dark:border-white/[0.05] ${column.className || ""}`}
-              style={{
-                width: column.width,
-                minWidth: column.minWidth,
-                maxWidth: column.maxWidth,
-              }}
+              className={`${firstColumn} px-4 py-3 border-b border-gray-100 dark:border-white/[0.05] ${column.width || ""} ${
+                column.className || ""
+              }`}
             >
               <div
                 className={`flex items-center justify-between ${isSortable ? "cursor-pointer" : ""}`}
                 onClick={() => isSortable && handleSort(column.key)}
               >
                 <span
-                  className={`font-medium text-gray-700 text-theme-xs dark:text-gray-400 ${isActive ? "text-brand-500" : ""}`}
-                  style={{ textAlign: column.align || "start" }}
+                  className={`font-medium text-gray-700 text-theme-xs dark:text-gray-400 ${alignClass} ${isActive ? "text-brand-500" : ""}`}
                 >
                   {column.label}
                 </span>

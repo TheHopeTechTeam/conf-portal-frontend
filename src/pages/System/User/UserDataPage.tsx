@@ -136,28 +136,28 @@ export default function UserDataPage() {
         key: "phone_number",
         label: "手機號碼",
         sortable: true,
-        width: "150px",
+        width: "w-36",
         tooltip: (row) => row.phone_number,
       },
       {
         key: "email",
         label: "電子郵件",
         sortable: true,
-        width: "250px",
+        width: "w-60",
         tooltip: (row) => row.email,
       },
       {
         key: "display_name",
         label: "顯示名稱",
         sortable: true,
-        width: "150px",
+        width: "w-36",
         tooltip: (row) => row.display_name || "",
       },
       {
         key: "gender",
         label: "性別",
         sortable: true,
-        width: "80px",
+        width: "w-20",
         valueEnum: {
           item: (value: unknown) => {
             const v = value as Gender | undefined;
@@ -172,7 +172,7 @@ export default function UserDataPage() {
         key: "is_verified",
         label: "已驗證",
         sortable: true,
-        width: "70px",
+        width: "w-18",
         render: (_value: unknown, row: UserDetail) => {
           return (
             <span
@@ -191,7 +191,7 @@ export default function UserDataPage() {
         key: "is_active",
         label: "啟用",
         sortable: true,
-        width: "70px",
+        width: "w-18",
         render: (_value: unknown, row: UserDetail) => {
           return (
             <span
@@ -210,7 +210,7 @@ export default function UserDataPage() {
         key: "is_admin",
         label: "管理員",
         sortable: true,
-        width: "100px",
+        width: "w-24",
         render: (_value: unknown, row: UserDetail) => {
           return (
             <div className="flex items-center gap-1">
@@ -236,7 +236,7 @@ export default function UserDataPage() {
         key: "is_ministry",
         label: "服事",
         sortable: true,
-        width: "70px",
+        width: "w-18",
         render: (_value: unknown, row: UserDetail) => {
           return (
             <span
@@ -255,7 +255,7 @@ export default function UserDataPage() {
         key: "last_login_at",
         label: "最後登入",
         sortable: true,
-        width: "120px",
+        width: "w-32",
         render: (value: unknown) => {
           if (!value) return <span className="text-gray-400">從未登入</span>;
           const friendlyTime = DateUtil.friendlyDate(value);
@@ -271,7 +271,7 @@ export default function UserDataPage() {
         key: "created_at",
         label: "建立時間",
         sortable: true,
-        width: "120px",
+        width: "w-32",
         render: (value: unknown) => {
           if (!value) return null;
           const friendlyTime = DateUtil.friendlyDate(value);

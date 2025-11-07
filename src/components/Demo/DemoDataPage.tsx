@@ -109,7 +109,7 @@ export default function DemoDataPage() {
         key: "name",
         label: "名稱",
         sortable: true,
-        width: "300px",
+        width: "w-72",
         tooltip: (row) => row.name,
       },
       {
@@ -123,13 +123,13 @@ export default function DemoDataPage() {
         key: "age",
         label: "年齡",
         sortable: true,
-        width: "200px",
+        width: "w-48",
       },
       {
         key: "gender",
         label: "性別",
         sortable: true,
-        width: "200px",
+        width: "w-48",
         valueEnum: {
           item: (value: unknown) => {
             const v = value as Gender | undefined;
@@ -143,7 +143,7 @@ export default function DemoDataPage() {
         key: "created_at",
         label: "建立時間",
         sortable: true,
-        width: "120px",
+        width: "w-32",
         render: (value: unknown) => {
           if (!value) return null;
           const friendlyTime = DateUtil.friendlyDate(value);
@@ -159,7 +159,7 @@ export default function DemoDataPage() {
         key: "updated_at",
         label: "更新時間",
         sortable: true,
-        width: "120px",
+        width: "w-32",
         render: (value: unknown) => {
           if (!value) return null;
           const friendlyTime = DateUtil.friendlyDate(value);
@@ -175,13 +175,13 @@ export default function DemoDataPage() {
         key: "created_by",
         label: "建立者",
         sortable: true,
-        width: "120px",
+        width: "w-32",
       },
       {
         key: "updated_by",
         label: "更新者",
         sortable: true,
-        width: "120px",
+        width: "w-32",
       },
     ],
     []

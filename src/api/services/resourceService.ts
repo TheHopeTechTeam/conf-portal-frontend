@@ -82,6 +82,11 @@ export interface DeleteResourceData {
   permanent?: boolean;
 }
 
+// 變更父資源數據
+export interface ResourceChangeParentData {
+  pid: string;
+}
+
 // 資源服務類別
 class ResourceService {
   // 取得資源列表（支援查詢已刪除/未刪除資源）
@@ -122,6 +127,11 @@ class ResourceService {
   // 恢復資源
   async restoreResource(id: string): Promise<ApiResponse<void>> {
     return httpClient.put<void>(API_ENDPOINTS.RESOURCES.RESTORE(id));
+  }
+
+  // 變更父資源
+  async changeParent(id: string, data: ResourceChangeParentData): Promise<ApiResponse<void>> {
+    return httpClient.put<void>(API_ENDPOINTS.RESOURCES.CHANGE_PARENT(id), data);
   }
 }
 

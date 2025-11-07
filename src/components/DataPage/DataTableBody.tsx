@@ -110,7 +110,7 @@ export default function DataTableBody<T extends Record<string, unknown>>({
     return <span>{displayValue}</span>;
   };
 
-  const renderTooltip = (column: DataTableColumn<T>, row: T) => {
+  const renderTooltip = (column: DataTableColumn<T>, row: T, index: number) => {
     if (!column.tooltip) return null;
 
     const tooltipText =
@@ -120,9 +120,13 @@ export default function DataTableBody<T extends Record<string, unknown>>({
         ? column.tooltip(row)
         : String(row[column.key] || "");
 
+    if (tooltipText === undefined || tooltipText === null || tooltipText === "") {
+      return renderCellValue(column, row, index);
+    }
+
     return (
-      <Tooltip content={tooltipText}>
-        <span className="cursor-help">{renderCellValue(column, row, 0)}</span>
+      <Tooltip content={tooltipText} className={column.tooltipWidth || ""} contentClassName={column.tooltipWidth || ""} placement="bottom">
+        <span className="cursor-help truncate block">{renderCellValue(column, row, index)}</span>
       </Tooltip>
     );
   };
@@ -184,26 +188,25 @@ export default function DataTableBody<T extends Record<string, unknown>>({
                 const isLastColumn = columnIndex === columns.filter((c) => c.visible !== false).length - 1;
                 const shouldShowExpandButton = hasExpandColumn && isLastColumn;
 
+                // 構建對齊相關的 Tailwind CSS 類名
+                const alignClass = column.align === "center" ? "text-center" : column.align === "end" ? "text-right" : "text-left";
+
+                // 構建 cursor 相關的 Tailwind CSS 類名
+                const cursorClass = column.onClick ? "cursor-pointer" : "cursor-default";
+
                 return (
                   <TableCell
                     key={column.key}
                     className={`${firstColumn} px-4 py-4 font-normal text-gray-800 text-theme-sm dark:text-white/90 ${
                       column.overflow ? "" : "whitespace-nowrap"
-                    } ${column.className || ""}`}
-                    style={{
-                      width: column.width,
-                      minWidth: column.minWidth,
-                      maxWidth: column.maxWidth,
-                      textAlign: column.align || "start",
-                      cursor: column.onClick ? "pointer" : "default",
-                    }}
+                    } ${column.width || ""} ${alignClass} ${cursorClass} ${column.className || ""}`}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 w-full">
+                      <div className="flex-1 min-w-0 w-full">
                         {column.copyable
                           ? renderCellValue(column, row, index)
                           : column.tooltip
-                          ? renderTooltip(column, row)
+                          ? renderTooltip(column, row, index)
                           : renderCellValue(column, row, index)}
                       </div>
                       {shouldShowExpandButton && (

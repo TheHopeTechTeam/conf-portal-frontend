@@ -57,6 +57,7 @@ export const API_ENDPOINTS = {
     DELETE: (id: string) => `${ADMIN_API_PREFIX}/resource/${id}`,
     RESTORE: (id: string) => `${ADMIN_API_PREFIX}/resource/restore/${id}`,
     CHANGE_SEQUENCE: `${ADMIN_API_PREFIX}/resource/change_sequence`,
+    CHANGE_PARENT: (id: string) => `${ADMIN_API_PREFIX}/resource/change_parent/${id}`,
     TREE: "/resources/tree",
     GROUPS: "/resources/groups",
     MENUS: `${ADMIN_API_PREFIX}/resource/menus`,

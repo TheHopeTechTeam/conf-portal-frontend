@@ -1,21 +1,11 @@
 import Blank from "@/pages/Blank";
-import FaqManagement from "@/pages/Menus/Faq/FaqManagement";
 import FileManagement from "@/pages/Menus/File/FileManagement";
+import InstructorManagement from "@/pages/Menus/Instructor/InstructorManagement";
 import LocationManagement from "@/pages/Menus/Location/LocationManagement";
 import TestimonyManagement from "@/pages/Menus/Testimony/TestimonyManagement";
 import { AppRoute } from "@/types/route";
 
 export const contentRoutes: AppRoute[] = [
-  {
-    path: "/content/faq",
-    element: <FaqManagement />,
-    meta: {
-      title: "FAQ Management",
-      description: "Content FAQ management page",
-      requiresAuth: true,
-      breadcrumb: ["Menus", "Content", "FAQ"],
-    },
-  },
   {
     path: "/content/files",
     element: <FileManagement />,
@@ -28,7 +18,7 @@ export const contentRoutes: AppRoute[] = [
   },
   {
     path: "/content/instructors",
-    element: <Blank />,
+    element: <InstructorManagement />,
     meta: {
       title: "Instructor Management",
       description: "Content instructor management page",

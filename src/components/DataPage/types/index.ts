@@ -15,12 +15,8 @@ export interface DataTableColumn<T> {
   render?: (value: unknown, row: T, index: number) => ReactNode;
   /** 欄位樣式類名 */
   className?: string | string[];
-  /** 欄位寬度 */
-  width?: string | number;
-  /** 最小寬度 */
-  minWidth?: string | number;
-  /** 最大寬度 */
-  maxWidth?: string | number;
+  /** 欄位寬度（Tailwind CSS 類名，例如: "w-32", "w-1/4", "w-[100px]"） */
+  width?: string;
   /** 對齊方式 */
   align?: "start" | "center" | "end";
   /** 是否可見 */
@@ -31,8 +27,8 @@ export interface DataTableColumn<T> {
   overflow?: boolean;
   /** 提示文字 */
   tooltip?: boolean | string | ((row: T) => string);
-  /** 提示寬度 */
-  tooltipWidth?: number | string;
+  /** 提示寬度 (Tailwind CSS 類名，例如: "w-32", "w-1/4", "w-[100px]"） */
+  tooltipWidth?: string;
   /** 值枚舉配置 */
   valueEnum?: {
     item: (value: unknown) => {
