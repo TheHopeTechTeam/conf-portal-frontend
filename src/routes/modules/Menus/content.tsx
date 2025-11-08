@@ -1,4 +1,3 @@
-import Blank from "@/pages/Blank";
 import FileManagement from "@/pages/Menus/File/FileManagement";
 import InstructorManagement from "@/pages/Menus/Instructor/InstructorManagement";
 import LocationManagement from "@/pages/Menus/Location/LocationManagement";

@@ -2,7 +2,7 @@ import { PopoverType } from "@/components/DataPage";
 import SearchPopoverContent from "@/components/DataPage/SearchPopoverContent";
 import Input from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { ReactNode, useState } from "react";
+import { ReactNode } from "react";
 
 export interface ConferenceSearchFilters {
   keyword?: string;
@@ -106,4 +106,3 @@ const ConferenceSearchPopover: React.FC<ConferenceSearchPopoverProps> = ({
 };
 
 export default ConferenceSearchPopover;
-

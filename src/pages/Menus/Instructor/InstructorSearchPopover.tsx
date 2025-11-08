@@ -28,13 +28,6 @@ const InstructorSearchPopover: React.FC<InstructorSearchPopoverProps> = ({
   trigger,
   popover,
 }) => {
-  const handleFilterChange = (key: keyof InstructorSearchFilters, value: unknown) => {
-    onFiltersChange({
-      ...filters,
-      [key]: value,
-    });
-  };
-
   return (
     <SearchPopoverContent
       onSearch={() => onSearch(filters)}
@@ -52,7 +45,7 @@ const InstructorSearchPopover: React.FC<InstructorSearchPopoverProps> = ({
             label="關鍵字搜尋"
             type="text"
             value={filters.keyword || ""}
-            onChange={(e) => handleFilterChange("keyword", e.target.value)}
+            onChange={(e) => onFiltersChange({ ...filters, keyword: e.target.value || undefined })}
             placeholder="搜尋姓名、職稱或簡介"
             clearable
           />
@@ -77,4 +70,3 @@ const InstructorSearchPopover: React.FC<InstructorSearchPopoverProps> = ({
 };
 
 export default InstructorSearchPopover;
-

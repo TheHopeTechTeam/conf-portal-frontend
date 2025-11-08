@@ -1,9 +1,9 @@
 import { locationService, type LocationItem } from "@/api/services/locationService";
 import Button from "@/components/ui/button";
+import Checkbox from "@/components/ui/checkbox";
 import Input from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import TextArea from "@/components/ui/textarea";
-import Checkbox from "@/components/ui/checkbox";
 import { useEffect, useState } from "react";
 
 export interface ConferenceFormValues {
@@ -175,7 +175,7 @@ const ConferenceDataForm: React.FC<ConferenceDataFormProps> = ({ mode, defaultVa
             label="地點"
             options={locationOptions}
             value={values.locationId || ""}
-            onChange={(value) => setValues((v) => ({ ...v, locationId: value || undefined }))}
+            onChange={(value) => setValues((v) => ({ ...v, locationId: value ? String(value) : undefined }))}
             placeholder="請選擇地點"
             clearable
             disabled={loadingLocations}
@@ -234,4 +234,3 @@ const ConferenceDataForm: React.FC<ConferenceDataFormProps> = ({ mode, defaultVa
 };
 
 export default ConferenceDataForm;
-
