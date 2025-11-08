@@ -1,6 +1,7 @@
 import Blank from "@/pages/Blank";
 import Dashboard from "@/pages/Dashboard";
 import ConferenceManagement from "@/pages/Menus/Conference/ConferenceManagement";
+import EventScheduleManagement from "@/pages/Menus/EventSchedule/EventScheduleManagement";
 import FaqManagement from "@/pages/Menus/Faq/FaqManagement";
 import FeedbackManagement from "@/pages/Menus/Feedback/FeedbackManagement";
 import FileManagement from "@/pages/Menus/File/FileManagement";
@@ -21,7 +22,7 @@ const componentRegistry: Record<string, React.ComponentType> = {
   // Menus
   // CONFERENCE	/conference
   CONFERENCE_BASIC: ConferenceManagement,
-  CONFERENCE_EVENT_SCHEDULE: Blank,
+  CONFERENCE_EVENT_SCHEDULE: EventScheduleManagement,
   // WORKSHOP /workshop
   WORKSHOP_BASIC: WorkshopManagement,
   WORKSHOP_REGISTRATION: Blank,

@@ -1,5 +1,5 @@
-import Blank from "@/pages/Blank";
 import ConferenceManagement from "@/pages/Menus/Conference/ConferenceManagement";
+import EventScheduleManagement from "@/pages/Menus/EventSchedule/EventScheduleManagement";
 import { AppRoute } from "@/types/route";
 
 export const conferenceRoutes: AppRoute[] = [
@@ -15,12 +15,12 @@ export const conferenceRoutes: AppRoute[] = [
   },
   {
     path: "/conference/events",
-    element: <Blank />,
+    element: <EventScheduleManagement />,
     meta: {
-      title: "Conference Events",
-      description: "Conference events page",
+      title: "Event Schedule Management",
+      description: "Event schedule management page",
       requiresAuth: true,
-      breadcrumb: ["Menus", "Conference", "Events"],
+      breadcrumb: ["Menus", "Conference", "Event Schedule"],
     },
   },
 ];
