@@ -1,19 +1,11 @@
 import { CalendarViewProps } from "./types";
-import { filterEventsByDate, getMonthDays } from "./utils";
+import { filterEventsByDate, getMonthDays, isDateInRange } from "./utils";
 
-const MonthView = ({ currentDate, firstDayOfWeek = "monday", events = [], onEventClick, onDateChange }: CalendarViewProps) => {
-  const days = getMonthDays(currentDate, firstDayOfWeek);
+const MonthView = ({ currentDate, events = [], validRange, onEventClick, onDateChange }: CalendarViewProps) => {
+  const days = getMonthDays(currentDate);
 
-  // Get weekday labels based on firstDayOfWeek
-  const getWeekdayLabels = (): string[] => {
-    const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    if (firstDayOfWeek === "monday") {
-      return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    }
-    return labels;
-  };
-
-  const weekdayLabels = getWeekdayLabels();
+  // Weekday labels - always start with Sunday
+  const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   const getEventsForDay = (date: string) => {
     return filterEventsByDate(events, new Date(date));
@@ -23,7 +15,10 @@ const MonthView = ({ currentDate, firstDayOfWeek = "monday", events = [], onEven
     // Parse date string (YYYY-MM-DD) as local time, not UTC
     const [year, month, day] = date.split("-").map(Number);
     const newDate = new Date(year, month - 1, day);
-    onDateChange(newDate);
+    // Check if date is within valid range
+    if (isDateInRange(newDate, validRange)) {
+      onDateChange(newDate);
+    }
   };
 
   return (
@@ -48,15 +43,22 @@ const MonthView = ({ currentDate, firstDayOfWeek = "monday", events = [], onEven
             const isSelected = date.getTime() === normalizedCurrentDate.getTime();
             const isToday = day.isToday;
 
+            const dayDate = new Date(year, month - 1, dayNum);
+            const isInRange = isDateInRange(dayDate, validRange);
+            const isDisabled = !isInRange;
+
             return (
               <div
                 key={day.date}
                 data-is-today={isToday ? "" : undefined}
                 data-is-selected={isSelected ? "" : undefined}
                 data-is-current-month={day.isCurrentMonth ? "" : undefined}
-                className="group relative bg-gray-50 px-3 py-2 text-gray-500 data-is-current-month:bg-white dark:bg-gray-900 dark:text-gray-400 dark:not-data-is-current-month:before:pointer-events-none dark:not-data-is-current-month:before:absolute dark:not-data-is-current-month:before:inset-0 dark:not-data-is-current-month:before:bg-gray-800/50 dark:data-is-current-month:bg-gray-900 data-is-current-month:hover:bg-gray-100 dark:data-is-current-month:hover:bg-gray-800/50 data-is-current-month:cursor-pointer transition-colors"
+                data-is-disabled={isDisabled ? "" : undefined}
+                className={`group relative bg-gray-50 px-3 py-2 text-gray-500 data-is-current-month:bg-white dark:bg-gray-900 dark:text-gray-400 dark:not-data-is-current-month:before:pointer-events-none dark:not-data-is-current-month:before:absolute dark:not-data-is-current-month:before:inset-0 dark:not-data-is-current-month:before:bg-gray-800/50 dark:data-is-current-month:bg-gray-900 data-is-current-month:hover:bg-gray-100 dark:data-is-current-month:hover:bg-gray-800/50 data-is-current-month:cursor-pointer transition-colors ${
+                  isDisabled ? "opacity-50 cursor-not-allowed" : ""
+                }`}
                 onClick={() => {
-                  if (day.isCurrentMonth) {
+                  if (day.isCurrentMonth && !isDisabled) {
                     handleDayClick(day.date);
                   }
                 }}
@@ -83,18 +85,18 @@ const MonthView = ({ currentDate, firstDayOfWeek = "monday", events = [], onEven
                         hour12: true,
                       });
                       return (
-                      <li key={event.id}>
+                        <li key={event.id}>
                           <button
                             type="button"
-                          onClick={(e) => {
+                            onClick={(e) => {
                               e.stopPropagation();
-                            onEventClick?.(event);
-                          }}
+                              onEventClick?.(event);
+                            }}
                             className="group flex w-full text-left"
-                        >
-                          <p className="flex-auto truncate font-medium text-gray-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400">
+                          >
+                            <p className="flex-auto truncate font-medium text-gray-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400">
                               {event.title}
-                          </p>
+                            </p>
                             <time
                               dateTime={eventStart.toISOString()}
                               className="ml-3 flex-none text-gray-500 group-hover:text-indigo-600 dark:text-gray-400 dark:group-hover:text-indigo-400"
@@ -102,7 +104,7 @@ const MonthView = ({ currentDate, firstDayOfWeek = "monday", events = [], onEven
                               {timeString}
                             </time>
                           </button>
-                      </li>
+                        </li>
                       );
                     })}
                     {dayEvents.length > 2 ? <li className="text-gray-500 dark:text-gray-400">+ {dayEvents.length - 2} more</li> : null}

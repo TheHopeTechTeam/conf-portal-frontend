@@ -1,5 +1,4 @@
 export type CalendarView = "day" | "week" | "month";
-export type FirstDayOfWeek = "sunday" | "monday";
 
 export interface CalendarEvent {
   id: string | number;
@@ -24,12 +23,17 @@ export interface CalendarMonth {
   days: CalendarDay[];
 }
 
+export interface DateRange {
+  start: Date;
+  end: Date;
+}
+
 export interface CalendarProps {
   currentDate?: Date;
   defaultView?: CalendarView;
-  firstDayOfWeek?: FirstDayOfWeek;
   availableViews?: CalendarView[];
   events?: CalendarEvent[];
+  validRange?: DateRange;
   onDateChange?: (date: Date) => void;
   onViewChange?: (view: CalendarView) => void;
   onEventClick?: (event: CalendarEvent) => void;
@@ -38,8 +42,8 @@ export interface CalendarProps {
 
 export interface CalendarViewProps {
   currentDate: Date;
-  firstDayOfWeek?: FirstDayOfWeek;
   events?: CalendarEvent[];
+  validRange?: DateRange;
   onDateChange: (date: Date) => void;
   onEventClick?: (event: CalendarEvent) => void;
   onAddEvent?: () => void;

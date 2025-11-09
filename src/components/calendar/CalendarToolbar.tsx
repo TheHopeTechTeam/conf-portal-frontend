@@ -1,17 +1,15 @@
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button";
-import { Dropdown } from "@/components/ui/dropdown/Dropdown";
-import { DropdownItem } from "@/components/ui/dropdown/DropdownItem";
-import { useState } from "react";
-import { MdChevronLeft, MdChevronRight, MdKeyboardArrowDown } from "react-icons/md";
-import { CalendarView, FirstDayOfWeek } from "./types";
-import { formatDate, formatWeekday, getEndOfWeek, getStartOfWeek } from "./utils";
+import ButtonGroup from "@/components/ui/buttons-group";
+import { MdChevronLeft, MdChevronRight } from "react-icons/md";
+import { CalendarView, DateRange } from "./types";
+import { canNavigateNext, canNavigatePrevious, formatDate, formatWeekday, getEndOfWeek, getStartOfWeek } from "./utils";
 
 interface CalendarToolBarProps {
   currentDate: Date;
   currentView: CalendarView;
-  firstDayOfWeek?: FirstDayOfWeek;
   availableViews?: CalendarView[];
+  validRange?: DateRange;
   onPrevious: () => void;
   onNext: () => void;
   onToday: () => void;
@@ -22,17 +20,16 @@ interface CalendarToolBarProps {
 const CalendarToolBar = ({
   currentDate,
   currentView,
-  firstDayOfWeek = "monday",
   availableViews = ["day", "week", "month"],
+  validRange,
   onPrevious,
   onNext,
   onToday,
   onViewChange,
   onAddEvent,
 }: CalendarToolBarProps) => {
-  const [isViewMenuOpen, setIsViewMenuOpen] = useState(false);
-
   // Calculate week number of the month (1-based)
+  // Week starts on Sunday (0)
   const getWeekNumber = (date: Date): number => {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -43,31 +40,45 @@ const CalendarToolBar = ({
     // Get the day of the week for the first day (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
     const firstDayOfMonthWeekday = firstDayOfMonth.getDay();
 
-    // Adjust based on firstDayOfWeek setting
-    let adjustedFirstDayOfWeek: number;
-    if (firstDayOfWeek === "sunday") {
-      adjustedFirstDayOfWeek = firstDayOfMonthWeekday;
-    } else {
-      // Monday = 1, so convert Sunday (0) to 7
-      adjustedFirstDayOfWeek = firstDayOfMonthWeekday === 0 ? 7 : firstDayOfMonthWeekday;
-    }
-
     // Calculate which week of the month this date falls into
-    // Week 1: days 1 to (7 - adjustedFirstDayOfWeek + 1)
-    const weekNumber = Math.ceil((day + adjustedFirstDayOfWeek - 1) / 7);
+    // Week 1: days 1 to (7 - firstDayOfMonthWeekday)
+    const weekNumber = Math.ceil((day + firstDayOfMonthWeekday) / 7);
 
     return weekNumber;
   };
 
-  const getViewLabel = (): string => {
-    switch (currentView) {
-      case "day":
-        return "Day view";
-      case "week":
-        return "Week view";
-      case "month":
-        return "Month view";
+  // Create view buttons for ButtonGroup
+  const getViewButtons = () => {
+    const buttons = [];
+
+    if (availableViews.includes("day")) {
+      buttons.push({
+        text: "Day",
+        onClick: () => onViewChange("day"),
+        active: currentView === "day",
+        className: "h-9 py-0 px-3 text-sm",
+      });
     }
+
+    if (availableViews.includes("week")) {
+      buttons.push({
+        text: "Week",
+        onClick: () => onViewChange("week"),
+        active: currentView === "week",
+        className: "h-9 py-0 px-3 text-sm",
+      });
+    }
+
+    if (availableViews.includes("month")) {
+      buttons.push({
+        text: "Month",
+        onClick: () => onViewChange("month"),
+        active: currentView === "month",
+        className: "h-9 py-0 px-3 text-sm",
+      });
+    }
+
+    return buttons;
   };
 
   const getTitle = (): string => {
@@ -90,8 +101,8 @@ const CalendarToolBar = ({
       case "day":
         return formatWeekday(currentDate, "full");
       case "week": {
-        const startOfWeek = getStartOfWeek(currentDate, firstDayOfWeek);
-        const endOfWeek = getEndOfWeek(currentDate, firstDayOfWeek);
+        const startOfWeek = getStartOfWeek(currentDate);
+        const endOfWeek = getEndOfWeek(currentDate);
         const startFormatted = formatDateForSubtitle(startOfWeek);
         const endFormatted = formatDateForSubtitle(endOfWeek);
         return `${startFormatted} – ${endFormatted}`;
@@ -132,11 +143,6 @@ const CalendarToolBar = ({
     }
   };
 
-  const handleViewChange = (view: CalendarView) => {
-    onViewChange(view);
-    setIsViewMenuOpen(false);
-  };
-
   // Get the date to display in the calendar icon
   const getCalendarIconDate = (): Date => {
     const today = new Date();
@@ -151,8 +157,8 @@ const CalendarToolBar = ({
         return normalizedCurrentDate;
       case "week": {
         // Check if current week is the same as today's week
-        const startOfWeek = getStartOfWeek(normalizedCurrentDate, firstDayOfWeek);
-        const startOfTodayWeek = getStartOfWeek(today, firstDayOfWeek);
+        const startOfWeek = getStartOfWeek(normalizedCurrentDate);
+        const startOfTodayWeek = getStartOfWeek(today);
 
         // If current week is the same as today's week, show today's date
         if (startOfWeek.getTime() === startOfTodayWeek.getTime()) {
@@ -193,7 +199,7 @@ const CalendarToolBar = ({
           <div className="flex items-center justify-center bg-gray-50 px-2 py-1 border-b border-gray-200 dark:border-white/10 text-[9px] font-semibold uppercase tracking-wide text-gray-700 dark:bg-gray-700 dark:text-gray-300">
             {monthAbbr}
           </div>
-          <div className="flex items-center justify-center px-4 py-0.5 text-xl font-bold text-indigo-600 dark:text-indigo-400">{day}</div>
+          <div className="flex items-center justify-center px-4 py-0.5 text-xl font-bold text-brand-500 dark:text-brand-400">{day}</div>
         </div>
         <div>
           <h1 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -210,7 +216,8 @@ const CalendarToolBar = ({
           <button
             type="button"
             onClick={onPrevious}
-            className="flex h-9 w-9 items-center justify-center rounded-l-md text-gray-400 hover:text-gray-500 focus:relative hover:bg-gray-50 dark:hover:text-white dark:hover:bg-white/10"
+            disabled={!canNavigatePrevious(currentDate, currentView, validRange)}
+            className="flex h-9 w-9 items-center justify-center rounded-l-md text-gray-400 hover:text-gray-500 focus:relative hover:bg-gray-50 dark:hover:text-white dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-gray-400 disabled:hover:bg-transparent"
           >
             <span className="sr-only">{getNavigationLabel()}</span>
             <MdChevronLeft className="size-5" />
@@ -226,7 +233,8 @@ const CalendarToolBar = ({
           <button
             type="button"
             onClick={onNext}
-            className="flex h-9 w-9 items-center justify-center rounded-r-md text-gray-400 hover:text-gray-500 focus:relative hover:bg-gray-50 dark:hover:text-white dark:hover:bg-white/10"
+            disabled={!canNavigateNext(currentDate, currentView, validRange)}
+            className="flex h-9 w-9 items-center justify-center rounded-r-md text-gray-400 hover:text-gray-500 focus:relative hover:bg-gray-50 dark:hover:text-white dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-gray-400 disabled:hover:bg-transparent"
           >
             <span className="sr-only">{getNextLabel()}</span>
             <MdChevronRight className="size-5" />
@@ -234,60 +242,17 @@ const CalendarToolBar = ({
         </div>
         <div className="ml-4 flex items-center">
           {availableViews.length > 1 && (
-            <div className="relative">
-              <Button
-                onClick={() => setIsViewMenuOpen(!isViewMenuOpen)}
-                variant="outline"
-                size="sm"
-                endIcon={<MdKeyboardArrowDown className="-mr-1 size-5 text-gray-400" />}
-                className="h-9 px-3 py-2 text-sm font-semibold shadow-xs"
-              >
-                {getViewLabel()}
-              </Button>
-
-              <Dropdown
-                isOpen={isViewMenuOpen}
-                onClose={() => setIsViewMenuOpen(false)}
-                className="absolute right-0 z-10 mt-3 w-36 origin-top-right overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:ring-white/10"
-              >
-                <div className="py-1">
-                  {availableViews.includes("day") && (
-                    <DropdownItem
-                      onClick={() => handleViewChange("day")}
-                      className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white"
-                    >
-                      Day view
-                    </DropdownItem>
-                  )}
-                  {availableViews.includes("week") && (
-                    <DropdownItem
-                      onClick={() => handleViewChange("week")}
-                      className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white"
-                    >
-                      Week view
-                    </DropdownItem>
-                  )}
-                  {availableViews.includes("month") && (
-                    <DropdownItem
-                      onClick={() => handleViewChange("month")}
-                      className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white"
-                    >
-                      Month view
-                    </DropdownItem>
-                  )}
-                </div>
-              </Dropdown>
+            <div className="mr-4">
+              <ButtonGroup variant="primary" buttons={getViewButtons()} className="!pb-0 [&>div>div]:!shadow-none" minWidth="auto" />
             </div>
           )}
-          {availableViews.length > 1 && onAddEvent && <div className="ml-6 h-6 w-px bg-gray-300 dark:bg-white/10" />}
+          {onAddEvent && <div className="mr-6 h-6 w-px bg-gray-300 dark:bg-white/10" />}
           {onAddEvent && (
             <Button
               onClick={onAddEvent}
               variant="primary"
               size="sm"
-              className={`h-9 ${
-                availableViews.length > 1 ? "ml-6" : ""
-              } bg-indigo-600 hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:focus-visible:outline-indigo-500`}
+              className="h-9 bg-brand-500 hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700 dark:focus-visible:outline-brand-700"
             >
               Add event
             </Button>

@@ -1,10 +1,10 @@
 import { MdAdd } from "react-icons/md";
 import EventBlock from "./EventBlock";
 import { CalendarViewProps } from "./types";
-import { filterEventsByDateRange, formatWeekday, getWeekDates } from "./utils";
+import { filterEventsByDateRange, formatWeekday, getWeekDates, isDateInRange } from "./utils";
 
-const WeekView = ({ currentDate, firstDayOfWeek = "monday", events = [], onEventClick, onDateChange, onAddEvent }: CalendarViewProps) => {
-  const weekDates = getWeekDates(currentDate, firstDayOfWeek);
+const WeekView = ({ currentDate, events = [], validRange, onEventClick, onDateChange, onAddEvent }: CalendarViewProps) => {
+  const weekDates = getWeekDates(currentDate);
   const startOfWeek = weekDates[0];
   const endOfWeek = weekDates[6];
   const weekEvents = filterEventsByDateRange(events, startOfWeek, endOfWeek);
@@ -22,14 +22,14 @@ const WeekView = ({ currentDate, firstDayOfWeek = "monday", events = [], onEvent
   });
 
   const getEventsForDay = (date: Date) => {
-    const dayStart = new Date(date);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(date);
-    dayEnd.setHours(23, 59, 59, 999);
+    // Create day boundaries in local timezone using date parts
+    const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
+    const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
 
     return weekEvents.filter((event) => {
-      const eventStart = new Date(event.start);
-      const eventEnd = new Date(event.end);
+      // Event dates are already Date objects or strings, convert to Date if needed
+      const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
+      const eventEnd = event.end instanceof Date ? event.end : new Date(event.end);
       // Event overlaps with the day if it starts before the day ends and ends after the day starts
       return eventStart <= dayEnd && eventEnd >= dayStart;
     });
@@ -37,20 +37,24 @@ const WeekView = ({ currentDate, firstDayOfWeek = "monday", events = [], onEvent
 
   // Calculate event position in pixels
   // Each 30-minute slot is 48px tall, so each minute is 48/30 = 1.6px
+  // Uses local time (getHours, getMinutes return local time)
   const getEventTop = (date: string | Date): number => {
-    const dateObj = new Date(date);
+    const dateObj = date instanceof Date ? date : new Date(date);
+    // getHours() and getMinutes() return local time
     const hours = dateObj.getHours();
     const minutes = dateObj.getMinutes();
-    // Total minutes from midnight
+    // Total minutes from midnight (local time)
     const totalMinutes = hours * 60 + minutes;
     // Convert to pixels (each minute is 1.6px: 48px / 30 minutes)
     return (totalMinutes / 30) * 48;
   };
 
   // Calculate event height in pixels
+  // Uses local time for calculations
   const getEventHeight = (start: string | Date, end: string | Date): number => {
-    const startDate = new Date(start);
-    const endDate = new Date(end);
+    const startDate = start instanceof Date ? start : new Date(start);
+    const endDate = end instanceof Date ? end : new Date(end);
+    // Calculate difference in minutes (works correctly with Date objects in any timezone)
     const diffMinutes = (endDate.getTime() - startDate.getTime()) / (1000 * 60);
     // Convert minutes to pixels (each minute is 1.6px: 48px / 30 minutes)
     return Math.max((diffMinutes / 30) * 48, 48); // Minimum height of 48px
@@ -70,11 +74,20 @@ const WeekView = ({ currentDate, firstDayOfWeek = "monday", events = [], onEvent
           normalizedCurrentDate.setHours(0, 0, 0, 0);
           const isSelected = dateNormalized.getTime() === normalizedCurrentDate.getTime();
 
+          const isInRange = isDateInRange(date, validRange);
+          const isDisabled = !isInRange;
+
           return (
             <div
               key={index}
-              onClick={() => onDateChange(date)}
-              className="relative flex w-full flex-col items-center justify-center gap-1.5 bg-white dark:bg-gray-900 p-2 md:flex-row md:gap-1 hover:bg-gray-50 dark:hover:bg-gray-800/50 before:pointer-events-none before:absolute before:inset-0 before:border-gray-300 dark:before:border-white/10 not-last:before:border-r cursor-pointer first:before:-left-px first:before:border-l transition-colors"
+              onClick={() => {
+                if (!isDisabled) {
+                  onDateChange(date);
+                }
+              }}
+              className={`relative flex w-full flex-col items-center justify-center gap-1.5 bg-white dark:bg-gray-900 p-2 md:flex-row md:gap-1 hover:bg-gray-50 dark:hover:bg-gray-800/50 before:pointer-events-none before:absolute before:inset-0 before:border-gray-300 dark:before:border-white/10 not-last:before:border-r first:before:-left-px first:before:border-l transition-colors ${
+                isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+              }`}
             >
               <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{formatWeekday(date, "short")}</span>
               <span

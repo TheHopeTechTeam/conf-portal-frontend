@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import EventBlock from "./EventBlock";
 import { CalendarViewProps } from "./types";
-import { filterEventsByDate, getMonthDays } from "./utils";
+import { filterEventsByDate, getMonthDays, isDateInRange } from "./utils";
 
-const DayView = ({ currentDate, firstDayOfWeek = "monday", events = [], onEventClick, onDateChange }: CalendarViewProps) => {
+const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateChange }: CalendarViewProps) => {
   const dayEvents = filterEventsByDate(events, currentDate);
   const [miniCalendarMonth, setMiniCalendarMonth] = useState(currentDate);
 
@@ -16,7 +16,10 @@ const DayView = ({ currentDate, firstDayOfWeek = "monday", events = [], onEventC
     // Parse date string (YYYY-MM-DD) as local time, not UTC
     const [year, month, day] = date.split("-").map(Number);
     const newDate = new Date(year, month - 1, day);
-    onDateChange(newDate);
+    // Check if date is within valid range
+    if (isDateInRange(newDate, validRange)) {
+      onDateChange(newDate);
+    }
   };
 
   const handleMiniCalendarPrevious = () => {
@@ -47,20 +50,24 @@ const DayView = ({ currentDate, firstDayOfWeek = "monday", events = [], onEventC
 
   // Calculate event position in pixels
   // Each 30-minute slot is 48px tall, so each minute is 48/30 = 1.6px
+  // Uses local time (getHours, getMinutes return local time)
   const getEventTop = (date: string | Date): number => {
-    const dateObj = new Date(date);
+    const dateObj = date instanceof Date ? date : new Date(date);
+    // getHours() and getMinutes() return local time
     const hours = dateObj.getHours();
     const minutes = dateObj.getMinutes();
-    // Total minutes from midnight
+    // Total minutes from midnight (local time)
     const totalMinutes = hours * 60 + minutes;
     // Convert to pixels (each minute is 1.6px: 48px / 30 minutes)
     return (totalMinutes / 30) * 48;
   };
 
   // Calculate event height in pixels
+  // Uses local time for calculations
   const getEventHeight = (start: string | Date, end: string | Date): number => {
-    const startDate = new Date(start);
-    const endDate = new Date(end);
+    const startDate = start instanceof Date ? start : new Date(start);
+    const endDate = end instanceof Date ? end : new Date(end);
+    // Calculate difference in minutes (works correctly with Date objects in any timezone)
     const diffMinutes = (endDate.getTime() - startDate.getTime()) / (1000 * 60);
     // Convert minutes to pixels (each minute is 1.6px: 48px / 30 minutes)
     return Math.max((diffMinutes / 30) * 48, 48); // Minimum height of 48px
@@ -151,46 +158,42 @@ const DayView = ({ currentDate, firstDayOfWeek = "monday", events = [], onEventC
           </button>
         </div>
         <div className="mt-6 grid grid-cols-7 text-center text-xs/6 text-gray-500 dark:text-gray-400">
-          {firstDayOfWeek === "monday" ? (
-            <>
-              <div>M</div>
-              <div>T</div>
-              <div>W</div>
-              <div>T</div>
-              <div>F</div>
-              <div>S</div>
-              <div>S</div>
-            </>
-          ) : (
-            <>
-              <div>S</div>
-              <div>M</div>
-              <div>T</div>
-              <div>W</div>
-              <div>T</div>
-              <div>F</div>
-              <div>S</div>
-            </>
-          )}
+          <div>S</div>
+          <div>M</div>
+          <div>T</div>
+          <div>W</div>
+          <div>T</div>
+          <div>F</div>
+          <div>S</div>
         </div>
         <div className="isolate mt-2 grid grid-cols-7 gap-px rounded-lg bg-gray-200 text-sm shadow-sm ring-1 ring-gray-200 dark:bg-white/10 dark:shadow-none dark:ring-white/10">
           {miniCalendarDays.map((day) => {
-            const date = new Date(day.date + "T00:00:00");
-            const normalizedCurrentDate = new Date(currentDate);
-            normalizedCurrentDate.setHours(0, 0, 0, 0);
-            date.setHours(0, 0, 0, 0);
-            const isSelected = date.getTime() === normalizedCurrentDate.getTime();
+            // Parse date string (YYYY-MM-DD) as local time
+            const [year, month, dayNum] = day.date.split("-").map(Number);
+            const dayDate = new Date(year, month - 1, dayNum);
+            
+            // Normalize currentDate to local timezone for comparison
+            const normalizedCurrentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+            const normalizedDayDate = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
+            const isSelected = normalizedDayDate.getTime() === normalizedCurrentDate.getTime();
             const isToday = day.isToday;
+
+            const isInRange = isDateInRange(dayDate, validRange);
+            const isDisabled = !isInRange;
 
             return (
               <button
                 key={day.date}
                 type="button"
                 onClick={() => handleDayClick(day.date)}
+                disabled={isDisabled}
                 data-is-today={isToday ? "" : undefined}
                 data-is-selected={isSelected ? "" : undefined}
                 data-is-current-month={day.isCurrentMonth ? "" : undefined}
-                className="py-1.5 not-data-is-current-month:bg-gray-50 not-data-is-selected:not-data-is-current-month:not-data-is-today:text-gray-400 first:rounded-tl-lg last:rounded-br-lg hover:bg-gray-100 focus:z-10 data-is-current-month:bg-white not-data-is-selected:data-is-current-month:not-data-is-today:text-gray-900 data-is-current-month:hover:bg-gray-100 data-is-selected:font-semibold data-is-selected:text-white data-is-today:font-semibold data-is-today:not-data-is-selected:text-indigo-600 nth-36:rounded-bl-lg nth-7:rounded-tr-lg dark:not-data-is-current-month:bg-gray-900/75 dark:not-data-is-selected:not-data-is-current-month:not-data-is-today:text-gray-500 dark:hover:bg-gray-900/25 dark:data-is-current-month:bg-gray-900/90 dark:not-data-is-selected:data-is-current-month:not-data-is-today:text-white dark:data-is-current-month:hover:bg-gray-900/50 dark:data-is-selected:text-gray-900 dark:data-is-today:not-data-is-selected:text-indigo-400"
+                data-is-disabled={isDisabled ? "" : undefined}
+                className={`py-1.5 not-data-is-current-month:bg-gray-50 not-data-is-selected:not-data-is-current-month:not-data-is-today:text-gray-400 first:rounded-tl-lg last:rounded-br-lg hover:bg-gray-100 focus:z-10 data-is-current-month:bg-white not-data-is-selected:data-is-current-month:not-data-is-today:text-gray-900 data-is-current-month:hover:bg-gray-100 data-is-selected:font-semibold data-is-selected:text-white data-is-today:font-semibold data-is-today:not-data-is-selected:text-indigo-600 nth-36:rounded-bl-lg nth-7:rounded-tr-lg dark:not-data-is-current-month:bg-gray-900/75 dark:not-data-is-selected:not-data-is-current-month:not-data-is-today:text-gray-500 dark:hover:bg-gray-900/25 dark:data-is-current-month:bg-gray-900/90 dark:not-data-is-selected:data-is-current-month:not-data-is-today:text-white dark:data-is-current-month:hover:bg-gray-900/50 dark:data-is-selected:text-gray-900 dark:data-is-today:not-data-is-selected:text-indigo-400 ${
+                  isDisabled ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 <time
                   dateTime={day.date}

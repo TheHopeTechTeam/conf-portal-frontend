@@ -8,9 +8,9 @@ import WeekView from "./WeekView";
 const Calendar = ({
   currentDate = new Date(),
   defaultView = "month",
-  firstDayOfWeek = "monday",
   availableViews = ["day", "week", "month"],
   events = [],
+  validRange,
   onDateChange,
   onViewChange,
   onEventClick,
@@ -88,8 +88,8 @@ const Calendar = ({
   const renderView = () => {
     const viewProps = {
       currentDate: selectedDate,
-      firstDayOfWeek,
       events,
+      validRange,
       onDateChange: handleDateChange,
       onEventClick,
       onAddEvent,
@@ -110,8 +110,8 @@ const Calendar = ({
       <CalendarToolBar
         currentDate={selectedDate}
         currentView={currentView}
-        firstDayOfWeek={firstDayOfWeek}
         availableViews={availableViews}
+        validRange={validRange}
         onPrevious={handlePrevious}
         onNext={handleNext}
         onToday={handleToday}
