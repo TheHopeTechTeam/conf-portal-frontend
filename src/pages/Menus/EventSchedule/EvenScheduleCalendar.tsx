@@ -1,10 +1,18 @@
 import { ConferenceItem } from "@/api/services/conferenceService";
-import { EventInfoItem, eventInfoService } from "@/api/services/eventInfoService";
+import { EventInfoCreate, EventInfoDetail, EventInfoItem, eventInfoService } from "@/api/services/eventInfoService";
 import { CalendarEvent } from "@/components/calendar";
 import Calendar from "@/components/calendar/Calendar";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import ContextMenu from "@/components/DataPage/ContextMenu";
+import { PageButtonType } from "@/components/DataPage/types";
+import { useContextMenu } from "@/components/DataPage/useContextMenu";
+import Button from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import moment from "moment-timezone";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { MdDelete, MdEdit, MdVisibility } from "react-icons/md";
+import EventDataForm from "./EventDataForm";
+import EventDetailView from "./EventDetailView";
 
 interface EventScheduleCalendarProps {
   conference: ConferenceItem;
@@ -102,27 +110,45 @@ export default function EventScheduleCalendar({ conference }: EventScheduleCalen
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchEventInfoList = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await eventInfoService.getList(conference.id);
-        if (response.success && response.data) {
-          setEvents(response.data.items || []);
-        }
-      } catch (err) {
-        console.error("Failed to fetch event info list:", err);
-        setError("載入活動資訊失敗，請稍後重試");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Modal states
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDeleteConfirmModalOpen, setIsDeleteConfirmModalOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null);
+  const [formMode, setFormMode] = useState<"create" | "edit">("create");
+  const [selectedEvent, setSelectedEvent] = useState<EventInfoDetail | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [formDefaultDate, setFormDefaultDate] = useState<string | undefined>(undefined);
+  const [formDefaultTime, setFormDefaultTime] = useState<string | undefined>(undefined);
+  const [formDefaultEndTime, setFormDefaultEndTime] = useState<string | undefined>(undefined);
+  const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-    if (conference.id) {
-      fetchEventInfoList();
+  // Context menu
+  const contextMenu = useContextMenu();
+
+  // Fetch events
+  const fetchEvents = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await eventInfoService.getList(conference.id);
+      if (response.success && response.data) {
+        setEvents(response.data.items || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch event info list:", err);
+      setError("載入活動資訊失敗，請稍後重試");
+    } finally {
+      setLoading(false);
     }
   }, [conference.id]);
+
+  useEffect(() => {
+    if (conference.id) {
+      fetchEvents();
+    }
+  }, [conference.id, fetchEvents]);
 
   // Convert EventInfoItem to CalendarEvent
   const calendarEvents: CalendarEvent[] = useMemo(() => {
@@ -150,6 +176,154 @@ export default function EventScheduleCalendar({ conference }: EventScheduleCalen
     return new Date(conference.startDate);
   }, [conference.startDate]);
 
+  // Handle add event
+  const handleAddEvent = (date?: Date, startTime?: string, endTime?: string) => {
+    const targetDate = date || currentDate;
+    const targetStartTime = startTime || "09:00";
+    const targetEndTime = endTime || "10:00";
+
+    // If endTime is earlier than startTime (e.g., 23:30 -> 00:00), it means the event spans to next day
+    // For now, we'll set endTime to 23:59 for same day events, or handle it in the form
+    // The form will handle date adjustment if endTime < startTime
+
+    setFormDefaultDate(moment(targetDate).format("YYYY-MM-DD"));
+    setFormDefaultTime(targetStartTime);
+    setFormDefaultEndTime(targetEndTime);
+    setFormMode("create");
+    setSelectedEvent(null);
+    setIsFormModalOpen(true);
+  };
+
+  // Handle edit event
+  const handleEditEvent = async (eventId: string) => {
+    try {
+      const response = await eventInfoService.getById(eventId);
+      if (response.success && response.data) {
+        setSelectedEvent(response.data);
+        setFormMode("edit");
+        setIsFormModalOpen(true);
+        contextMenu.hideContextMenu();
+      }
+    } catch (err) {
+      console.error("Failed to fetch event detail:", err);
+    }
+  };
+
+  // Handle view event
+  const handleViewEvent = async (eventId: string) => {
+    setSelectedEventId(eventId);
+    setIsDetailModalOpen(true);
+    contextMenu.hideContextMenu();
+  };
+
+  // Handle delete event - show confirmation dialog
+  const handleDeleteEvent = (eventId: string) => {
+    setEventToDelete(eventId);
+    setIsDeleteConfirmModalOpen(true);
+    contextMenu.hideContextMenu();
+  };
+
+  // Confirm delete event
+  const handleConfirmDelete = async () => {
+    if (!eventToDelete) return;
+
+    try {
+      setDeleting(true);
+      await eventInfoService.remove(eventToDelete);
+      await fetchEvents();
+      setIsDeleteConfirmModalOpen(false);
+      setEventToDelete(null);
+      contextMenu.hideContextMenu();
+    } catch (err) {
+      console.error("Failed to delete event:", err);
+      alert("刪除活動失敗，請稍後重試");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Cancel delete
+  const handleCancelDelete = () => {
+    setIsDeleteConfirmModalOpen(false);
+    setEventToDelete(null);
+  };
+
+  // Handle event click
+  const handleEventClick = (event: CalendarEvent) => {
+    if (event.item && typeof event.item === "object" && "id" in event.item) {
+      handleViewEvent(event.item.id as string);
+    }
+  };
+
+  // Handle event context menu
+  const handleEventContextMenu = (event: CalendarEvent, mouseEvent: React.MouseEvent) => {
+    if (!event.item || typeof event.item !== "object" || !("id" in event.item)) {
+      return;
+    }
+
+    const eventId = event.item.id as string;
+    const buttons: PageButtonType[] = [
+      {
+        key: "view",
+        text: "檢視",
+        icon: <MdVisibility className="size-4" />,
+        onClick: () => handleViewEvent(eventId),
+        color: "default",
+      },
+      {
+        key: "edit",
+        text: "編輯",
+        icon: <MdEdit className="size-4" />,
+        onClick: () => handleEditEvent(eventId),
+        color: "primary",
+      },
+      {
+        key: "delete",
+        text: "刪除",
+        icon: <MdDelete className="size-4" />,
+        onClick: () => handleDeleteEvent(eventId),
+        color: "danger",
+      },
+    ];
+
+    contextMenu.showContextMenu(mouseEvent, buttons);
+  };
+
+  // Handle form submit
+  const handleFormSubmit = async (values: EventInfoCreate) => {
+    try {
+      setSubmitting(true);
+      if (formMode === "create") {
+        await eventInfoService.create(values);
+      } else if (selectedEvent) {
+        await eventInfoService.update(selectedEvent.id, values);
+      }
+      await fetchEvents();
+      setIsFormModalOpen(false);
+      setSelectedEvent(null);
+    } catch (err) {
+      console.error("Failed to save event:", err);
+      alert(formMode === "create" ? "新增活動失敗，請稍後重試" : "更新活動失敗，請稍後重試");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Handle form cancel
+  const handleFormCancel = () => {
+    setIsFormModalOpen(false);
+    setSelectedEvent(null);
+    setFormDefaultDate(undefined);
+    setFormDefaultTime(undefined);
+    setFormDefaultEndTime(undefined);
+  };
+
+  // Handle detail modal close
+  const handleDetailClose = () => {
+    setIsDetailModalOpen(false);
+    setSelectedEventId(null);
+  };
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -167,18 +341,120 @@ export default function EventScheduleCalendar({ conference }: EventScheduleCalen
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <Calendar
-        currentDate={currentDate}
-        defaultView="week"
-        availableViews={["week", "day"]}
-        events={calendarEvents}
-        validRange={validRange}
-        onDateChange={(date) => console.log("Date changed:", date)}
-        onViewChange={(view) => console.log("View changed:", view)}
-        onEventClick={(event) => console.log("Event clicked:", event)}
-        onAddEvent={() => console.log("Add event clicked")}
+    <>
+      <div className="flex h-full flex-col">
+        <Calendar
+          currentDate={currentDate}
+          defaultView="week"
+          availableViews={["week", "day"]}
+          events={calendarEvents}
+          validRange={validRange}
+          onViewChange={() => {}}
+          onEventClick={handleEventClick}
+          onEventContextMenu={handleEventContextMenu}
+          onAddEvent={(date, startTime, endTime) => handleAddEvent(date, startTime, endTime)}
+          showNavigationButtons={{
+            month: { nav: false, today: false },
+            week: { nav: false, today: false },
+            day: { nav: true, today: false },
+          }}
+        />
+      </div>
+
+      {/* Context Menu */}
+      <ContextMenu
+        buttons={contextMenu.buttons}
+        visible={contextMenu.visible}
+        position={contextMenu.position}
+        onClose={contextMenu.hideContextMenu}
       />
-    </div>
+
+      {/* Form Modal */}
+      <Modal
+        title={formMode === "create" ? "新增活動" : "編輯活動"}
+        isOpen={isFormModalOpen}
+        onClose={handleFormCancel}
+        className="max-w-2xl w-full mx-4 p-6"
+      >
+        <EventDataForm
+          mode={formMode}
+          conferenceId={conference.id}
+          defaultValues={selectedEvent || undefined}
+          defaultStartDate={formDefaultDate}
+          defaultStartTime={formDefaultTime}
+          defaultEndTime={formDefaultEndTime}
+          onSubmit={handleFormSubmit}
+          onCancel={handleFormCancel}
+          submitting={submitting}
+        />
+      </Modal>
+
+      {/* Detail Modal */}
+      <Modal title="活動詳情" isOpen={isDetailModalOpen} onClose={handleDetailClose} className="max-w-2xl w-full mx-4 p-6">
+        {selectedEventId && <EventDetailView eventId={selectedEventId} />}
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <button
+            type="button"
+            onClick={handleDetailClose}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
+          >
+            關閉
+          </button>
+          {selectedEventId && (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  handleDetailClose();
+                  handleEditEvent(selectedEventId);
+                }}
+                className="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600"
+              >
+                編輯
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleDetailClose();
+                  handleDeleteEvent(selectedEventId);
+                }}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
+              >
+                刪除
+              </button>
+            </>
+          )}
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        title="確認刪除"
+        isOpen={isDeleteConfirmModalOpen}
+        onClose={handleCancelDelete}
+        className="max-w-md w-full mx-4 p-6"
+        showCloseButton={!deleting}
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={handleCancelDelete} disabled={deleting}>
+              取消
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleConfirmDelete}
+              disabled={deleting}
+              className="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
+            >
+              {deleting ? "刪除中..." : "確定刪除"}
+            </Button>
+          </div>
+        }
+      >
+        <div className="text-gray-900 dark:text-white">
+          <p>確定要刪除這個活動嗎？</p>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">此操作無法復原。</p>
+        </div>
+      </Modal>
+    </>
   );
 }

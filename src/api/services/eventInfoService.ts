@@ -26,12 +26,12 @@ export interface EventInfoDetail extends EventInfoItem {
 
 export interface EventInfoCreate {
   title: string;
-  startTime: string; // ISO 8601 format without timezone (e.g., "2024-01-01T09:00:00")
-  endTime: string; // ISO 8601 format without timezone (e.g., "2024-01-01T10:00:00")
+  start_datetime: string; // ISO 8601 format without timezone (e.g., "2024-01-01T09:00:00")
+  end_datetime: string; // ISO 8601 format without timezone (e.g., "2024-01-01T10:00:00")
   timezone: string; // Timezone name (e.g., "Asia/Taipei")
-  textColor: string;
-  backgroundColor: string;
-  conferenceId: string;
+  text_color: string;
+  background_color: string;
+  conference_id: string;
   remark?: string;
   description?: string;
 }

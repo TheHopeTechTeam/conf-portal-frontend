@@ -36,14 +36,23 @@ export interface EventBlockProps {
   isFullDay?: boolean; // Event is fully within this day
   dayDate?: Date; // The date this event block represents
   onEventClick?: (event: CalendarEvent) => void;
+  onContextMenu?: (event: CalendarEvent, mouseEvent: React.MouseEvent) => void;
 }
 
 /**
  * Event block component for rendering calendar events
  */
-const EventBlock = ({ event, top, height, isSpanning, isContinuing, onEventClick }: EventBlockProps) => {
+const EventBlock = ({ event, top, height, isSpanning, isContinuing, onEventClick, onContextMenu }: EventBlockProps) => {
   const eventStart = new Date(event.start);
   const eventEnd = new Date(event.end);
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onContextMenu) {
+      onContextMenu(event, e);
+    }
+  };
 
   // Always display original event times
   const startTimeString = eventStart.toLocaleTimeString("en-US", {
@@ -116,6 +125,7 @@ const EventBlock = ({ event, top, height, isSpanning, isContinuing, onEventClick
       <button
         type="button"
         onClick={() => onEventClick?.(event)}
+        onContextMenu={handleContextMenu}
         className={cn(
           "flex h-full w-full flex-1 cursor-pointer flex-col gap-0.5",
           getEventClasses(),

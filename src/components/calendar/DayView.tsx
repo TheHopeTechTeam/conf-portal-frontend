@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
+import { MdAdd } from "react-icons/md";
 import EventBlock from "./EventBlock";
 import { CalendarViewProps } from "./types";
 import { getMonthDays, isDateInRange } from "./utils";
 
-const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateChange }: CalendarViewProps) => {
+const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateChange, onEventContextMenu, onAddEvent }: CalendarViewProps) => {
   // Filter events that overlap with the current day (including multi-day events)
   const getEventsForDay = (date: Date) => {
     const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
@@ -149,6 +150,17 @@ const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateCha
               {timeSlots.map((slot) => {
                 const isLastSlot = slot.index === 47;
                 const top = slot.index * 48; // Each slot is 48px
+                
+                // Calculate start time for this slot (HH:mm format)
+                const startHour = slot.hour;
+                const startMinute = slot.isHalfHour ? 30 : 0;
+                const startTime = `${startHour.toString().padStart(2, "0")}:${startMinute.toString().padStart(2, "0")}`;
+                
+                // Calculate end time for this slot (30 minutes later, HH:mm format)
+                const endHour = slot.isHalfHour ? (slot.hour + 1) % 24 : slot.hour;
+                const endMinute = slot.isHalfHour ? 0 : 30;
+                const endTime = `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
+                
                 return (
                   <div
                     key={slot.index}
@@ -162,7 +174,23 @@ const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateCha
                       width: "100%",
                       height: "48px",
                     }}
-                  />
+                  >
+                    {onAddEvent && (
+                      <div className="absolute right-1.5 bottom-1.5 hidden group-hover:inline-flex z-20">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAddEvent(currentDate, startTime, endTime);
+                          }}
+                          className="flex items-center justify-center size-7 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
+                          aria-label="Add event"
+                        >
+                          <MdAdd className="size-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
 
@@ -185,6 +213,7 @@ const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateCha
                     isFullDay={isFullDay}
                     dayDate={currentDate}
                     onEventClick={onEventClick}
+                    onContextMenu={onEventContextMenu}
                   />
                 );
               })}

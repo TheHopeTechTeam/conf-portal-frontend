@@ -3,7 +3,15 @@ import EventBlock from "./EventBlock";
 import { CalendarViewProps } from "./types";
 import { filterEventsByDateRange, formatWeekday, getWeekDates, isDateInRange } from "./utils";
 
-const WeekView = ({ currentDate, events = [], validRange, onEventClick, onDateChange, onAddEvent }: CalendarViewProps) => {
+const WeekView = ({
+  currentDate,
+  events = [],
+  validRange,
+  onEventClick,
+  onDateChange,
+  onAddEvent,
+  onEventContextMenu,
+}: CalendarViewProps) => {
   const weekDates = getWeekDates(currentDate);
   const startOfWeek = weekDates[0];
   const endOfWeek = weekDates[6];
@@ -171,6 +179,17 @@ const WeekView = ({ currentDate, events = [], validRange, onEventClick, onDateCh
                   {timeSlots.map((slot) => {
                     const isLastSlot = slot.index === 47;
                     const top = slot.index * 48; // Each slot is 48px
+
+                    // Calculate start time for this slot (HH:mm format)
+                    const startHour = slot.hour;
+                    const startMinute = slot.isHalfHour ? 30 : 0;
+                    const startTime = `${startHour.toString().padStart(2, "0")}:${startMinute.toString().padStart(2, "0")}`;
+
+                    // Calculate end time for this slot (30 minutes later, HH:mm format)
+                    const endHour = slot.isHalfHour ? (slot.hour + 1) % 24 : slot.hour;
+                    const endMinute = slot.isHalfHour ? 0 : 30;
+                    const endTime = `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
+
                     return (
                       <div
                         key={slot.index}
@@ -191,7 +210,7 @@ const WeekView = ({ currentDate, events = [], validRange, onEventClick, onDateCh
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                onAddEvent();
+                                onAddEvent(date, startTime, endTime);
                               }}
                               className="flex items-center justify-center size-7 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
                               aria-label="Add event"
@@ -223,6 +242,7 @@ const WeekView = ({ currentDate, events = [], validRange, onEventClick, onDateCh
                         isFullDay={isFullDay}
                         dayDate={date}
                         onEventClick={onEventClick}
+                        onContextMenu={onEventContextMenu}
                       />
                     );
                   })}

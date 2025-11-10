@@ -14,7 +14,9 @@ const Calendar = ({
   onDateChange,
   onViewChange,
   onEventClick,
+  onEventContextMenu,
   onAddEvent,
+  showNavigationButtons = true,
 }: CalendarProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>(currentDate);
 
@@ -28,6 +30,31 @@ const Calendar = ({
   };
 
   const [currentView, setCurrentView] = useState<CalendarView>(getInitialView());
+
+  // Get showNavigationButtons value based on current view
+  const getShowNavigationButtons = (): { nav: boolean; today: boolean } => {
+    if (typeof showNavigationButtons === "boolean") {
+      return { nav: showNavigationButtons, today: showNavigationButtons };
+    }
+
+    // If it's an object, get the value for current view
+    const viewConfig = showNavigationButtons[currentView];
+
+    if (viewConfig === undefined) {
+      return { nav: false, today: false };
+    }
+
+    // If it's a boolean, use it for both nav and today
+    if (typeof viewConfig === "boolean") {
+      return { nav: viewConfig, today: viewConfig };
+    }
+
+    // If it's an object with nav and today properties
+    return {
+      nav: viewConfig.nav ?? false,
+      today: viewConfig.today ?? false,
+    };
+  };
 
   // Validate currentView when availableViews changes
   useEffect(() => {
@@ -92,6 +119,7 @@ const Calendar = ({
       validRange,
       onDateChange: handleDateChange,
       onEventClick,
+      onEventContextMenu,
       onAddEvent,
     };
 
@@ -116,7 +144,8 @@ const Calendar = ({
         onNext={handleNext}
         onToday={handleToday}
         onViewChange={handleViewChange}
-        onAddEvent={onAddEvent}
+        onAddEvent={onAddEvent ? () => onAddEvent() : undefined}
+        showNavigationButtons={getShowNavigationButtons()}
       />
       {renderView()}
     </div>

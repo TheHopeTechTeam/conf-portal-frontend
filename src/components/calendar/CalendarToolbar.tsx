@@ -1,9 +1,9 @@
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button";
 import ButtonGroup from "@/components/ui/buttons-group";
-import { MdChevronLeft, MdChevronRight } from "react-icons/md";
+import NavigationButtons from "./NavigationButtons";
 import { CalendarView, DateRange } from "./types";
-import { canNavigateNext, canNavigatePrevious, formatDate, formatWeekday, getEndOfWeek, getStartOfWeek } from "./utils";
+import { formatDate, formatWeekday, getEndOfWeek, getStartOfWeek } from "./utils";
 
 interface CalendarToolBarProps {
   currentDate: Date;
@@ -15,6 +15,7 @@ interface CalendarToolBarProps {
   onToday: () => void;
   onViewChange: (view: CalendarView) => void;
   onAddEvent?: () => void;
+  showNavigationButtons?: { nav: boolean; today: boolean };
 }
 
 const CalendarToolBar = ({
@@ -27,6 +28,7 @@ const CalendarToolBar = ({
   onToday,
   onViewChange,
   onAddEvent,
+  showNavigationButtons = { nav: true, today: true },
 }: CalendarToolBarProps) => {
   // Calculate week number of the month (1-based)
   // Week starts on Sunday (0)
@@ -121,28 +123,6 @@ const CalendarToolBar = ({
     }
   };
 
-  const getNavigationLabel = (): string => {
-    switch (currentView) {
-      case "day":
-        return "Previous day";
-      case "week":
-        return "Previous week";
-      case "month":
-        return "Previous month";
-    }
-  };
-
-  const getNextLabel = (): string => {
-    switch (currentView) {
-      case "day":
-        return "Next day";
-      case "week":
-        return "Next week";
-      case "month":
-        return "Next month";
-    }
-  };
-
   // Get the date to display in the calendar icon
   const getCalendarIconDate = (): Date => {
     const today = new Date();
@@ -154,13 +134,20 @@ const CalendarToolBar = ({
 
     switch (currentView) {
       case "day":
+        // Day view: always show the selected date
         return normalizedCurrentDate;
       case "week": {
-        // Check if current week is the same as today's week
         const startOfWeek = getStartOfWeek(normalizedCurrentDate);
-        const startOfTodayWeek = getStartOfWeek(today);
+        const endOfWeek = getEndOfWeek(normalizedCurrentDate);
 
-        // If current week is the same as today's week, show today's date
+        // Check if currentDate (selected date) is within the current week view
+        // If the selected date is in the current week, show the selected date
+        if (normalizedCurrentDate >= startOfWeek && normalizedCurrentDate <= endOfWeek) {
+          return normalizedCurrentDate;
+        }
+
+        // Otherwise, check if current week is the same as today's week
+        const startOfTodayWeek = getStartOfWeek(today);
         if (startOfWeek.getTime() === startOfTodayWeek.getTime()) {
           return today;
         }
@@ -170,10 +157,18 @@ const CalendarToolBar = ({
       case "month": {
         const year = normalizedCurrentDate.getFullYear();
         const month = normalizedCurrentDate.getMonth();
+
+        // Check if currentDate (selected date) is within the current month view
+        const selectedYear = normalizedCurrentDate.getFullYear();
+        const selectedMonth = normalizedCurrentDate.getMonth();
+        if (selectedYear === year && selectedMonth === month) {
+          // If the selected date is in the current month, show the selected date
+          return normalizedCurrentDate;
+        }
+
+        // Otherwise, check if current month is today's month
         const todayYear = today.getFullYear();
         const todayMonth = today.getMonth();
-
-        // If current month is today's month, show today's date
         if (year === todayYear && month === todayMonth) {
           return today;
         }
@@ -212,35 +207,19 @@ const CalendarToolBar = ({
         </div>
       </div>
       <div className="flex items-center">
-        <div className="relative flex items-stretch rounded-md bg-white shadow-xs outline -outline-offset-1 outline-gray-300 dark:bg-white/10 dark:shadow-none dark:outline-white/5">
-          <button
-            type="button"
-            onClick={onPrevious}
-            disabled={!canNavigatePrevious(currentDate, currentView, validRange)}
-            className="flex h-9 w-9 items-center justify-center rounded-l-md text-gray-400 hover:text-gray-500 focus:relative hover:bg-gray-50 dark:hover:text-white dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-gray-400 disabled:hover:bg-transparent"
-          >
-            <span className="sr-only">{getNavigationLabel()}</span>
-            <MdChevronLeft className="size-5" />
-          </button>
-          <Button
-            onClick={onToday}
-            variant="outline"
-            size="sm"
-            className="h-9 px-3.5 py-2 text-sm font-semibold rounded-none border-0 shadow-none bg-transparent hover:bg-gray-50 dark:hover:bg-white/10"
-          >
-            Today
-          </Button>
-          <button
-            type="button"
-            onClick={onNext}
-            disabled={!canNavigateNext(currentDate, currentView, validRange)}
-            className="flex h-9 w-9 items-center justify-center rounded-r-md text-gray-400 hover:text-gray-500 focus:relative hover:bg-gray-50 dark:hover:text-white dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-gray-400 disabled:hover:bg-transparent"
-          >
-            <span className="sr-only">{getNextLabel()}</span>
-            <MdChevronRight className="size-5" />
-          </button>
-        </div>
-        <div className="ml-4 flex items-center">
+        {(showNavigationButtons.nav || showNavigationButtons.today) && (
+          <NavigationButtons
+            currentDate={currentDate}
+            currentView={currentView}
+            validRange={validRange}
+            onPrevious={onPrevious}
+            onNext={onNext}
+            onToday={onToday}
+            showNav={showNavigationButtons.nav}
+            showToday={showNavigationButtons.today}
+          />
+        )}
+        <div className={`flex items-center ${showNavigationButtons.nav || showNavigationButtons.today ? "ml-4" : ""}`}>
           {availableViews.length > 1 && (
             <div className="mr-4">
               <ButtonGroup variant="primary" buttons={getViewButtons()} className="!pb-0 [&>div>div]:!shadow-none" minWidth="auto" />
