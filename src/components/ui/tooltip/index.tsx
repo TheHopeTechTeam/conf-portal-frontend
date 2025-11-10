@@ -14,6 +14,7 @@ interface TooltipProps {
   className?: string;
   /** Tooltip 内容容器的样式类名（仅应用于 tooltip 气泡，不影响触发元素） */
   contentClassName?: string;
+  wrapContent?: boolean;
 }
 
 function getPositionClasses(placement: TooltipPlacement) {
@@ -55,6 +56,7 @@ export default function Tooltip({
   leaveDelay = 100,
   className = "",
   contentClassName = "",
+  wrapContent = true,
 }: TooltipProps) {
   const pos = getPositionClasses(placement);
   const { theme: currentTheme } = useTheme();
@@ -110,7 +112,7 @@ export default function Tooltip({
         <div className={`relative ${contentClassName}`}>
           <div
             className={`drop-shadow-4xl rounded-lg px-3 py-3 text-xs font-medium ${
-              contentClassName ? "text-pretty" : "whitespace-nowrap"
+              wrapContent ? "text-pretty" : "whitespace-nowrap"
             } ${bubbleClass}`}
           >
             {content}

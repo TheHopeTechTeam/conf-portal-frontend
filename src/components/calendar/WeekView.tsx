@@ -35,11 +35,18 @@ const WeekView = ({ currentDate, events = [], validRange, onEventClick, onDateCh
     });
   };
 
-  // Calculate event position in pixels
+  // Calculate event position in pixels, handling events that continue from previous day
   // Each 30-minute slot is 48px tall, so each minute is 48/30 = 1.6px
   // Uses local time (getHours, getMinutes return local time)
-  const getEventTop = (date: string | Date): number => {
+  const getEventTop = (date: string | Date, dayDate: Date): number => {
     const dateObj = date instanceof Date ? date : new Date(date);
+    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0);
+
+    // If event starts before this day, start from 0
+    if (dateObj < dayStart) {
+      return 0;
+    }
+
     // getHours() and getMinutes() return local time
     const hours = dateObj.getHours();
     const minutes = dateObj.getMinutes();
@@ -49,15 +56,48 @@ const WeekView = ({ currentDate, events = [], validRange, onEventClick, onDateCh
     return (totalMinutes / 30) * 48;
   };
 
-  // Calculate event height in pixels
+  // Calculate event height in pixels, clamping to day boundaries
   // Uses local time for calculations
-  const getEventHeight = (start: string | Date, end: string | Date): number => {
+  const getEventHeight = (start: string | Date, end: string | Date, dayDate: Date): number => {
     const startDate = start instanceof Date ? start : new Date(start);
     const endDate = end instanceof Date ? end : new Date(end);
-    // Calculate difference in minutes (works correctly with Date objects in any timezone)
-    const diffMinutes = (endDate.getTime() - startDate.getTime()) / (1000 * 60);
-    // Convert minutes to pixels (each minute is 1.6px: 48px / 30 minutes)
-    return Math.max((diffMinutes / 30) * 48, 48); // Minimum height of 48px
+
+    // Get day boundaries in local timezone
+    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0);
+    const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999);
+
+    // Clamp event start and end to day boundaries
+    const clampedStart = startDate < dayStart ? dayStart : startDate;
+    const clampedEnd = endDate > dayEnd ? dayEnd : endDate;
+
+    // Calculate difference in minutes
+    const diffMinutes = (clampedEnd.getTime() - clampedStart.getTime()) / (1000 * 60);
+
+    // Convert minutes to pixels
+    return Math.max((diffMinutes / 30) * 48, 48);
+  };
+
+  // Check if event spans to next day
+  const isEventSpanningToNextDay = (_start: string | Date, end: string | Date, dayDate: Date): boolean => {
+    const endDate = end instanceof Date ? end : new Date(end);
+    const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999);
+    return endDate > dayEnd;
+  };
+
+  // Check if event continues from previous day
+  const isEventContinuingFromPreviousDay = (start: string | Date, dayDate: Date): boolean => {
+    const startDate = start instanceof Date ? start : new Date(start);
+    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0);
+    return startDate < dayStart;
+  };
+
+  // Check if event is fully within this day
+  const isEventFullyWithinDay = (start: string | Date, end: string | Date, dayDate: Date): boolean => {
+    const startDate = start instanceof Date ? start : new Date(start);
+    const endDate = end instanceof Date ? end : new Date(end);
+    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0);
+    const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999);
+    return startDate >= dayStart && endDate <= dayEnd;
   };
 
   return (
@@ -166,8 +206,11 @@ const WeekView = ({ currentDate, events = [], validRange, onEventClick, onDateCh
 
                   {/* Events */}
                   {dayEvents.map((event) => {
-                    const eventTop = getEventTop(event.start);
-                    const eventHeight = getEventHeight(event.start, event.end);
+                    const eventTop = getEventTop(event.start, date);
+                    const eventHeight = getEventHeight(event.start, event.end, date);
+                    const isSpanning = isEventSpanningToNextDay(event.start, event.end, date);
+                    const isContinuing = isEventContinuingFromPreviousDay(event.start, date);
+                    const isFullDay = isEventFullyWithinDay(event.start, event.end, date);
 
                     return (
                       <EventBlock
@@ -175,6 +218,10 @@ const WeekView = ({ currentDate, events = [], validRange, onEventClick, onDateCh
                         event={event}
                         top={eventTop}
                         height={eventHeight}
+                        isSpanning={isSpanning}
+                        isContinuing={isContinuing}
+                        isFullDay={isFullDay}
+                        dayDate={date}
                         onEventClick={onEventClick}
                       />
                     );

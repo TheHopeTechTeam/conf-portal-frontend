@@ -55,6 +55,7 @@ alwaysApply: true
 - 確保響應式設計，支援不同螢幕尺寸。
 - 優先使用現有的 UI 元件，避免重複造輪子，盡量使用現有的 UI 元件來組合出新的元件，除非現有的 UI 元件無法滿足需求，才需要自己實作新的 UI 元件或原生 html 元素。
 - 所有 icon 都使用 react-icons 來引入，並優先使用 md 系列的 icon。
+- 所有 className 都使用 utils/index.ts 中的 cn 函數來合併 classNames，避免手動合併 classNames。
 
 ## 路由管理
 

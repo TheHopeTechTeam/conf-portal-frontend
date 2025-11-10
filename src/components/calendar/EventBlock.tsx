@@ -1,83 +1,51 @@
+import { cn } from "@/utils";
 import { CalendarEvent } from "./types";
 
 export interface EventColorClasses {
   bg: string;
-  ring: string;
+  border: string;
   hoverBg: string;
   text: string;
   timeText: string;
 }
 
+export interface EventColorStyles {
+  backgroundColor?: string;
+  color?: string;
+}
+
 /**
- * Get event color classes based on event color
+ * Get default event color classes based on color name
  */
-export const getEventColorClasses = (color?: string): EventColorClasses => {
-  switch (color) {
-    case "blue":
-      return {
-        bg: "bg-blue-50",
-        ring: "ring-blue-200",
-        hoverBg: "hover:bg-blue-100",
-        text: "text-blue-700",
-        timeText: "text-blue-600",
-      };
-    case "purple":
-      return {
-        bg: "bg-purple-50",
-        ring: "ring-purple-200",
-        hoverBg: "hover:bg-purple-100",
-        text: "text-purple-700",
-        timeText: "text-purple-600",
-      };
-    case "green":
-      return {
-        bg: "bg-green-50",
-        ring: "ring-green-200",
-        hoverBg: "hover:bg-green-100",
-        text: "text-green-700",
-        timeText: "text-green-600",
-      };
-    case "red":
-      return {
-        bg: "bg-red-50",
-        ring: "ring-red-200",
-        hoverBg: "hover:bg-red-100",
-        text: "text-red-700",
-        timeText: "text-red-600",
-      };
-    case "orange":
-      return {
-        bg: "bg-orange-50",
-        ring: "ring-orange-200",
-        hoverBg: "hover:bg-orange-100",
-        text: "text-orange-700",
-        timeText: "text-orange-600",
-      };
-    default:
-      // Default to purple-like color (using indigo as fallback)
-      return {
-        bg: "bg-indigo-50",
-        ring: "ring-indigo-200",
-        hoverBg: "hover:bg-indigo-100",
-        text: "text-indigo-700",
-        timeText: "text-indigo-600",
-      };
-  }
+const getDefaultColorClasses = (): EventColorClasses => {
+  return {
+    bg: "bg-brand-50",
+    border: "border-brand-200",
+    hoverBg: "hover:bg-brand-100",
+    text: "text-brand-500",
+    timeText: "text-brand-400",
+  };
 };
 
 export interface EventBlockProps {
   event: CalendarEvent;
   top: number;
   height: number;
+  isSpanning?: boolean; // Event spans to next day
+  isContinuing?: boolean; // Event continues from previous day
+  isFullDay?: boolean; // Event is fully within this day
+  dayDate?: Date; // The date this event block represents
   onEventClick?: (event: CalendarEvent) => void;
 }
 
 /**
  * Event block component for rendering calendar events
  */
-const EventBlock = ({ event, top, height, onEventClick }: EventBlockProps) => {
+const EventBlock = ({ event, top, height, isSpanning, isContinuing, onEventClick }: EventBlockProps) => {
   const eventStart = new Date(event.start);
   const eventEnd = new Date(event.end);
+
+  // Always display original event times
   const startTimeString = eventStart.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
@@ -89,29 +57,88 @@ const EventBlock = ({ event, top, height, onEventClick }: EventBlockProps) => {
     hour12: true,
   });
 
-  // TODO: 根據用戶設定textColor&backgroundColor來產生各項顏色類別 (ring, hoverBg)
-  // e.g. textColor: text-[#bada55], backgroundColor: bg-[#FFFFFF]
-  const colorClasses = getEventColorClasses(event.textColor);
+  // Get default classes based on preset color name (if any)
+  const defaultClasses = getDefaultColorClasses();
+
+  // Build inline styles for custom colors
+  // Normalize color values (trim whitespace, ensure proper format)
+  const inlineStyles: EventColorStyles = {};
+  if (event.backgroundColor) {
+    inlineStyles.backgroundColor = event.backgroundColor.trim();
+  }
+  if (event.textColor) {
+    inlineStyles.color = event.textColor.trim();
+  }
+
+  const colorClasses: EventColorClasses = {
+    bg: event.backgroundColor ? "" : defaultClasses.bg,
+    border: defaultClasses.border,
+    hoverBg: event.backgroundColor ? "hover:brightness-95" : defaultClasses.hoverBg,
+    text: event.textColor ? "" : defaultClasses.text,
+    timeText: event.textColor ? "" : defaultClasses.timeText,
+  };
+
+  // Determine rounded corners based on event state
+  // - isSpanning: remove bottom rounded (event continues to next day)
+  // - isContinuing: remove top rounded (event continues from previous day)
+  // - Both: remove both top and bottom rounded
+  // - Neither: keep all rounded (default)
+  const getEventClasses = (): string => {
+    if (isSpanning && isContinuing) {
+      return "border-x";
+    } else if (isSpanning) {
+      return "rounded-t-md border-x border-t";
+    } else if (isContinuing) {
+      return "rounded-b-md pt-3 border-x border-b";
+    }
+    return "rounded-md border";
+  };
+
+  const getPaddingClasses = (): string => {
+    if (isSpanning && isContinuing) {
+      return "px-1.5";
+    } else if (isSpanning) {
+      return "pt-2 px-1.5";
+    } else if (isContinuing) {
+      return "px-1.5 pb-1.5";
+    }
+    return "px-1.5 py-1.5";
+  };
 
   return (
     <div
-      className="absolute w-full px-1.5 py-1.5"
+      className={`absolute w-full ${getPaddingClasses()}`}
       style={{
         top: `${top}px`,
         height: `${height}px`,
-        left: 0,
       }}
     >
       <button
         type="button"
         onClick={() => onEventClick?.(event)}
-        className={`flex h-full w-full flex-1 cursor-pointer flex-col gap-0.5 rounded-md px-2 py-1.5 ring-1 ring-inset ${colorClasses.bg} ${colorClasses.ring} ${colorClasses.hoverBg}`}
+        className={cn(
+          "flex h-full w-full flex-1 cursor-pointer flex-col gap-0.5",
+          getEventClasses(),
+          "px-1 py-0.5",
+          colorClasses.bg,
+          colorClasses.border,
+          colorClasses.hoverBg,
+          "relative"
+        )}
+        style={inlineStyles}
       >
-        <div className="flex w-full flex-col items-start">
-          <div className={`truncate text-xs font-semibold ${colorClasses.text}`}>{event.title}</div>
-          <div className={`text-xs ${colorClasses.timeText}`}>
-            {startTimeString}
-            {height > 96 && ` – ${endTimeString}`}
+        <div className="flex w-full flex-col items-start relative">
+          <div className="flex w-full flex-col items-start">
+            <div
+              className={cn("text-xs font-semibold text-start", colorClasses.text)}
+              style={inlineStyles.color ? { color: inlineStyles.color } : undefined}
+            >
+              {event.title}
+            </div>
+            <div className={cn("text-xs", colorClasses.timeText)} style={inlineStyles.color ? { color: inlineStyles.color } : undefined}>
+              {startTimeString}
+              {height > 48 && ` – ${endTimeString}`}
+            </div>
           </div>
         </div>
       </button>

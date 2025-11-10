@@ -1,10 +1,23 @@
 import { useEffect, useState } from "react";
 import EventBlock from "./EventBlock";
 import { CalendarViewProps } from "./types";
-import { filterEventsByDate, getMonthDays, isDateInRange } from "./utils";
+import { getMonthDays, isDateInRange } from "./utils";
 
 const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateChange }: CalendarViewProps) => {
-  const dayEvents = filterEventsByDate(events, currentDate);
+  // Filter events that overlap with the current day (including multi-day events)
+  const getEventsForDay = (date: Date) => {
+    const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
+    const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+
+    return events.filter((event) => {
+      const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
+      const eventEnd = event.end instanceof Date ? event.end : new Date(event.end);
+      // Event overlaps with the day if it starts before the day ends and ends after the day starts
+      return eventStart <= dayEnd && eventEnd >= dayStart;
+    });
+  };
+
+  const dayEvents = getEventsForDay(currentDate);
   const [miniCalendarMonth, setMiniCalendarMonth] = useState(currentDate);
 
   // Sync mini calendar month when currentDate changes
@@ -48,11 +61,18 @@ const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateCha
     return { hour, isHalfHour, index: i };
   });
 
-  // Calculate event position in pixels
+  // Calculate event position in pixels, handling events that continue from previous day
   // Each 30-minute slot is 48px tall, so each minute is 48/30 = 1.6px
   // Uses local time (getHours, getMinutes return local time)
-  const getEventTop = (date: string | Date): number => {
+  const getEventTop = (date: string | Date, dayDate: Date): number => {
     const dateObj = date instanceof Date ? date : new Date(date);
+    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0);
+
+    // If event starts before this day, start from 0
+    if (dateObj < dayStart) {
+      return 0;
+    }
+
     // getHours() and getMinutes() return local time
     const hours = dateObj.getHours();
     const minutes = dateObj.getMinutes();
@@ -62,15 +82,49 @@ const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateCha
     return (totalMinutes / 30) * 48;
   };
 
-  // Calculate event height in pixels
+  // Calculate event height in pixels, clamping to end of day if event spans to next day
   // Uses local time for calculations
-  const getEventHeight = (start: string | Date, end: string | Date): number => {
+  const getEventHeight = (start: string | Date, end: string | Date, dayDate: Date): number => {
     const startDate = start instanceof Date ? start : new Date(start);
     const endDate = end instanceof Date ? end : new Date(end);
-    // Calculate difference in minutes (works correctly with Date objects in any timezone)
-    const diffMinutes = (endDate.getTime() - startDate.getTime()) / (1000 * 60);
+
+    // Get day boundaries in local timezone
+    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0);
+    const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999);
+
+    // Clamp event start and end to day boundaries
+    const clampedStart = startDate < dayStart ? dayStart : startDate;
+    const clampedEnd = endDate > dayEnd ? dayEnd : endDate;
+
+    // Calculate difference in minutes
+    const diffMinutes = (clampedEnd.getTime() - clampedStart.getTime()) / (1000 * 60);
+
     // Convert minutes to pixels (each minute is 1.6px: 48px / 30 minutes)
-    return Math.max((diffMinutes / 30) * 48, 48); // Minimum height of 48px
+    // Minimum height of 48px (30 minutes)
+    return Math.max((diffMinutes / 30) * 48, 48);
+  };
+
+  // Check if event spans to next day
+  const isEventSpanningToNextDay = (_start: string | Date, end: string | Date, dayDate: Date): boolean => {
+    const endDate = end instanceof Date ? end : new Date(end);
+    const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999);
+    return endDate > dayEnd;
+  };
+
+  // Check if event continues from previous day
+  const isEventContinuingFromPreviousDay = (start: string | Date, dayDate: Date): boolean => {
+    const startDate = start instanceof Date ? start : new Date(start);
+    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0);
+    return startDate < dayStart;
+  };
+
+  // Check if event is fully within this day
+  const isEventFullyWithinDay = (start: string | Date, end: string | Date, dayDate: Date): boolean => {
+    const startDate = start instanceof Date ? start : new Date(start);
+    const endDate = end instanceof Date ? end : new Date(end);
+    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0);
+    const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999);
+    return startDate >= dayStart && endDate <= dayEnd;
   };
 
   return (
@@ -114,10 +168,25 @@ const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateCha
 
               {/* Events */}
               {dayEvents.map((event) => {
-                const eventTop = getEventTop(event.start);
-                const eventHeight = getEventHeight(event.start, event.end);
+                const eventTop = getEventTop(event.start, currentDate);
+                const eventHeight = getEventHeight(event.start, event.end, currentDate);
+                const isSpanning = isEventSpanningToNextDay(event.start, event.end, currentDate);
+                const isContinuing = isEventContinuingFromPreviousDay(event.start, currentDate);
+                const isFullDay = isEventFullyWithinDay(event.start, event.end, currentDate);
 
-                return <EventBlock key={event.id} event={event} top={eventTop} height={eventHeight} onEventClick={onEventClick} />;
+                return (
+                  <EventBlock
+                    key={event.id}
+                    event={event}
+                    top={eventTop}
+                    height={eventHeight}
+                    isSpanning={isSpanning}
+                    isContinuing={isContinuing}
+                    isFullDay={isFullDay}
+                    dayDate={currentDate}
+                    onEventClick={onEventClick}
+                  />
+                );
               })}
             </div>
           </div>

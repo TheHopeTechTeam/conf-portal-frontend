@@ -88,6 +88,10 @@ export const conferenceService = {
     return httpClient.get<ConferenceDetail>(`/api/v1/admin/conference/${id}`);
   },
 
+  async getActive() {
+    return httpClient.get<ConferenceItem>("/api/v1/admin/conference/active");
+  },
+
   async create(payload: ConferenceCreate) {
     return httpClient.post<{ id: string }>("/api/v1/admin/conference/", payload);
   },
