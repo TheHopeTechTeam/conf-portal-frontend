@@ -1,6 +1,6 @@
 import { faqService, type FaqDetail, type FaqItem } from "@/api/services/faqService";
 import type { DataTableColumn, DataTableRowAction, PageButtonType, PopoverType } from "@/components/DataPage";
-import { CommonPageButton, DataPage } from "@/components/DataPage";
+import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import RestoreForm from "@/components/DataPage/RestoreForm";
 import { Modal } from "@/components/ui/modal";
@@ -9,7 +9,7 @@ import { PopoverPosition } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MdCategory, MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
+import { MdCategory } from "react-icons/md";
 import FaqCategoryManagementModal from "./FaqCategoryManagementModal";
 import FaqDataForm, { type FaqFormValues } from "./FaqDataForm";
 import FaqDeleteForm from "./FaqDeleteForm";
@@ -115,6 +115,7 @@ export default function FaqDataPage() {
         label: "問題",
         sortable: true,
         width: "w-72",
+        tooltip: true,
         render: (value: unknown) => {
           const question = value as string;
           return <span className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{question}</span>;
@@ -139,7 +140,7 @@ export default function FaqDataPage() {
           const relatedLink = value as string | undefined;
           if (!relatedLink) return <span className="text-gray-400">無</span>;
           return (
-            <Tooltip content={relatedLink}>
+            <Tooltip content={relatedLink} wrapContent={false}>
               <a
                 href={relatedLink}
                 target="_blank"
@@ -157,14 +158,10 @@ export default function FaqDataPage() {
         label: "備註",
         sortable: false,
         width: "w-48",
+        tooltip: true,
         render: (value: unknown) => {
           const remark = value as string | undefined;
-          if (!remark) return <span className="text-gray-400">無</span>;
-          return (
-            <Tooltip content={remark}>
-              <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help line-clamp-2">{remark}</span>
-            </Tooltip>
-          );
+          return remark || <span className="text-gray-400">無</span>;
         },
       },
       {
@@ -177,7 +174,7 @@ export default function FaqDataPage() {
           const friendlyTime = DateUtil.friendlyDate(value);
           const shortTime = DateUtil.format(value);
           return (
-            <Tooltip content={shortTime}>
+            <Tooltip content={shortTime} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help">{friendlyTime}</span>
             </Tooltip>
           );
@@ -193,7 +190,7 @@ export default function FaqDataPage() {
           const friendlyTime = DateUtil.friendlyDate(value);
           const shortTime = DateUtil.format(value);
           return (
-            <Tooltip content={shortTime}>
+            <Tooltip content={shortTime} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help">{friendlyTime}</span>
             </Tooltip>
           );
@@ -315,6 +312,7 @@ export default function FaqDataPage() {
         variant: "info",
         tooltip: "管理常見問題分類",
         size: "md",
+        permission: "modify",
       },
       CommonPageButton.RESTORE(handleBulkRestore, {
         visible: showDeleted,
@@ -338,20 +336,12 @@ export default function FaqDataPage() {
   // Row actions
   const rowActions: DataTableRowAction<FaqItem>[] = useMemo(
     () => [
-      {
-        key: "view",
-        label: "檢視",
-        icon: <MdVisibility />,
-        onClick: (row: FaqItem) => {
-          setViewing(row);
-          openViewModal();
-        },
-      },
-      {
-        key: "edit",
-        label: "編輯",
-        icon: <MdEdit />,
-        onClick: async (row: FaqItem) => {
+      CommonRowAction.VIEW((row: FaqItem) => {
+        setViewing(row);
+        openViewModal();
+      }),
+      CommonRowAction.EDIT(
+        async (row: FaqItem) => {
           try {
             const response = await faqService.getById(row.id);
             setEditing(response.data);
@@ -362,24 +352,20 @@ export default function FaqDataPage() {
             alert("載入常見問題詳情失敗，請稍後重試");
           }
         },
-        visible: !showDeleted, // 僅在正常模式下顯示
-      },
-      {
-        key: "restore",
-        label: "還原",
-        icon: <MdRestore />,
-        variant: "primary",
-        onClick: async (row: FaqItem) => {
+        {
+          visible: !showDeleted, // 僅在正常模式下顯示
+        }
+      ),
+      CommonRowAction.RESTORE(
+        async (row: FaqItem) => {
           handleSingleRestore(row);
         },
-        visible: showDeleted, // 僅在回收桶模式下顯示
-      },
-      {
-        key: "delete",
-        label: showDeleted ? "永久刪除" : "刪除",
-        icon: <MdDelete />,
-        variant: "danger",
-        onClick: async (row: FaqItem) => {
+        {
+          visible: showDeleted, // 僅在回收桶模式下顯示
+        }
+      ),
+      CommonRowAction.DELETE(
+        async (row: FaqItem) => {
           try {
             const response = await faqService.getById(row.id);
             setEditing(response.data);
@@ -389,7 +375,10 @@ export default function FaqDataPage() {
             alert("載入常見問題詳情失敗，請稍後重試");
           }
         },
-      },
+        {
+          label: showDeleted ? "永久刪除" : "刪除",
+        }
+      ),
     ],
     [openModal, openDeleteModal, openViewModal, showDeleted, fetchPages, handleSingleRestore]
   );
@@ -463,6 +452,7 @@ export default function FaqDataPage() {
         singleSelect
         orderBy={orderBy}
         descending={descending}
+        resource="support:faq"
         buttons={toolbarButtons}
         rowActions={rowActions}
         onSort={handleSort}

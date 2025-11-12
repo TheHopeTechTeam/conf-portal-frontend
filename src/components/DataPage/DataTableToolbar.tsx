@@ -4,11 +4,13 @@ import { PageButtonType } from "./types";
 interface DataTableToolbarProps {
   /** 工具欄按鈕 */
   buttons?: PageButtonType[];
+  /** 資源名稱（用於權限檢查） */
+  resource: string;
   /** 容器樣式類名 */
   className?: string;
 }
 
-export default function DataTableToolbar({ buttons = [], className }: DataTableToolbarProps) {
+export default function DataTableToolbar({ buttons = [], resource, className }: DataTableToolbarProps) {
   // 依 align 分群（預設為左側）
   const leftButtons = (buttons || []).filter((b) => b.align === "left");
   const rightButtons = (buttons || []).filter((b) => b.align === "right");
@@ -21,12 +23,12 @@ export default function DataTableToolbar({ buttons = [], className }: DataTableT
     >
       {/* 左側：功能按鈕（align: left 或未指定） */}
       <div className="flex gap-3 sm:flex-row sm:items-center">
-        {leftButtons.length > 0 && <ToolbarButtonGroup buttons={leftButtons} align="left" gap="md" />}
+        {leftButtons.length > 0 && <ToolbarButtonGroup buttons={leftButtons} resource={resource} align="left" gap="md" />}
       </div>
 
       <div className="flex items-center gap-2">
         {/* 右側：功能按鈕（align: right） */}
-        {rightButtons.length > 0 && <ToolbarButtonGroup buttons={rightButtons} align="right" gap="md" />}
+        {rightButtons.length > 0 && <ToolbarButtonGroup buttons={rightButtons} resource={resource} align="right" gap="md" />}
       </div>
     </div>
   );

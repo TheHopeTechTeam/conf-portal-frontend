@@ -1,14 +1,14 @@
 import { permissionService } from "@/api";
 import type { PermissionDetail as ApiPermissionDetail, PermissionPageItem } from "@/api/types";
 import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
-import { CommonPageButton, DataPage } from "@/components/DataPage";
+import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import RestoreForm from "@/components/DataPage/RestoreForm";
 import { Modal } from "@/components/ui/modal";
 import { PopoverPosition } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MdCheck, MdClose, MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
+import { MdCheck, MdClose } from "react-icons/md";
 import PermissionDataForm, { type PermissionFormValues } from "./PermissionDataForm";
 import PermissionDeleteForm from "./PermissionDeleteForm";
 import PermissionDetailView from "./PermissionDetailView";
@@ -296,20 +296,12 @@ export default function PermissionDataPage() {
   // Row actions
   const rowActions: DataTableRowAction<PermissionPageItem>[] = useMemo(
     () => [
-      {
-        key: "view",
-        label: "檢視",
-        icon: <MdVisibility />,
-        onClick: (row: PermissionPageItem) => {
-          setViewing(row);
-          openViewModal();
-        },
-      },
-      {
-        key: "edit",
-        label: "編輯",
-        icon: <MdEdit />,
-        onClick: async (row: PermissionPageItem) => {
+      CommonRowAction.VIEW((row: PermissionPageItem) => {
+        setViewing(row);
+        openViewModal();
+      }),
+      CommonRowAction.EDIT(
+        async (row: PermissionPageItem) => {
           try {
             setSubmitting(true);
             // 獲取完整的權限詳情（包含 resourceId 和 verbId）
@@ -340,30 +332,29 @@ export default function PermissionDataPage() {
             setSubmitting(false);
           }
         },
-        visible: !showDeleted, // 僅在正常模式下顯示
-      },
-      {
-        key: "restore",
-        label: "還原",
-        icon: <MdRestore />,
-        variant: "primary",
-        onClick: async (row: PermissionPageItem) => {
+        {
+          visible: !showDeleted, // 僅在正常模式下顯示
+        }
+      ),
+      CommonRowAction.RESTORE(
+        async (row: PermissionPageItem) => {
           handleSingleRestore(row);
         },
-        visible: showDeleted, // 僅在回收桶模式下顯示
-      },
-      {
-        key: "delete",
-        label: showDeleted ? "永久刪除" : "刪除",
-        icon: <MdDelete />,
-        variant: "danger",
-        onClick: (row: PermissionPageItem) => {
+        {
+          visible: showDeleted, // 僅在回收桶模式下顯示
+        }
+      ),
+      CommonRowAction.DELETE(
+        (row: PermissionPageItem) => {
           setEditing(row);
           openDeleteModal();
         },
-      },
+        {
+          label: showDeleted ? "永久刪除" : "刪除",
+        }
+      ),
     ],
-    [openModal, openDeleteModal, openViewModal, showDeleted, fetchPages]
+    [openModal, openDeleteModal, openViewModal, showDeleted, fetchPages, setSubmitting]
   );
 
   // Submit handlers
@@ -421,6 +412,7 @@ export default function PermissionDataPage() {
         loading={loading}
         orderBy={orderBy}
         descending={descending}
+        resource="system:permission"
         buttons={toolbarButtons}
         rowActions={rowActions}
         onSort={handleSort}

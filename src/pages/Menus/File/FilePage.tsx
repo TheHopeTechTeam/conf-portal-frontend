@@ -262,6 +262,7 @@ const FilePage = () => {
         variant: "primary",
         size: "md",
         onClick: openUploadModal,
+        permission: "create",
       },
       {
         key: "selectAll",
@@ -271,12 +272,14 @@ const FilePage = () => {
         disabled: files.length === 0,
         size: "md",
         onClick: handleSelectAll,
+        permission: "delete",
       },
       CommonPageButton.BULK_DELETE(handleBatchDelete, {
         align: "left",
         tooltip: "批量刪除",
         size: "md",
         disabled: selectedKeys.length === 0,
+        permission: "delete",
       }),
       CommonPageButton.REFRESH(() => {
         refetchFiles();
@@ -305,6 +308,7 @@ const FilePage = () => {
             />
           </div>
         ),
+        permission: "read",
       },
     ];
   }, [selectedKeys.length, handleBatchDelete, sortOrder, openUploadModal, refetchFiles, isAllSelected, handleSelectAll, files.length]);
@@ -321,7 +325,7 @@ const FilePage = () => {
     <>
       <div className="flex flex-col rounded-xl bg-white dark:bg-white/[0.03] h-full">
         {/* Toolbar */}
-        <DataTableToolbar buttons={toolbarButtons} />
+        <DataTableToolbar buttons={toolbarButtons} resource="content:file" />
         <div className="flex-1 min-h-0">
           <div className="h-full flex flex-col">
             <div className="grow max-w-full overflow-x-auto overflow-y-auto custom-scrollbar border-x border-b border-gray-100 dark:border-white/[0.05]">

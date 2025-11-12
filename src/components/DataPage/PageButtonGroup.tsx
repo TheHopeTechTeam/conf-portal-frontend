@@ -1,3 +1,4 @@
+import { usePermissions } from "@/context/AuthContext";
 import PageButton from "./PageButton";
 import { PageButtonType } from "./types";
 
@@ -6,6 +7,8 @@ interface PageButtonGroupProps {
   buttons: PageButtonType[];
   /** 顯示模式 */
   mode: "toolbar" | "contextmenu";
+  /** 資源名稱（用於權限檢查） */
+  resource: string;
   /** 容器樣式類名 */
   className?: string;
   /** 按鈕間距 */
@@ -19,13 +22,41 @@ interface PageButtonGroupProps {
 export default function PageButtonGroup({
   buttons,
   mode,
+  resource,
   className,
   gap = "md",
   align = "left",
   showDivider = false,
 }: PageButtonGroupProps) {
+  const { hasPermission } = usePermissions();
+
+  // 检查按钮权限
+  const checkButtonPermission = (button: PageButtonType): boolean => {
+    // 如果没有设置权限，则允许显示
+    if (!button.permission) {
+      return true;
+    }
+
+    // 判斷 permission 是否為完整的權限代碼（包含冒號）
+    // 如果是完整權限代碼（例如 "system:role:modify"），則直接使用
+    // 如果是動詞（例如 "modify"），則與 resource 拼接為 resource:verb
+    const permissionCode = button.permission.includes(":") ? button.permission : `${resource}:${button.permission}`;
+
+    // 检查权限
+    return hasPermission(permissionCode);
+  };
+
   // 過濾可見的按鈕並排序
-  const visibleButtons = buttons.filter((button) => button.visible !== false).sort((a, b) => (a.order || 0) - (b.order || 0));
+  const visibleButtons = buttons
+    .filter((button) => {
+      // 先检查 visible 属性
+      if (button.visible === false) {
+        return false;
+      }
+      // 再检查权限
+      return checkButtonPermission(button);
+    })
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
 
   if (visibleButtons.length === 0) {
     return null;
@@ -91,11 +122,11 @@ export default function PageButtonGroup({
 }
 
 // 專門用於 Toolbar 的按鈕組
-export function ToolbarButtonGroup({ buttons, className, ...props }: Omit<PageButtonGroupProps, "mode">) {
-  return <PageButtonGroup buttons={buttons} mode="toolbar" className={className} {...props} />;
+export function ToolbarButtonGroup({ buttons, resource, className, ...props }: Omit<PageButtonGroupProps, "mode">) {
+  return <PageButtonGroup buttons={buttons} mode="toolbar" resource={resource} className={className} {...props} />;
 }
 
 // 專門用於 ContextMenu 的按鈕組
-export function ContextMenuButtonGroup({ buttons, className, ...props }: Omit<PageButtonGroupProps, "mode">) {
-  return <PageButtonGroup buttons={buttons} mode="contextmenu" className={className} {...props} />;
+export function ContextMenuButtonGroup({ buttons, resource, className, ...props }: Omit<PageButtonGroupProps, "mode">) {
+  return <PageButtonGroup buttons={buttons} mode="contextmenu" resource={resource} className={className} {...props} />;
 }

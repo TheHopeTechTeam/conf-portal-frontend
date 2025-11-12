@@ -1,6 +1,6 @@
 import { roleService, type RoleCreate, type RolePageItem, type RolePagesResponse, type RoleUpdate } from "@/api/services/roleService";
 import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
-import { CommonPageButton, DataPage } from "@/components/DataPage";
+import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import Button from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -10,7 +10,6 @@ import { PopoverPosition } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
 import RoleDataForm, { type RoleDataFormHandle, type RoleFormValues } from "./RoleDataForm";
 import RoleDeleteForm from "./RoleDeleteForm";
 import RoleDetailView from "./RoleDetailView";
@@ -196,34 +195,26 @@ export default function RoleDataPage() {
 
   const rowActions: DataTableRowAction<RolePageItem>[] = useMemo(
     () => [
-      {
-        key: "view",
-        label: "檢視",
-        icon: <MdVisibility />,
-        onClick: async (row) => {
-          try {
-            setSubmitting(true);
-            // 獲取完整的角色詳情（包含權限列表）
-            const response = await roleService.getById(row.id);
-            if (response.success) {
-              setViewing(response.data);
-              openViewModal();
-            } else {
-              alert("載入角色詳情失敗，請稍後再試");
-            }
-          } catch (e) {
-            console.error("Error fetching role detail:", e);
+      CommonRowAction.VIEW(async (row) => {
+        try {
+          setSubmitting(true);
+          // 獲取完整的角色詳情（包含權限列表）
+          const response = await roleService.getById(row.id);
+          if (response.success) {
+            setViewing(response.data);
+            openViewModal();
+          } else {
             alert("載入角色詳情失敗，請稍後再試");
-          } finally {
-            setSubmitting(false);
           }
-        },
-      },
-      {
-        key: "edit",
-        label: "編輯",
-        icon: <MdEdit />,
-        onClick: async (row) => {
+        } catch (e) {
+          console.error("Error fetching role detail:", e);
+          alert("載入角色詳情失敗，請稍後再試");
+        } finally {
+          setSubmitting(false);
+        }
+      }),
+      CommonRowAction.EDIT(
+        async (row) => {
           try {
             setSubmitting(true);
             // 獲取完整的角色詳情（包含權限列表）
@@ -252,14 +243,12 @@ export default function RoleDataPage() {
             setSubmitting(false);
           }
         },
-        visible: !showDeleted,
-      },
-      {
-        key: "restore",
-        label: "還原",
-        icon: <MdRestore />,
-        variant: "primary",
-        onClick: async (row) => {
+        {
+          visible: !showDeleted,
+        }
+      ),
+      CommonRowAction.RESTORE(
+        async (row) => {
           try {
             setSubmitting(true);
             await roleService.restore(row.id);
@@ -268,18 +257,19 @@ export default function RoleDataPage() {
             setSubmitting(false);
           }
         },
-        visible: showDeleted,
-      },
-      {
-        key: "delete",
-        label: showDeleted ? "永久刪除" : "刪除",
-        icon: <MdDelete />,
-        variant: "danger",
-        onClick: (row) => {
+        {
+          visible: showDeleted,
+        }
+      ),
+      CommonRowAction.DELETE(
+        (row) => {
           setEditing(row);
           openDeleteModal();
         },
-      },
+        {
+          label: showDeleted ? "永久刪除" : "刪除",
+        }
+      ),
     ],
     [openModal, openDeleteModal, openViewModal, showDeleted, fetchPages, setSubmitting]
   );
@@ -320,6 +310,7 @@ export default function RoleDataPage() {
         loading={loading}
         orderBy={orderBy}
         descending={descending}
+        resource="system:role"
         buttons={toolbarButtons}
         rowActions={rowActions}
         onSort={handleSort}

@@ -1,6 +1,6 @@
 import { testimonyService, type TestimonyDetail } from "@/api/services/testimonyService";
 import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
-import { CommonPageButton, DataPage } from "@/components/DataPage";
+import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
@@ -8,7 +8,7 @@ import { PopoverPosition } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MdCheck, MdClose, MdVisibility } from "react-icons/md";
+import { MdCheck, MdClose } from "react-icons/md";
 import TestimonyDetailView from "./TestimonyDetailView";
 import TestimonySearchPopover, { type TestimonySearchFilters } from "./TestimonySearchPopover";
 
@@ -36,7 +36,6 @@ export default function TestimonyDataPage() {
   const { isOpen: isViewOpen, openModal: openViewModal, closeModal: closeViewModal } = useModal(false);
   const [viewing, setViewing] = useState<TestimonyDetail | null>(null);
 
-
   // Fetch function - 使用 useRef 避免不必要的重新創建
   const fetchPagesRef = useRef({
     currentPage,
@@ -58,7 +57,6 @@ export default function TestimonyDataPage() {
   };
 
   const fetchPages = useCallback(async () => {
-
     const { currentPage, pageSize, orderBy, descending, appliedFilters, showDeleted } = fetchPagesRef.current;
 
     setLoading(true);
@@ -97,9 +95,8 @@ export default function TestimonyDataPage() {
       {
         key: "name",
         label: "姓名",
-        sortable: true,
         width: "w-36",
-        tooltip: (row) => row.name,
+        tooltip: true,
       },
       {
         key: "phoneNumber",
@@ -141,7 +138,7 @@ export default function TestimonyDataPage() {
           const remark = value as string | undefined;
           if (!remark) return <span className="text-gray-400">無</span>;
           return (
-            <Tooltip content={remark}>
+            <Tooltip content={remark} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help line-clamp-2">{remark}</span>
             </Tooltip>
           );
@@ -157,7 +154,7 @@ export default function TestimonyDataPage() {
           const friendlyTime = DateUtil.friendlyDate(value);
           const shortTime = DateUtil.format(value);
           return (
-            <Tooltip content={shortTime}>
+            <Tooltip content={shortTime} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help">{friendlyTime}</span>
             </Tooltip>
           );
@@ -173,7 +170,7 @@ export default function TestimonyDataPage() {
           const friendlyTime = DateUtil.friendlyDate(value);
           const shortTime = DateUtil.format(value);
           return (
-            <Tooltip content={shortTime}>
+            <Tooltip content={shortTime} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help">{friendlyTime}</span>
             </Tooltip>
           );
@@ -208,7 +205,6 @@ export default function TestimonyDataPage() {
     setPageSize(newPageSize);
     setCurrentPage(1);
   };
-
 
   // Toolbar buttons
   const toolbarButtons = useMemo(() => {
@@ -267,15 +263,10 @@ export default function TestimonyDataPage() {
   // Row actions - 只有查看功能，不支持更新或删除
   const rowActions: DataTableRowAction<TestimonyDetail>[] = useMemo(
     () => [
-      {
-        key: "view",
-        label: "檢視",
-        icon: <MdVisibility />,
-        onClick: (row: TestimonyDetail) => {
-          setViewing(row);
-          openViewModal();
-        },
-      },
+      CommonRowAction.VIEW((row: TestimonyDetail) => {
+        setViewing(row);
+        openViewModal();
+      }),
     ],
     [openViewModal]
   );
@@ -299,6 +290,7 @@ export default function TestimonyDataPage() {
         singleSelect
         orderBy={orderBy}
         descending={descending}
+        resource="content:testimony"
         buttons={toolbarButtons}
         rowActions={rowActions}
         onSort={handleSort}

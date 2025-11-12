@@ -29,6 +29,8 @@ export interface DataTableColumn<T> {
   tooltip?: boolean | string | ((row: T) => string);
   /** 提示寬度 (Tailwind CSS 類名，例如: "w-32", "w-1/4", "w-[100px]"） */
   tooltipWidth?: string;
+  /** 提示是否換行 */
+  tooltipWrapContent?: boolean;
   /** 值枚舉配置 */
   valueEnum?: {
     item: (value: unknown) => {
@@ -65,6 +67,10 @@ export interface DataTableRowAction<T> {
   variant?: "default" | "primary" | "danger" | "warning" | "success";
   /** 自定義顏色類名 */
   className?: string;
+  /** 权限代码或动词 */
+  /** 如果是完整权限代码（包含冒号，例如 "system:role:modify"），则直接使用 */
+  /** 如果是动词（不包含冒号，例如 "read", "create", "modify", "delete"），则与 DataPage 的 resource 参数自动拼接为 resource:verb */
+  permission?: string;
 }
 
 /**
@@ -97,6 +103,8 @@ export interface DataTableProps<T> {
   actionable?: boolean;
   /** 是否單選 */
   singleSelect?: boolean;
+  /** 資源名稱（用於權限檢查） */
+  resource?: string;
   /** 行右鍵選單動作 */
   rowActions?: DataTableRowAction<T>[] | ((row: T, index: number) => DataTableRowAction<T>[]);
   /** 右鍵選單觸發事件 */
@@ -205,6 +213,10 @@ export interface PageButtonType {
   }) => ReactNode;
   popover?: PopoverType;
   render?: () => ReactNode;
+  /** 权限代码或动词 */
+  /** 如果是完整权限代码（包含冒号，例如 "system:role:modify"），则直接使用 */
+  /** 如果是动词（不包含冒号，例如 "read", "create", "modify", "delete"），则与 DataPage 的 resource 参数自动拼接为 resource:verb */
+  permission?: string;
 }
 
 /**

@@ -1,6 +1,6 @@
 import { locationService, type LocationDetail, type LocationItem } from "@/api/services/locationService";
 import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
-import { CommonPageButton, DataPage } from "@/components/DataPage";
+import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import RestoreForm from "@/components/DataPage/RestoreForm";
 import { Modal } from "@/components/ui/modal";
@@ -9,7 +9,6 @@ import { PopoverPosition } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
 import LocationDataForm, { type LocationFormValues } from "./LocationDataForm";
 import LocationDeleteForm from "./LocationDeleteForm";
 import LocationDetailView from "./LocationDetailView";
@@ -113,7 +112,7 @@ export default function LocationDataPage() {
         label: "地點名稱",
         sortable: false,
         width: "w-48",
-        tooltip: (row) => row.name,
+        tooltip: true,
       },
       {
         key: "roomNumber",
@@ -144,7 +143,7 @@ export default function LocationDataPage() {
           const address = value as string | undefined;
           if (!address) return <span className="text-gray-400">無</span>;
           return (
-            <Tooltip content={address}>
+            <Tooltip content={address} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help line-clamp-2">{address}</span>
             </Tooltip>
           );
@@ -159,7 +158,7 @@ export default function LocationDataPage() {
           const remark = value as string | undefined;
           if (!remark) return <span className="text-gray-400">無</span>;
           return (
-            <Tooltip content={remark}>
+            <Tooltip content={remark} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help line-clamp-2">{remark}</span>
             </Tooltip>
           );
@@ -175,7 +174,7 @@ export default function LocationDataPage() {
           const friendlyTime = DateUtil.friendlyDate(value);
           const shortTime = DateUtil.format(value);
           return (
-            <Tooltip content={shortTime}>
+            <Tooltip content={shortTime} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help">{friendlyTime}</span>
             </Tooltip>
           );
@@ -191,7 +190,7 @@ export default function LocationDataPage() {
           const friendlyTime = DateUtil.friendlyDate(value);
           const shortTime = DateUtil.format(value);
           return (
-            <Tooltip content={shortTime}>
+            <Tooltip content={shortTime} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help">{friendlyTime}</span>
             </Tooltip>
           );
@@ -326,20 +325,12 @@ export default function LocationDataPage() {
   // Row actions
   const rowActions: DataTableRowAction<LocationItem>[] = useMemo(
     () => [
-      {
-        key: "view",
-        label: "檢視",
-        icon: <MdVisibility />,
-        onClick: (row: LocationItem) => {
-          setViewing(row);
-          openViewModal();
-        },
-      },
-      {
-        key: "edit",
-        label: "編輯",
-        icon: <MdEdit />,
-        onClick: async (row: LocationItem) => {
+      CommonRowAction.VIEW((row: LocationItem) => {
+        setViewing(row);
+        openViewModal();
+      }),
+      CommonRowAction.EDIT(
+        async (row: LocationItem) => {
           try {
             const response = await locationService.getById(row.id);
             setEditing(response.data);
@@ -350,24 +341,20 @@ export default function LocationDataPage() {
             alert("載入地點詳情失敗，請稍後重試");
           }
         },
-        visible: !showDeleted, // 僅在正常模式下顯示
-      },
-      {
-        key: "restore",
-        label: "還原",
-        icon: <MdRestore />,
-        variant: "primary",
-        onClick: async (row: LocationItem) => {
+        {
+          visible: !showDeleted, // 僅在正常模式下顯示
+        }
+      ),
+      CommonRowAction.RESTORE(
+        async (row: LocationItem) => {
           handleSingleRestore(row);
         },
-        visible: showDeleted, // 僅在回收桶模式下顯示
-      },
-      {
-        key: "delete",
-        label: showDeleted ? "永久刪除" : "刪除",
-        icon: <MdDelete />,
-        variant: "danger",
-        onClick: async (row: LocationItem) => {
+        {
+          visible: showDeleted, // 僅在回收桶模式下顯示
+        }
+      ),
+      CommonRowAction.DELETE(
+        async (row: LocationItem) => {
           try {
             const response = await locationService.getById(row.id);
             setEditing(response.data);
@@ -377,7 +364,10 @@ export default function LocationDataPage() {
             alert("載入地點詳情失敗，請稍後重試");
           }
         },
-      },
+        {
+          label: showDeleted ? "永久刪除" : "刪除",
+        }
+      ),
     ],
     [openModal, openDeleteModal, openViewModal, showDeleted, fetchPages, handleSingleRestore]
   );
@@ -458,6 +448,7 @@ export default function LocationDataPage() {
         loading={loading}
         orderBy={orderBy}
         descending={descending}
+        resource="content:location"
         buttons={toolbarButtons}
         rowActions={rowActions}
         onSort={handleSort}

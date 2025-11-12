@@ -4,8 +4,9 @@ import DataTableFooter from "@/components/DataPage/DataTableFooter";
 import DataTableHeader from "@/components/DataPage/DataTableHeader";
 import { useContextMenu } from "@/components/DataPage/useContextMenu";
 import { Table } from "@/components/ui/table";
+import { usePermissions } from "@/context/AuthContext";
 import React, { useCallback, useEffect, useState } from "react";
-import { DataTablePagedData, DataTableProps, PageButtonType } from "./types";
+import { DataTablePagedData, DataTableProps, DataTableRowAction, PageButtonType } from "./types";
 
 export default function DataTable<T extends Record<string, unknown>>({
   data,
@@ -13,6 +14,7 @@ export default function DataTable<T extends Record<string, unknown>>({
   loading = false,
   emptyMessage = "No data available",
   singleSelect = false,
+  resource,
   rowActions,
   onRowContextMenu,
   onRowSelect,
@@ -29,6 +31,9 @@ export default function DataTable<T extends Record<string, unknown>>({
   const [selectedRows, setSelectedRows] = useState<T[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
+
+  // 權限檢查
+  const { hasPermission } = usePermissions();
 
   // 右鍵選單狀態
   const contextMenu = useContextMenu();
@@ -133,6 +138,27 @@ export default function DataTable<T extends Record<string, unknown>>({
     pagination?.onItemsPerPageChange?.(newPageSize);
   };
 
+  // 檢查行操作權限
+  const checkRowActionPermission = (action: DataTableRowAction<T>): boolean => {
+    // 如果沒有設置權限，則允許顯示
+    if (!action.permission) {
+      return true;
+    }
+
+    // 如果沒有 resource，則允許顯示（向後兼容）
+    if (!resource) {
+      return true;
+    }
+
+    // 判斷 permission 是否為完整的權限代碼（包含冒號）
+    // 如果是完整權限代碼（例如 "system:role:modify"），則直接使用
+    // 如果是動詞（例如 "modify"），則與 resource 拼接為 resource:verb
+    const permissionCode = action.permission.includes(":") ? action.permission : `${resource}:${action.permission}`;
+
+    // 檢查權限
+    return hasPermission(permissionCode);
+  };
+
   // 處理右鍵選單
   const handleRowContextMenu = (row: T, index: number, event: React.MouseEvent) => {
     event.preventDefault();
@@ -151,11 +177,16 @@ export default function DataTable<T extends Record<string, unknown>>({
         const actions = rowActions(row, index);
         contextMenuButtons = actions
           .filter((action) => {
-            // 檢查 visible 屬性
-            if (action.visible === undefined) return true;
-            if (typeof action.visible === "boolean") return action.visible;
-            if (typeof action.visible === "function") return action.visible(row);
-            return true;
+            // 先檢查 visible 屬性
+            if (action.visible !== undefined) {
+              if (typeof action.visible === "boolean") {
+                if (!action.visible) return false;
+              } else if (typeof action.visible === "function") {
+                if (!action.visible(row)) return false;
+              }
+            }
+            // 再檢查權限
+            return checkRowActionPermission(action);
           })
           .map((action) => ({
             key: action.key,
@@ -174,11 +205,16 @@ export default function DataTable<T extends Record<string, unknown>>({
       } else {
         contextMenuButtons = rowActions
           .filter((action) => {
-            // 檢查 visible 屬性
-            if (action.visible === undefined) return true;
-            if (typeof action.visible === "boolean") return action.visible;
-            if (typeof action.visible === "function") return action.visible(row);
-            return true;
+            // 先檢查 visible 屬性
+            if (action.visible !== undefined) {
+              if (typeof action.visible === "boolean") {
+                if (!action.visible) return false;
+              } else if (typeof action.visible === "function") {
+                if (!action.visible(row)) return false;
+              }
+            }
+            // 再檢查權限
+            return checkRowActionPermission(action);
           })
           .map((action) => ({
             key: action.key,

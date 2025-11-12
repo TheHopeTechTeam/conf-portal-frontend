@@ -79,15 +79,40 @@ export const getPageButtonText = (type: PageButtonTypeKey): string => {
   return texts[type];
 };
 
+// 按鈕類型對應的默認權限動詞
+const getDefaultPermission = (type: PageButtonTypeKey): string | undefined => {
+  const permissionMap: Partial<Record<PageButtonTypeKey, string>> = {
+    [PAGE_BUTTON_TYPES.SEARCH]: "read",
+    [PAGE_BUTTON_TYPES.ADD]: "create",
+    [PAGE_BUTTON_TYPES.REFRESH]: "read",
+    [PAGE_BUTTON_TYPES.BULK_DELETE]: "delete",
+    [PAGE_BUTTON_TYPES.RECYCLE]: "delete",
+    [PAGE_BUTTON_TYPES.RESTORE]: "modify",
+    [PAGE_BUTTON_TYPES.EDIT]: "modify",
+    [PAGE_BUTTON_TYPES.DELETE]: "delete",
+    [PAGE_BUTTON_TYPES.VIEW]: "read",
+    // DOWNLOAD, COPY, EXPORT 沒有默認權限（可選）
+  };
+
+  return permissionMap[type];
+};
+
 // 建立內建按鈕的工廠函數
 export const createPageButton = (type: PageButtonTypeKey, onClick: () => void, options: Partial<PageButtonType> = {}): PageButtonType => {
+  const defaultPermission = getDefaultPermission(type);
+  const { permission, ...restOptions } = options;
+
   return {
     key: type,
     text: getPageButtonText(type),
     icon: getPageButtonIcon(type),
     onClick,
     size: "md",
-    ...options,
+    // 如果 options 中沒有指定 permission，則使用默認權限
+    // 如果 options 中指定了 permission（字符串），則使用它
+    // 如果 options 中指定了 permission: undefined，則移除權限（不檢查權限）
+    permission: permission ?? defaultPermission,
+    ...restOptions,
   };
 };
 

@@ -1,6 +1,6 @@
 import { feedbackService, FeedbackStatus, type FeedbackDetail } from "@/api/services/feedbackService";
 import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
-import { CommonPageButton, DataPage } from "@/components/DataPage";
+import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
@@ -8,7 +8,6 @@ import { PopoverPosition } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MdEdit, MdVisibility } from "react-icons/md";
 import FeedbackDetailView from "./FeedbackDetailView";
 import FeedbackSearchPopover, { type FeedbackSearchFilters } from "./FeedbackSearchPopover";
 import FeedbackStatusUpdateForm from "./FeedbackStatusUpdateForm";
@@ -143,7 +142,7 @@ export default function FeedbackDataPage() {
         label: "姓名",
         sortable: true,
         width: "w-40",
-        tooltip: (row) => row.name,
+        tooltip: true,
       },
       {
         key: "email",
@@ -151,7 +150,7 @@ export default function FeedbackDataPage() {
         sortable: true,
         width: "w-60",
         overflow: true,
-        tooltip: (row) => row.email || "",
+        tooltip: true,
         render: (value: unknown) => {
           const email = value as string | undefined;
           return email || <span className="text-gray-400">未提供</span>;
@@ -199,7 +198,7 @@ export default function FeedbackDataPage() {
           const friendlyTime = DateUtil.friendlyDate(value);
           const shortTime = DateUtil.format(value);
           return (
-            <Tooltip content={shortTime}>
+            <Tooltip content={shortTime} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help">{friendlyTime}</span>
             </Tooltip>
           );
@@ -215,7 +214,7 @@ export default function FeedbackDataPage() {
           const friendlyTime = DateUtil.friendlyDate(value);
           const shortTime = DateUtil.format(value);
           return (
-            <Tooltip content={shortTime}>
+            <Tooltip content={shortTime} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help">{friendlyTime}</span>
             </Tooltip>
           );
@@ -308,25 +307,20 @@ export default function FeedbackDataPage() {
   // Row actions
   const rowActions: DataTableRowAction<FeedbackDetail>[] = useMemo(
     () => [
-      {
-        key: "view",
-        label: "檢視",
-        icon: <MdVisibility />,
-        onClick: (row: FeedbackDetail) => {
-          setViewing(row);
-          openViewModal();
-        },
-      },
-      {
-        key: "update",
-        label: "更新",
-        icon: <MdEdit />,
-        onClick: (row: FeedbackDetail) => {
+      CommonRowAction.VIEW((row: FeedbackDetail) => {
+        setViewing(row);
+        openViewModal();
+      }),
+      CommonRowAction.EDIT(
+        (row: FeedbackDetail) => {
           setStatusUpdating(row);
           openStatusUpdateModal();
         },
-        visible: !showDeleted, // 僅在正常模式下顯示
-      },
+        {
+          label: "更新",
+          visible: !showDeleted, // 僅在正常模式下顯示
+        }
+      ),
     ],
     [openViewModal, openStatusUpdateModal, showDeleted]
   );
@@ -367,6 +361,7 @@ export default function FeedbackDataPage() {
         singleSelect
         orderBy={orderBy}
         descending={descending}
+        resource="support:feedback"
         buttons={toolbarButtons}
         rowActions={rowActions}
         onSort={handleSort}

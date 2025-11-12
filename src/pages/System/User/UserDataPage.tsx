@@ -1,17 +1,18 @@
 import { httpClient } from "@/api";
 import { userService } from "@/api/services/userService";
-import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
-import { CommonPageButton, DataPage } from "@/components/DataPage";
+import type { DataTableColumn, DataTableRowAction, PageButtonType, PopoverType } from "@/components/DataPage";
+import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
+import RestoreForm from "@/components/DataPage/RestoreForm";
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
 import { Gender, PopoverPosition } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MdCheck, MdClose, MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
+import { MdCheck, MdClose, MdGroup } from "react-icons/md";
 import { TbCircleLetterSFilled } from "react-icons/tb";
-import RestoreForm from "@/components/DataPage/RestoreForm";
+import UserBindRoleForm from "./UserBindRoleForm";
 import UserDataForm, { type UserFormValues } from "./UserDataForm";
 import UserDeleteForm from "./UserDeleteForm";
 import UserDetailView from "./UserDetailView";
@@ -60,11 +61,14 @@ export default function UserDataPage() {
   const { isOpen: isDeleteOpen, openModal: openDeleteModal, closeModal: closeDeleteModal } = useModal(false);
   const { isOpen: isViewOpen, openModal: openViewModal, closeModal: closeViewModal } = useModal(false);
   const { isOpen: isRestoreOpen, openModal: openRestoreModal, closeModal: closeRestoreModal } = useModal(false);
+  const { isOpen: isBindRoleOpen, openModal: openBindRoleModal, closeModal: closeBindRoleModal } = useModal(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [editing, setEditing] = useState<UserDetail | null>(null);
   const [viewing, setViewing] = useState<UserDetail | null>(null);
+  const [bindingUser, setBindingUser] = useState<UserDetail | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [restoreIds, setRestoreIds] = useState<string[]>([]);
+  const [userRoleIds, setUserRoleIds] = useState<string[]>([]);
 
   const clearSelectionRef = useRef<(() => void) | null>(null);
 
@@ -338,10 +342,13 @@ export default function UserDataPage() {
     }
   };
 
-  const handleSingleRestore = async (row: UserDetail) => {
-    setRestoreIds([row.id]);
-    openRestoreModal();
-  };
+  const handleSingleRestore = useCallback(
+    (row: UserDetail) => {
+      setRestoreIds([row.id]);
+      openRestoreModal();
+    },
+    [openRestoreModal]
+  );
 
   // Toolbar buttons
   const toolbarButtons = useMemo(() => {
@@ -378,7 +385,7 @@ export default function UserDataPage() {
       />
     );
 
-    const buttons = [
+    const buttons: PageButtonType[] = [
       CommonPageButton.SEARCH(searchPopoverCallback, {
         popover: { title: "搜尋用戶", position: PopoverPosition.BottomLeft, width: "500px" },
       }),
@@ -414,48 +421,51 @@ export default function UserDataPage() {
   // Row actions
   const rowActions: DataTableRowAction<UserDetail>[] = useMemo(
     () => [
-      {
-        key: "view",
-        label: "檢視",
-        icon: <MdVisibility />,
-        onClick: (row: UserDetail) => {
-          setViewing(row);
-          openViewModal();
-        },
-      },
-      {
-        key: "edit",
-        label: "編輯",
-        icon: <MdEdit />,
-        onClick: (row: UserDetail) => {
+      CommonRowAction.VIEW((row: UserDetail) => {
+        setViewing(row);
+        openViewModal();
+      }),
+      CommonRowAction.EDIT(
+        (row: UserDetail) => {
           setFormMode("edit");
           setEditing(row);
           openModal();
         },
+        {
+          visible: !showDeleted, // 僅在正常模式下顯示
+        }
+      ),
+      {
+        key: "bind_role",
+        label: "綁定角色",
+        icon: <MdGroup />,
+        permission: "system:role:modify",
+        onClick: (row: UserDetail) => {
+          setBindingUser(row);
+          setUserRoleIds([]); // 重置，讓 UserBindRoleForm 自動獲取
+          openBindRoleModal();
+        },
         visible: !showDeleted, // 僅在正常模式下顯示
       },
-      {
-        key: "restore",
-        label: "還原",
-        icon: <MdRestore />,
-        variant: "primary",
-        onClick: async (row: UserDetail) => {
+      CommonRowAction.RESTORE(
+        async (row: UserDetail) => {
           handleSingleRestore(row);
         },
-        visible: showDeleted, // 僅在回收桶模式下顯示
-      },
-      {
-        key: "delete",
-        label: showDeleted ? "永久刪除" : "刪除",
-        icon: <MdDelete />,
-        variant: "danger",
-        onClick: (row: UserDetail) => {
+        {
+          visible: showDeleted, // 僅在回收桶模式下顯示
+        }
+      ),
+      CommonRowAction.DELETE(
+        (row: UserDetail) => {
           setEditing(row);
           openDeleteModal();
         },
-      },
+        {
+          label: showDeleted ? "永久刪除" : "刪除",
+        }
+      ),
     ],
-    [openModal, openDeleteModal, openViewModal, showDeleted, fetchPages]
+    [openModal, openDeleteModal, openViewModal, openBindRoleModal, showDeleted, handleSingleRestore]
   );
 
   // Submit handlers
@@ -463,9 +473,31 @@ export default function UserDataPage() {
     try {
       setSubmitting(true);
       if (formMode === "create") {
-        await userService.create(values);
+        // 創建模式下需要密碼字段（表單驗證已確保存在）
+        const { password, password_confirm, ...restValues } = values;
+        if (!password || !password_confirm) {
+          alert("請輸入密碼");
+          return;
+        }
+        await userService.create({
+          ...restValues,
+          password,
+          password_confirm,
+        } as Parameters<typeof userService.create>[0]);
       } else if (formMode === "edit" && editing?.id) {
-        await userService.update(editing.id, values);
+        // 編輯模式下不發送密碼字段（UserDataForm 已處理）
+        await userService.update(editing.id, {
+          phone_number: values.phone_number,
+          email: values.email,
+          verified: values.verified,
+          is_active: values.is_active,
+          is_superuser: values.is_superuser,
+          is_admin: values.is_admin,
+          display_name: values.display_name,
+          gender: values.gender,
+          is_ministry: values.is_ministry,
+          remark: values.remark,
+        });
       }
       closeModal();
       // Refresh list by calling fetchPages directly
@@ -494,6 +526,22 @@ export default function UserDataPage() {
     }
   };
 
+  const handleBindRoles = async (roleIds: string[]) => {
+    try {
+      setSubmitting(true);
+      if (!bindingUser?.id) return;
+      await userService.bindRoles(bindingUser.id, roleIds);
+      closeBindRoleModal();
+      // Refresh list by calling fetchPages directly
+      await fetchPages();
+    } catch (e) {
+      console.error(e);
+      alert("綁定角色失敗，請稍後再試");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const pagedData = useMemo(() => {
     const data = {
       page: currentPage,
@@ -512,6 +560,7 @@ export default function UserDataPage() {
         loading={loading}
         orderBy={orderBy}
         descending={descending}
+        resource="system:user"
         buttons={toolbarButtons}
         rowActions={rowActions}
         onSort={handleSort}
@@ -553,6 +602,23 @@ export default function UserDataPage() {
 
       <Modal title="用戶詳細資料" isOpen={isViewOpen} onClose={closeViewModal} className="max-w-[900px] w-full mx-4 p-6">
         {viewing && <UserDetailView userId={viewing.id} />}
+      </Modal>
+
+      <Modal
+        title={bindingUser ? `綁定角色 - ${bindingUser.display_name || bindingUser.email}` : "綁定角色"}
+        isOpen={isBindRoleOpen}
+        onClose={closeBindRoleModal}
+        className="max-w-[600px] w-full mx-4 p-6"
+      >
+        {bindingUser && (
+          <UserBindRoleForm
+            userId={bindingUser.id}
+            initialRoleIds={userRoleIds}
+            onSubmit={handleBindRoles}
+            onCancel={closeBindRoleModal}
+            submitting={submitting}
+          />
+        )}
       </Modal>
     </>
   );

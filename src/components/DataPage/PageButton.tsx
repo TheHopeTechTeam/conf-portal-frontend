@@ -134,7 +134,7 @@ export default function PageButton({ button, mode }: PageButtonProps) {
   );
 
   const wrappedWithTooltip = showTooltip ? (
-    <Tooltip content={tooltip || text}>
+    <Tooltip content={tooltip || text} wrapContent={false}>
       <span className="inline-block">{buttonElement}</span>
     </Tooltip>
   ) : (

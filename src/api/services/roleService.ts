@@ -52,6 +52,16 @@ export interface RolePermissionAssign {
   permissionIds: string[];
 }
 
+export interface RoleBase {
+  id: string;
+  code: string;
+  name?: string;
+}
+
+export interface RoleListResponse {
+  items: RoleBase[];
+}
+
 class RoleService {
   async getPages(params: {
     page?: number;
@@ -86,6 +96,10 @@ class RoleService {
 
   async assignPermissions(id: string, payload: RolePermissionAssign) {
     return httpClient.post<void>(API_ENDPOINTS.ROLES.ASSIGN_PERMISSIONS(id), payload);
+  }
+
+  async getList(): Promise<ApiResponse<RoleListResponse>> {
+    return httpClient.get<RoleListResponse>("/api/v1/admin/role/list");
   }
 }
 

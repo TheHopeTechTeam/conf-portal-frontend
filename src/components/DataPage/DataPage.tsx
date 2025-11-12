@@ -15,6 +15,8 @@ interface DataPageProps<T extends Record<string, unknown>> {
   orderBy?: string;
   /** 是否降序（外部控制） */
   descending?: boolean;
+  /** 資源名稱（用於權限檢查，例如 "user"） */
+  resource: string;
   /** 工具欄按鈕 */
   buttons?: PageButtonType[];
   /** 右鍵選單動作 */
@@ -40,6 +42,7 @@ export default function DataPage<T extends Record<string, unknown>>({
   singleSelect = false,
   orderBy,
   descending,
+  resource,
   buttons = [],
   rowActions,
   onSort,
@@ -51,7 +54,7 @@ export default function DataPage<T extends Record<string, unknown>>({
 }: DataPageProps<T>) {
   return (
     <div className={`h-full flex flex-col rounded-xl bg-white dark:bg-white/[0.03] ${className || ""}`}>
-      <DataTableToolbar buttons={buttons} />
+      <DataTableToolbar buttons={buttons} resource={resource} />
       <div className="flex-1 min-h-0">
         <DataTable<T>
           data={data}
@@ -60,6 +63,7 @@ export default function DataPage<T extends Record<string, unknown>>({
           singleSelect={singleSelect}
           orderBy={orderBy}
           descending={descending}
+          resource={resource}
           onSort={onSort}
           onRowSelect={onRowSelect}
           rowActions={rowActions}

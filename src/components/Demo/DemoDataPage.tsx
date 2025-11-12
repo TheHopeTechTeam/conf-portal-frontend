@@ -1,7 +1,7 @@
 import { httpClient } from "@/api";
 import { demoService } from "@/api/services/demoService";
 import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
-import { CommonPageButton, DataPage, SearchPopoverContent } from "@/components/DataPage";
+import { CommonPageButton, CommonRowAction, DataPage, SearchPopoverContent } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
@@ -9,7 +9,6 @@ import { Gender, PopoverPosition } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MdDelete, MdEdit } from "react-icons/md";
 import DemoDataForm, { type DemoFormValues } from "./DemoDataForm";
 import DemoDeleteForm from "./DemoDeleteForm";
 
@@ -277,26 +276,15 @@ export default function DemoDataPage() {
   // Row actions
   const rowActions: DataTableRowAction<DemoDetail>[] = useMemo(
     () => [
-      {
-        key: "edit",
-        label: "編輯",
-        icon: <MdEdit />,
-        onClick: (row: DemoDetail) => {
-          setFormMode("edit");
-          setEditing(row);
-          openModal();
-        },
-      },
-      {
-        key: "delete",
-        label: "刪除",
-        icon: <MdDelete />,
-        variant: "danger",
-        onClick: (row: DemoDetail) => {
-          setEditing(row);
-          openDeleteModal();
-        },
-      },
+      CommonRowAction.EDIT((row: DemoDetail) => {
+        setFormMode("edit");
+        setEditing(row);
+        openModal();
+      }),
+      CommonRowAction.DELETE((row: DemoDetail) => {
+        setEditing(row);
+        openDeleteModal();
+      }),
     ],
     [openModal, openDeleteModal]
   );
@@ -355,6 +343,7 @@ export default function DemoDataPage() {
         loading={loading}
         orderBy={orderBy}
         descending={descending}
+        resource="demo:demo"
         buttons={toolbarButtons}
         rowActions={rowActions}
         onSort={handleSort}

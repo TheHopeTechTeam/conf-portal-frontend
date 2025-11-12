@@ -1,6 +1,6 @@
 import { instructorService, type InstructorDetail, type InstructorItem } from "@/api/services/instructorService";
 import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
-import { CommonPageButton, DataPage } from "@/components/DataPage";
+import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import RestoreForm from "@/components/DataPage/RestoreForm";
 import { Modal } from "@/components/ui/modal";
@@ -9,7 +9,6 @@ import { PopoverPosition } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
 import InstructorDataForm, { type InstructorFormValues } from "./InstructorDataForm";
 import InstructorDeleteForm from "./InstructorDeleteForm";
 import InstructorDetailView from "./InstructorDetailView";
@@ -113,7 +112,6 @@ export default function InstructorDataPage() {
         sortable: false,
         width: "max-w-56",
         tooltip: true,
-        tooltipWidth: "max-w-56",
       },
       {
         key: "title",
@@ -121,7 +119,7 @@ export default function InstructorDataPage() {
         sortable: false,
         width: "max-w-40",
         tooltip: true,
-        tooltipWidth: "max-w-40",
+        tooltipWrapContent: false,
         render: (value: unknown) => {
           const title = value as string | undefined;
           return title || <span className="text-gray-400">無</span>;
@@ -161,7 +159,7 @@ export default function InstructorDataPage() {
           const friendlyTime = DateUtil.friendlyDate(value);
           const shortTime = DateUtil.format(value);
           return (
-            <Tooltip content={shortTime}>
+            <Tooltip content={shortTime} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help">{friendlyTime}</span>
             </Tooltip>
           );
@@ -177,7 +175,7 @@ export default function InstructorDataPage() {
           const friendlyTime = DateUtil.friendlyDate(value);
           const shortTime = DateUtil.format(value);
           return (
-            <Tooltip content={shortTime}>
+            <Tooltip content={shortTime} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help">{friendlyTime}</span>
             </Tooltip>
           );
@@ -312,20 +310,12 @@ export default function InstructorDataPage() {
   // Row actions
   const rowActions: DataTableRowAction<InstructorItem>[] = useMemo(
     () => [
-      {
-        key: "view",
-        label: "檢視",
-        icon: <MdVisibility />,
-        onClick: (row: InstructorItem) => {
-          setViewing(row);
-          openViewModal();
-        },
-      },
-      {
-        key: "edit",
-        label: "編輯",
-        icon: <MdEdit />,
-        onClick: async (row: InstructorItem) => {
+      CommonRowAction.VIEW((row: InstructorItem) => {
+        setViewing(row);
+        openViewModal();
+      }),
+      CommonRowAction.EDIT(
+        async (row: InstructorItem) => {
           try {
             const response = await instructorService.getById(row.id);
             setEditing(response.data);
@@ -336,24 +326,20 @@ export default function InstructorDataPage() {
             alert("載入講者詳情失敗，請稍後重試");
           }
         },
-        visible: !showDeleted, // 僅在正常模式下顯示
-      },
-      {
-        key: "restore",
-        label: "還原",
-        icon: <MdRestore />,
-        variant: "primary",
-        onClick: async (row: InstructorItem) => {
+        {
+          visible: !showDeleted, // 僅在正常模式下顯示
+        }
+      ),
+      CommonRowAction.RESTORE(
+        async (row: InstructorItem) => {
           handleSingleRestore(row);
         },
-        visible: showDeleted, // 僅在回收桶模式下顯示
-      },
-      {
-        key: "delete",
-        label: showDeleted ? "永久刪除" : "刪除",
-        icon: <MdDelete />,
-        variant: "danger",
-        onClick: async (row: InstructorItem) => {
+        {
+          visible: showDeleted, // 僅在回收桶模式下顯示
+        }
+      ),
+      CommonRowAction.DELETE(
+        async (row: InstructorItem) => {
           try {
             const response = await instructorService.getById(row.id);
             setEditing(response.data);
@@ -363,7 +349,10 @@ export default function InstructorDataPage() {
             alert("載入講者詳情失敗，請稍後重試");
           }
         },
-      },
+        {
+          label: showDeleted ? "永久刪除" : "刪除",
+        }
+      ),
     ],
     [openModal, openDeleteModal, openViewModal, showDeleted, fetchPages, handleSingleRestore]
   );
@@ -441,6 +430,7 @@ export default function InstructorDataPage() {
         loading={loading}
         orderBy={orderBy}
         descending={descending}
+        resource="content:instructor"
         buttons={toolbarButtons}
         rowActions={rowActions}
         onSort={handleSort}

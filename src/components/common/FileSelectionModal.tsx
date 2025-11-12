@@ -252,6 +252,7 @@ const FileSelectionModal: React.FC<FileSelectionModalProps> = ({
         variant: "primary",
         size: "md",
         onClick: openUploadModal,
+        permission: "create",
       },
     ];
 
@@ -283,7 +284,8 @@ const FileSelectionModal: React.FC<FileSelectionModalProps> = ({
             />
           </div>
         ),
-      }
+        permission: "read",
+      },
     );
 
     return buttons;
@@ -306,7 +308,7 @@ const FileSelectionModal: React.FC<FileSelectionModalProps> = ({
         <div className="flex flex-col flex-1 min-h-0 max-h-[calc(90vh-120px)]">
           {/* Toolbar - 固定 */}
           <div className="shrink-0">
-            <DataTableToolbar buttons={toolbarButtons} />
+            <DataTableToolbar buttons={toolbarButtons} resource="content:file" />
           </div>
 
           {/* 內容區域 - 可滾動 */}

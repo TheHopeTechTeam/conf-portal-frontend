@@ -1,6 +1,6 @@
 import { faqCategoryService, type FaqCategoryBase, type FaqCategoryCreate, type FaqCategoryDetail } from "@/api/services/faqService";
 import type { DataTableColumn, DataTableRowAction } from "@/components/DataPage";
-import { CommonPageButton } from "@/components/DataPage";
+import { CommonPageButton, CommonRowAction } from "@/components/DataPage";
 import DataTable from "@/components/DataPage/DataTable";
 import DataTableToolbar from "@/components/DataPage/DataTableToolbar";
 import DeleteForm from "@/components/DataPage/DeleteForm";
@@ -13,7 +13,6 @@ import TextArea from "@/components/ui/textarea";
 import Tooltip from "@/components/ui/tooltip";
 import { DateUtil } from "@/utils/dateUtil";
 import { useEffect, useMemo, useState } from "react";
-import { MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
 
 interface FaqCategoryManagementModalProps {
   isOpen: boolean;
@@ -261,44 +260,35 @@ const FaqCategoryManagementModal: React.FC<FaqCategoryManagementModalProps> = ({
   // Row actions - 使用 ContextMenu
   const rowActions: DataTableRowAction<FaqCategoryBase>[] = useMemo(
     () => [
-      {
-        key: "view",
-        label: "檢視",
-        icon: <MdVisibility />,
-        onClick: (row: FaqCategoryBase) => {
-          handleView(row);
-        },
-      },
-      {
-        key: "edit",
-        label: "編輯",
-        icon: <MdEdit />,
-        onClick: (row: FaqCategoryBase) => {
+      CommonRowAction.VIEW((row: FaqCategoryBase) => {
+        handleView(row);
+      }),
+      CommonRowAction.EDIT(
+        (row: FaqCategoryBase) => {
           handleEdit(row);
         },
-        visible: !showDeleted,
-      },
-      {
-        key: "restore",
-        label: "還原",
-        icon: <MdRestore />,
-        variant: "primary",
-        onClick: (row: FaqCategoryBase) => {
+        {
+          visible: !showDeleted,
+        }
+      ),
+      CommonRowAction.RESTORE(
+        (row: FaqCategoryBase) => {
           handleSingleRestore(row);
         },
-        visible: showDeleted,
-      },
-      {
-        key: "delete",
-        label: showDeleted ? "永久刪除" : "刪除",
-        icon: <MdDelete />,
-        variant: "danger",
-        onClick: (row: FaqCategoryBase) => {
+        {
+          visible: showDeleted,
+        }
+      ),
+      CommonRowAction.DELETE(
+        (row: FaqCategoryBase) => {
           handleDelete(row);
         },
-      },
+        {
+          label: showDeleted ? "永久刪除" : "刪除",
+        }
+      ),
     ],
-    [showDeleted]
+    [showDeleted, handleView, handleEdit, handleSingleRestore, handleDelete]
   );
 
   // Toolbar buttons
@@ -330,12 +320,13 @@ const FaqCategoryManagementModal: React.FC<FaqCategoryManagementModalProps> = ({
     <>
       <Modal title="分類管理" isOpen={isOpen} onClose={onClose} className="max-w-[900px] w-full mx-4 p-6">
         <div className="space-y-4 h-[calc(100vh-300px)] flex flex-col">
-          <DataTableToolbar buttons={toolbarButtons} />
+          <DataTableToolbar buttons={toolbarButtons} resource="support:faq:category" />
           <div className="flex-1 min-h-0 overflow-hidden">
             <DataTable<FaqCategoryBase>
               data={categories}
               columns={columns}
               loading={loading}
+              resource="support:faq:category"
               rowActions={rowActions}
               onRowSelect={handleRowSelect}
               emptyMessage="暫無分類資料"

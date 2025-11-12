@@ -91,7 +91,7 @@ export default function DataTableBody<T extends Record<string, unknown>>({
     const displayValue = String(value ?? "");
     if (column.copyable) {
       return (
-        <Tooltip content="點擊複製">
+        <Tooltip content="點擊複製" wrapContent={false}>
           <button
             type="button"
             onClick={(e) => {
@@ -123,9 +123,10 @@ export default function DataTableBody<T extends Record<string, unknown>>({
     if (tooltipText === undefined || tooltipText === null || tooltipText === "") {
       return renderCellValue(column, row, index);
     }
+    const wrapContent = column.tooltipWrapContent !== undefined ? column.tooltipWrapContent : true;
 
     return (
-      <Tooltip content={tooltipText} className={column.tooltipWidth || ""} contentClassName={column.tooltipWidth || ""} placement="bottom">
+      <Tooltip content={tooltipText} wrapContent={wrapContent} className={column.tooltipWidth || ""} contentClassName={column.tooltipWidth || ""} placement="bottom">
         <span className="cursor-help truncate block">{renderCellValue(column, row, index)}</span>
       </Tooltip>
     );

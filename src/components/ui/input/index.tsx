@@ -1,8 +1,8 @@
 import type React from "react";
 import type { FC } from "react";
 import { MdClose } from "react-icons/md";
-import { cn } from "../../../utils";
-import Label from "../label";
+import { cn } from "@/utils";
+import Label from "@/components/ui/label";
 
 interface InputProps {
   type?: "text" | "number" | "email" | "password" | "date" | "time" | string;
@@ -12,6 +12,7 @@ interface InputProps {
   placeholder?: string;
   value?: string | number | undefined;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
   className?: string;
   min?: string;
   max?: string;
@@ -35,6 +36,7 @@ const Input: FC<InputProps> = ({
   placeholder,
   value,
   onChange,
+  onFocus,
   className = "",
   min,
   max,
@@ -118,6 +120,7 @@ const Input: FC<InputProps> = ({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
+          onFocus={onFocus}
           min={min}
           max={max}
           step={step}

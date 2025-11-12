@@ -20,6 +20,8 @@ export interface UserDetail {
 export interface UserCreate {
   phone_number: string;
   email: string;
+  password: string;
+  password_confirm: string;
   verified?: boolean;
   is_active?: boolean;
   is_superuser?: boolean;
@@ -30,7 +32,18 @@ export interface UserCreate {
   remark?: string;
 }
 
-export type UserUpdate = UserCreate;
+export interface UserUpdate {
+  phone_number: string;
+  email: string;
+  verified?: boolean;
+  is_active?: boolean;
+  is_superuser?: boolean;
+  is_admin?: boolean;
+  display_name?: string;
+  gender?: number;
+  is_ministry?: boolean;
+  remark?: string;
+}
 
 export interface UserDelete {
   reason?: string;
@@ -83,6 +96,14 @@ export const userService = {
 
   async restore(ids: string[]) {
     return httpClient.put<void>("/api/v1/admin/user/restore", { ids });
+  },
+
+  async bindRoles(userId: string, roleIds: string[]) {
+    return httpClient.post<void>(`/api/v1/admin/user/${userId}/bind_role`, { role_ids: roleIds });
+  },
+
+  async getUserRoles(userId: string) {
+    return httpClient.get<{ role_ids: string[] }>(`/api/v1/admin/user/${userId}/roles`);
   },
 };
 

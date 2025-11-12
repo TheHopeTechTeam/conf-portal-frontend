@@ -1,6 +1,6 @@
 import { conferenceService, type ConferenceDetail, type ConferenceItem } from "@/api/services/conferenceService";
 import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
-import { CommonPageButton, DataPage } from "@/components/DataPage";
+import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import RestoreForm from "@/components/DataPage/RestoreForm";
 import { Modal } from "@/components/ui/modal";
@@ -9,7 +9,6 @@ import { PopoverPosition } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
 import ConferenceDataForm, { type ConferenceFormValues } from "./ConferenceDataForm";
 import ConferenceDeleteForm from "./ConferenceDeleteForm";
 import ConferenceDetailView from "./ConferenceDetailView";
@@ -114,7 +113,7 @@ export default function ConferenceDataPage() {
         sortable: false,
         width: "w-40 max-w-60",
         tooltip: true,
-        tooltipWidth: "w-40 max-w-60",
+        tooltipWrapContent: false,
       },
       {
         key: "startDate",
@@ -126,7 +125,7 @@ export default function ConferenceDataPage() {
           const dateStr = value as string;
           const formattedDate = DateUtil.format(dateStr, "YYYY-MM-DD");
           return (
-            <Tooltip content={formattedDate || dateStr}>
+            <Tooltip content={formattedDate || dateStr} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help">{dateStr}</span>
             </Tooltip>
           );
@@ -142,7 +141,7 @@ export default function ConferenceDataPage() {
           const dateStr = value as string;
           const formattedDate = DateUtil.format(dateStr, "YYYY-MM-DD");
           return (
-            <Tooltip content={formattedDate || dateStr}>
+            <Tooltip content={formattedDate || dateStr} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help">{dateStr}</span>
             </Tooltip>
           );
@@ -154,7 +153,7 @@ export default function ConferenceDataPage() {
         sortable: false,
         width: "w-30 max-w-40",
         tooltip: true,
-        tooltipWidth: "w-30 max-w-40",
+        tooltipWrapContent: false,
         render: (value: unknown) => {
           const locationName = value as string | undefined;
           return locationName || <span className="text-gray-400">未設置</span>;
@@ -197,7 +196,7 @@ export default function ConferenceDataPage() {
           const friendlyTime = DateUtil.friendlyDate(value);
           const shortTime = DateUtil.format(value);
           return (
-            <Tooltip content={shortTime}>
+            <Tooltip content={shortTime} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help">{friendlyTime}</span>
             </Tooltip>
           );
@@ -213,7 +212,7 @@ export default function ConferenceDataPage() {
           const friendlyTime = DateUtil.friendlyDate(value);
           const shortTime = DateUtil.format(value);
           return (
-            <Tooltip content={shortTime}>
+            <Tooltip content={shortTime} wrapContent={false}>
               <span className="text-sm text-gray-600 dark:text-gray-400 cursor-help">{friendlyTime}</span>
             </Tooltip>
           );
@@ -348,20 +347,12 @@ export default function ConferenceDataPage() {
   // Row actions
   const rowActions: DataTableRowAction<ConferenceItem>[] = useMemo(
     () => [
-      {
-        key: "view",
-        label: "檢視",
-        icon: <MdVisibility />,
-        onClick: (row: ConferenceItem) => {
-          setViewing(row);
-          openViewModal();
-        },
-      },
-      {
-        key: "edit",
-        label: "編輯",
-        icon: <MdEdit />,
-        onClick: async (row: ConferenceItem) => {
+      CommonRowAction.VIEW((row: ConferenceItem) => {
+        setViewing(row);
+        openViewModal();
+      }),
+      CommonRowAction.EDIT(
+        async (row: ConferenceItem) => {
           try {
             const response = await conferenceService.getById(row.id);
             setEditing(response.data);
@@ -372,24 +363,20 @@ export default function ConferenceDataPage() {
             alert("載入會議詳情失敗，請稍後重試");
           }
         },
-        visible: !showDeleted, // 僅在正常模式下顯示
-      },
-      {
-        key: "restore",
-        label: "還原",
-        icon: <MdRestore />,
-        variant: "primary",
-        onClick: async (row: ConferenceItem) => {
+        {
+          visible: !showDeleted, // 僅在正常模式下顯示
+        }
+      ),
+      CommonRowAction.RESTORE(
+        async (row: ConferenceItem) => {
           handleSingleRestore(row);
         },
-        visible: showDeleted, // 僅在回收桶模式下顯示
-      },
-      {
-        key: "delete",
-        label: showDeleted ? "永久刪除" : "刪除",
-        icon: <MdDelete />,
-        variant: "danger",
-        onClick: async (row: ConferenceItem) => {
+        {
+          visible: showDeleted, // 僅在回收桶模式下顯示
+        }
+      ),
+      CommonRowAction.DELETE(
+        async (row: ConferenceItem) => {
           try {
             const response = await conferenceService.getById(row.id);
             setEditing(response.data);
@@ -399,7 +386,10 @@ export default function ConferenceDataPage() {
             alert("載入會議詳情失敗，請稍後重試");
           }
         },
-      },
+        {
+          label: showDeleted ? "永久刪除" : "刪除",
+        }
+      ),
     ],
     [openModal, openDeleteModal, openViewModal, showDeleted, fetchPages, handleSingleRestore]
   );
@@ -474,6 +464,7 @@ export default function ConferenceDataPage() {
         loading={loading}
         orderBy={orderBy}
         descending={descending}
+        resource="conference:conferences"
         buttons={toolbarButtons}
         rowActions={rowActions}
         onSort={handleSort}
