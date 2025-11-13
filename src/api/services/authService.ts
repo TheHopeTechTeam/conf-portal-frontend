@@ -1,9 +1,9 @@
 // 認證服務
+import { IS_SKIP_AUTH } from "@/config/env";
 import type { AuthError, LoginCredentials, LoginResponse, User } from "../../types/auth";
 import { API_ENDPOINTS } from "../config";
 import type { ApiResponse } from "../types";
 import { httpClient } from "./httpClient";
-import { IS_SKIP_AUTH } from "@/config/env";
 
 // 後端回應型別（管理員認證 API）
 interface AdminInfoResponse {
@@ -18,10 +18,10 @@ interface AdminInfoResponse {
 interface AdminLoginResponse {
   admin: AdminInfoResponse;
   token: {
-    access_token: string;
-    refresh_token: string;
-    token_type: string;
-    expires_in: number;
+    accessToken: string;
+    refreshToken: string;
+    tokenType: string;
+    expiresIn: number;
   };
 }
 
@@ -66,9 +66,9 @@ class AuthService {
       if (response.success && response.data) {
         // 映射回應至本地結構
         const user = mapAdminToUser(response.data.admin);
-        const accessToken = response.data.token.access_token;
-        const refreshToken = response.data.token.refresh_token;
-        const expiresAt = new Date(Date.now() + response.data.token.expires_in * 1000).toISOString();
+        const accessToken = response.data.token.accessToken;
+        const refreshToken = response.data.token.refreshToken;
+        const expiresAt = new Date(Date.now() + response.data.token.expiresIn * 1000).toISOString();
 
         // 先儲存 rememberMe 狀態
         this.setRememberMe(credentials.rememberMe || false);
