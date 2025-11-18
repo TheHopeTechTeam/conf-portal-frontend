@@ -105,6 +105,10 @@ export const userService = {
   async getUserRoles(userId: string) {
     return httpClient.get<{ role_ids: string[] }>(`/api/v1/admin/user/${userId}/roles`);
   },
+
+  async getCurrentUser() {
+    return httpClient.get<UserDetail>("/api/v1/admin/user/me");
+  },
 };
 
 export default userService;

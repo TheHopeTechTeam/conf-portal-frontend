@@ -17,6 +17,8 @@ export const API_ENDPOINTS = {
     REFRESH: `${ADMIN_API_PREFIX}/auth/refresh`,
     PROFILE: `${ADMIN_API_PREFIX}/auth/me`,
     CHANGE_PASSWORD: `${ADMIN_API_PREFIX}/auth/change-password`,
+    REQUEST_PASSWORD_RESET: `${ADMIN_API_PREFIX}/auth/password_reset/request`,
+    RESET_PASSWORD_CONFIRM: `${ADMIN_API_PREFIX}/auth/password_reset/confirm`,
   },
 
   // 角色管理（管理員）
@@ -104,6 +106,11 @@ export const API_ENDPOINTS = {
     FILE: "/upload/file",
     IMAGE: "/upload/image",
     AVATAR: "/upload/avatar",
+  },
+
+  // 用戶管理（管理員）
+  USER: {
+    ME: `${ADMIN_API_PREFIX}/user/me`,
   },
 } as const;
 

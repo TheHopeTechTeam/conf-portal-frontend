@@ -408,6 +408,30 @@ class AuthService {
   hasAllRoles(roles: string[]): boolean {
     return roles.every((role) => this.hasRole(role));
   }
+
+  // 請求重置密碼
+  async requestPasswordReset(email: string): Promise<ApiResponse<{ message: string }>> {
+    try {
+      const response = await httpClient.post<{ message: string }>(API_ENDPOINTS.AUTH.REQUEST_PASSWORD_RESET, { email });
+      return response;
+    } catch (error) {
+      throw this.handleAuthError(error);
+    }
+  }
+
+  // 使用 Token 重置密碼
+  async resetPasswordWithToken(token: string, newPassword: string, newPasswordConfirm: string): Promise<ApiResponse<{ message: string }>> {
+    try {
+      const response = await httpClient.post<{ message: string }>(API_ENDPOINTS.AUTH.RESET_PASSWORD_CONFIRM, {
+        token,
+        new_password: newPassword,
+        new_password_confirm: newPasswordConfirm,
+      });
+      return response;
+    } catch (error) {
+      throw this.handleAuthError(error);
+    }
+  }
 }
 
 // 建立全域認證服務實例

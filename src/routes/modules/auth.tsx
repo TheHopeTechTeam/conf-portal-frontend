@@ -1,5 +1,6 @@
 import { MdLock } from "react-icons/md";
 import ResetPassword from "../../pages/AuthPages/ResetPassword";
+import ForgotPassword from "../../pages/AuthPages/ForgotPassword";
 import SignIn from "../../pages/AuthPages/SignIn";
 import SignUp from "../../pages/AuthPages/SignUp";
 import TwoStepVerification from "../../pages/AuthPages/TwoStepVerification";
@@ -32,6 +33,16 @@ export const authRoutes: ModuleRoute = {
         description: "User registration page",
         requiresAuth: false,
         breadcrumb: ["Authentication", "Sign Up"],
+      },
+    },
+    {
+      path: "/forgot-password",
+      element: <ForgotPassword />,
+      meta: {
+        title: "Forgot Password",
+        description: "Forgot password page",
+        requiresAuth: false,
+        breadcrumb: ["Authentication", "Forgot Password"],
       },
     },
     {

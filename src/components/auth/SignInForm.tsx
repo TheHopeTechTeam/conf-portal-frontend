@@ -3,7 +3,7 @@ import Checkbox from "@/components/ui/checkbox";
 import Input from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 
 export default function SignInForm() {
@@ -76,9 +76,9 @@ export default function SignInForm() {
                 </div>
                 <div className="flex items-center justify-between">
                   <Checkbox checked={isChecked} onChange={setIsChecked} label="Keep me logged in" />
-                  {/* <Link to="/reset-password" className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400">
+                  <Link to="/forgot-password" className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400">
                     Forgot password?
-                  </Link> */}
+                  </Link>
                 </div>
                 {error && <p className="text-sm text-error-500">{error}</p>}
                 <div>
