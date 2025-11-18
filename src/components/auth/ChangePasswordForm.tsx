@@ -172,9 +172,8 @@ export default function ChangePasswordForm() {
                 {isLoading ? "修改中..." : "確認修改"}
               </Button>
               <Button
-                variant="secondary"
+                variant="outline"
                 size="md"
-                type="button"
                 onClick={() => {
                   setShowForm(false);
                   setOldPassword("");

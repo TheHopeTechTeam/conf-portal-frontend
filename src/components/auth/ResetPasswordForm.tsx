@@ -132,7 +132,7 @@ export default function ResetPasswordForm() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  minLength={8}
+                  min={8}
                 />
               </div>
 
@@ -154,7 +154,7 @@ export default function ResetPasswordForm() {
                   value={newPasswordConfirm}
                   onChange={(e) => setNewPasswordConfirm(e.target.value)}
                   required
-                  minLength={8}
+                  min={8}
                 />
               </div>
 
