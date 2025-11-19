@@ -86,6 +86,10 @@ export const userService = {
     return httpClient.post<{ id: string }>("/api/v1/admin/user/", payload);
   },
 
+  async updateCurrentUser(payload: UserUpdate) {
+    return httpClient.put<void>("/api/v1/admin/user/me", payload);
+  },
+
   async update(id: string, payload: UserUpdate) {
     return httpClient.put<void>(`/api/v1/admin/user/${id}`, payload);
   },

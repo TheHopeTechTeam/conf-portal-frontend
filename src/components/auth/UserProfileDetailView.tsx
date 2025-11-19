@@ -52,7 +52,6 @@ const UserProfileDetailView: React.FC<UserProfileDetailViewProps> = ({ isEditing
             email: response.data.email,
             display_name: response.data.display_name || "",
             gender: response.data.gender ?? Gender.Unknown,
-            is_ministry: response.data.is_ministry,
             remark: response.data.remark || "",
           });
         } else {
@@ -77,7 +76,6 @@ const UserProfileDetailView: React.FC<UserProfileDetailViewProps> = ({ isEditing
         email: userData.email,
         display_name: userData.display_name || "",
         gender: userData.gender ?? Gender.Unknown,
-        is_ministry: userData.is_ministry,
         remark: userData.remark || "",
       });
       setError(null);
@@ -94,7 +92,7 @@ const UserProfileDetailView: React.FC<UserProfileDetailViewProps> = ({ isEditing
     setError(null);
 
     try {
-      await userService.update(user.id, formData);
+      await userService.updateCurrentUser(formData);
       // 重新載入數據
       const response = await userService.getCurrentUser();
       if (response.success && response.data) {
@@ -116,7 +114,6 @@ const UserProfileDetailView: React.FC<UserProfileDetailViewProps> = ({ isEditing
         email: userData.email,
         display_name: userData.display_name || "",
         gender: userData.gender ?? Gender.Unknown,
-        is_ministry: userData.is_ministry,
         remark: userData.remark || "",
       });
     }
@@ -235,13 +232,7 @@ const UserProfileDetailView: React.FC<UserProfileDetailViewProps> = ({ isEditing
           <Checkbox id="is_superuser" checked={userData.is_superuser} disabled label="超級管理員" />
         </div>
         <div>
-          <Checkbox
-            id="is_ministry"
-            checked={isEditing ? formData.is_ministry ?? false : userData.is_ministry ?? false}
-            onChange={(checked) => isEditing && setFormData((f) => (f ? { ...f, is_ministry: checked } : null))}
-            disabled={!isEditing}
-            label="服事人員"
-          />
+          <Checkbox id="is_ministry" checked={userData.is_ministry} disabled label="服事人員" />
         </div>
       </div>
 

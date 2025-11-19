@@ -169,11 +169,11 @@ const AppSidebar: React.FC = () => {
         <Link to="/">
           {isExpanded || isHovered || isMobileOpen ? (
             <div className="flex items-center gap-2">
-              <img src="/images/logo/logo-icon.svg" alt="Logo" width={40} height={40} />
+              <img src="/images/logo/logo.png" alt="Logo" className="rounded-lg w-10 h-10" />
               <span className="text-xl font-bold text-gray-900 dark:text-white">TheHope Conf Portal</span>
             </div>
           ) : (
-            <img src="/images/logo/logo-icon.svg" alt="Logo" width={32} height={32} />
+            <img src="/images/logo/logo.png" alt="Logo" width={32} height={32} />
           )}
         </Link>
       </div>
