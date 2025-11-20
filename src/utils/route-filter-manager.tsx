@@ -2,6 +2,7 @@
 import type { ResourceMenuItem } from "@/api/services/resourceService";
 import { FullPageLoading } from "@/components/common/LoadingSpinner";
 import AppLayout from "@/layout/AppLayout";
+import NotFound from "@/pages/OtherPage/NotFound";
 import { getAllRoutes } from "@/routes";
 import type { Permission, Role, User } from "@/types/auth";
 import type { AppRoute } from "@/types/route";
@@ -245,17 +246,7 @@ class RouteFilterManager {
     // 已認證時添加 404 路由
     config.push({
       path: "*",
-      element: (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-600 mb-4">頁面不存在</h1>
-            <p className="text-gray-500 mb-4">您訪問的頁面不存在或您沒有權限訪問</p>
-            <button onClick={() => window.history.back()} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-              返回上一頁
-            </button>
-          </div>
-        </div>
-      ),
+      element: <NotFound />,
     });
 
     return createBrowserRouter(config);

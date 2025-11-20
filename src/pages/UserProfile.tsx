@@ -2,6 +2,7 @@ import ChangePasswordForm from "@/components/auth/ChangePasswordForm";
 import UserProfileDetailView from "@/components/auth/UserProfileDetailView";
 import PageMeta from "@/components/common/PageMeta";
 import Button from "@/components/ui/button";
+import { ENV_CONFIG } from "@/config/env";
 import { useState } from "react";
 import { MdEdit } from "react-icons/md";
 
@@ -10,10 +11,7 @@ export default function UserProfile() {
 
   return (
     <>
-      <PageMeta
-        title="User Profile | TailAdmin - React.js Admin Dashboard Template"
-        description="This is React.js User Profile page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
-      />
+      <PageMeta title={`User Profile | ${ENV_CONFIG.APP_NAME}`} description={`This is User Profile page for ${ENV_CONFIG.APP_NAME}`} />
       <div className="space-y-6 max-w-6xl mx-auto">
         {/* 個人資訊 */}
         <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">

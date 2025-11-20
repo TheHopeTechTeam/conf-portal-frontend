@@ -26,6 +26,9 @@ export const ENV_CONFIG = {
   // - 構建模式：NODE_ENV = "production"（無論 MODE 是什麼）
   NODE_ENV: import.meta.env.PROD ? "production" : "development",
 
+  // APP Base
+  APP_NAME: import.meta.env.VITE_APP_NAME || "TheHope Conf Portal",
+
   // API 配置
   API_BASE_URL: import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000",
   API_TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT || "90000", 10), // 90 seconds

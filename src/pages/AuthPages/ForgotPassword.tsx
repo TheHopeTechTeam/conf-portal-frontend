@@ -1,13 +1,14 @@
+import { ENV_CONFIG } from "@/config/env";
+import ForgotPasswordForm from "../../components/auth/ForgotPasswordForm";
 import PageMeta from "../../components/common/PageMeta";
 import AuthLayout from "./AuthPageLayout";
-import ForgotPasswordForm from "../../components/auth/ForgotPasswordForm";
 
 export default function ForgotPassword() {
   return (
     <>
       <PageMeta
-        title="Forgot Password | TailAdmin - React.js Admin Dashboard Template"
-        description="This is React.js Forgot Password page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title={`Forgot Password | ${ENV_CONFIG.APP_NAME}`}
+        description={`This is Forgot Password page for ${ENV_CONFIG.APP_NAME}`}
       />
       <AuthLayout>
         <ForgotPasswordForm />
@@ -15,4 +16,3 @@ export default function ForgotPassword() {
     </>
   );
 }
-
