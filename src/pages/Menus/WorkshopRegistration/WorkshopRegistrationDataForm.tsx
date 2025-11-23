@@ -1,4 +1,4 @@
-import { workshopRegistrationService, workshopService, userService } from "@/api/services/workshopRegistrationService";
+import { userService, workshopService } from "@/api/services/workshopRegistrationService";
 import Button from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { useEffect, useState } from "react";
@@ -18,12 +18,13 @@ interface WorkshopRegistrationDataFormProps {
 }
 
 const WorkshopRegistrationDataForm: React.FC<WorkshopRegistrationDataFormProps> = ({
-  mode,
+  mode: _mode,
   defaultValues,
   onSubmit,
   onCancel,
   submitting,
 }) => {
+  void _mode; // mode is not used currently but kept for future use
   const [values, setValues] = useState<WorkshopRegistrationFormValues>({
     workshopId: undefined,
     userId: undefined,
@@ -169,10 +170,10 @@ const WorkshopRegistrationDataForm: React.FC<WorkshopRegistrationDataFormProps> 
       </div>
 
       <div className="flex justify-end gap-3 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
+        <Button btnType="button" variant="outline" onClick={onCancel} disabled={submitting}>
           取消
         </Button>
-        <Button type="submit" variant="primary" disabled={submitting}>
+        <Button btnType="submit" variant="primary" disabled={submitting}>
           {submitting ? "儲存中..." : "儲存"}
         </Button>
       </div>
@@ -181,4 +182,3 @@ const WorkshopRegistrationDataForm: React.FC<WorkshopRegistrationDataFormProps> 
 };
 
 export default WorkshopRegistrationDataForm;
-
