@@ -1,5 +1,5 @@
 import { locationService, type LocationDetail, type LocationItem } from "@/api/services/locationService";
-import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
+import type { DataTableColumn, MenuButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import RestoreForm from "@/components/DataPage/RestoreForm";
@@ -323,7 +323,7 @@ export default function LocationDataPage() {
   }, [openModal, fetchPages, searchFilters, showDeleted, selectedKeys, handleBulkRestore]);
 
   // Row actions
-  const rowActions: DataTableRowAction<LocationItem>[] = useMemo(
+  const rowActions: MenuButtonType<LocationItem>[] = useMemo(
     () => [
       CommonRowAction.VIEW((row: LocationItem) => {
         setViewing(row);
@@ -365,7 +365,7 @@ export default function LocationDataPage() {
           }
         },
         {
-          label: showDeleted ? "永久刪除" : "刪除",
+          text: showDeleted ? "永久刪除" : "刪除",
         }
       ),
     ],

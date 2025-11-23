@@ -1,8 +1,8 @@
 // 認證服務
 import { IS_SKIP_AUTH } from "@/config/env";
-import type { AuthError, LoginCredentials, LoginResponse, User } from "../../types/auth";
-import { API_ENDPOINTS } from "../config";
-import type { ApiResponse } from "../types";
+import type { AuthError, LoginCredentials, LoginResponse, User } from "@/types/auth";
+import { API_ENDPOINTS } from "@/api/config";
+import type { ApiResponse, TokenResponse } from "@/api/types";
 import { httpClient } from "./httpClient";
 
 // 後端回應型別（管理員認證 API）
@@ -17,12 +17,7 @@ interface AdminInfoResponse {
 
 interface AdminLoginResponse {
   admin: AdminInfoResponse;
-  token: {
-    accessToken: string;
-    refreshToken: string;
-    tokenType: string;
-    expiresIn: number;
-  };
+  token: TokenResponse;
 }
 
 // 將 AdminInfo 映射到本地 User 型別
@@ -189,14 +184,14 @@ class AuthService {
         throw new Error("No refresh token available");
       }
 
-      const response = await httpClient.post<{ access_token: string; refresh_token: string; token_type: string; expires_in: number }>(
+      const response = await httpClient.post<TokenResponse>(
         API_ENDPOINTS.AUTH.REFRESH,
         { refresh_token: refreshToken }
       );
 
       if (response.success && response.data) {
-        const newAccessToken = response.data.access_token;
-        const newRefreshToken = response.data.refresh_token;
+        const newAccessToken = response.data.accessToken;
+        const newRefreshToken = response.data.refreshToken;
 
         this.setToken(newAccessToken);
         if (newRefreshToken) {

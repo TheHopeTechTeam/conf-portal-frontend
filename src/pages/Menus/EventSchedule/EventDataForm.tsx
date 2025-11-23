@@ -241,6 +241,7 @@ const EventDataForm: React.FC<EventDataFormProps> = ({
           <TimePicker
             id="startTime"
             label="開始時間"
+            step={300}
             value={values.startTime}
             onChange={(e) => setValues((v) => ({ ...v, startTime: e.target.value }))}
             error={errors.startTime}
@@ -269,6 +270,7 @@ const EventDataForm: React.FC<EventDataFormProps> = ({
           <TimePicker
             id="endTime"
             label="結束時間"
+            step={300}
             value={values.endTime}
             onChange={(e) => setValues((v) => ({ ...v, endTime: e.target.value }))}
             error={errors.endTime}

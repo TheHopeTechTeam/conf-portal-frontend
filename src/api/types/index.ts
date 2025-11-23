@@ -27,6 +27,13 @@ export interface PaginatedResponse<T> {
   };
 }
 
+export interface TokenResponse {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+}
+
 // 錯誤型別
 export interface ApiError {
   code: number;

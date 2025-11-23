@@ -1,5 +1,5 @@
 import { faqService, type FaqDetail, type FaqItem } from "@/api/services/faqService";
-import type { DataTableColumn, DataTableRowAction, PageButtonType, PopoverType } from "@/components/DataPage";
+import type { DataTableColumn, MenuButtonType, PageButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import RestoreForm from "@/components/DataPage/RestoreForm";
@@ -334,7 +334,7 @@ export default function FaqDataPage() {
   }, [openModal, fetchPages, searchFilters, showDeleted, selectedKeys, handleBulkRestore, openCategoryModal]);
 
   // Row actions
-  const rowActions: DataTableRowAction<FaqItem>[] = useMemo(
+  const rowActions: MenuButtonType<FaqItem>[] = useMemo(
     () => [
       CommonRowAction.VIEW((row: FaqItem) => {
         setViewing(row);
@@ -376,7 +376,7 @@ export default function FaqDataPage() {
           }
         },
         {
-          label: showDeleted ? "永久刪除" : "刪除",
+          text: showDeleted ? "永久刪除" : "刪除",
         }
       ),
     ],

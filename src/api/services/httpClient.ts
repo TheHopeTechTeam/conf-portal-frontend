@@ -2,6 +2,7 @@
 import type { ApiError, ApiResponse } from "@/api";
 import { API_ENDPOINTS, ERROR_MESSAGES, REQUEST_CONFIG } from "@/api";
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, HttpStatusCode } from "axios";
+import { TokenResponse } from "@/api/types";
 
 // 請求攔截器型別
 type RequestInterceptor = (config: AxiosRequestConfig) => AxiosRequestConfig | Promise<AxiosRequestConfig>;
@@ -153,6 +154,7 @@ class HttpClient {
       const apiError = this.handleError(error as AxiosError);
 
       // 若為 401，嘗試使用 refresh token 重新取得 access token 並重試一次
+      console.log("apiError", apiError);
       if (apiError.code === HttpStatusCode.Unauthorized && !this.isRefreshRequest(config)) {
         try {
           await this.getOrCreateRefreshPromise();
@@ -308,9 +310,9 @@ class HttpClient {
       refresh_token: storedRefreshToken,
     });
 
-    const data = response.data as { access_token: string; refresh_token?: string };
-    const newAccessToken = data.access_token;
-    const newRefreshToken = data.refresh_token;
+    const data = response.data as TokenResponse;
+    const newAccessToken = data.accessToken;
+    const newRefreshToken = data.refreshToken;
 
     if (!newAccessToken) {
       throw {

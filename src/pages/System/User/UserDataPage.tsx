@@ -1,6 +1,6 @@
 import { httpClient } from "@/api";
 import { userService } from "@/api/services/userService";
-import type { DataTableColumn, DataTableRowAction, PageButtonType, PopoverType } from "@/components/DataPage";
+import type { DataTableColumn, MenuButtonType, PageButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import RestoreForm from "@/components/DataPage/RestoreForm";
@@ -121,9 +121,6 @@ export default function UserDataPage() {
       setTotal(data.total);
       // Backend page is 0-based; map back to 1-based UI if changed externally
       setCurrentPage(data.page + 1);
-      // 處理 API 可能返回 pageSize 或 page_size 的情況
-      const responsePageSize = data.pageSize || 10;
-      setPageSize(responsePageSize);
     } catch (e) {
       console.error("Error fetching user pages:", e);
       // Simplified error surfacing for demo
@@ -419,7 +416,7 @@ export default function UserDataPage() {
   }, [openModal, fetchPages, searchFilters, showDeleted, selectedKeys, handleBulkRestore]);
 
   // Row actions
-  const rowActions: DataTableRowAction<UserDetail>[] = useMemo(
+  const rowActions: MenuButtonType<UserDetail>[] = useMemo(
     () => [
       CommonRowAction.VIEW((row: UserDetail) => {
         setViewing(row);
@@ -437,7 +434,7 @@ export default function UserDataPage() {
       ),
       {
         key: "bind_role",
-        label: "綁定角色",
+        text: "綁定角色",
         icon: <MdGroup />,
         permission: "system:role:modify",
         onClick: (row: UserDetail) => {
@@ -461,7 +458,7 @@ export default function UserDataPage() {
           openDeleteModal();
         },
         {
-          label: showDeleted ? "永久刪除" : "刪除",
+          text: showDeleted ? "永久刪除" : "刪除",
         }
       ),
     ],

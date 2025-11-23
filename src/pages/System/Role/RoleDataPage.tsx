@@ -1,5 +1,5 @@
 import { roleService, type RoleCreate, type RolePageItem, type RolePagesResponse, type RoleUpdate } from "@/api/services/roleService";
-import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
+import type { DataTableColumn, MenuButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import Button from "@/components/ui/button";
@@ -193,7 +193,7 @@ export default function RoleDataPage() {
     ];
   }, [fetchPages, searchFilters, showDeleted, openModal, setFormMode, setEditing, setEditingFormValues, clearSelectionRef]);
 
-  const rowActions: DataTableRowAction<RolePageItem>[] = useMemo(
+  const rowActions: MenuButtonType<RolePageItem>[] = useMemo(
     () => [
       CommonRowAction.VIEW(async (row) => {
         try {
@@ -267,7 +267,7 @@ export default function RoleDataPage() {
           openDeleteModal();
         },
         {
-          label: showDeleted ? "永久刪除" : "刪除",
+          text: showDeleted ? "永久刪除" : "刪除",
         }
       ),
     ],

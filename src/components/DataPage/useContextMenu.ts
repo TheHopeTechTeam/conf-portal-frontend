@@ -1,20 +1,24 @@
 import { useCallback, useState } from "react";
-import { PageButtonType } from "./types";
+import { MenuButtonType } from "./types";
 
-interface ContextMenuState {
+interface ContextMenuState<T = unknown> {
   visible: boolean;
   position: { x: number; y: number };
-  buttons: PageButtonType[];
+  buttons: MenuButtonType<T>[];
+  row?: T;
+  index?: number;
 }
 
-export const useContextMenu = () => {
-  const [state, setState] = useState<ContextMenuState>({
+export const useContextMenu = <T = unknown>() => {
+  const [state, setState] = useState<ContextMenuState<T>>({
     visible: false,
     position: { x: 0, y: 0 },
     buttons: [],
+    row: undefined,
+    index: undefined,
   });
 
-  const showContextMenu = useCallback((event: React.MouseEvent, buttons: PageButtonType[]) => {
+  const showContextMenu = useCallback((event: React.MouseEvent, buttons: MenuButtonType<T>[], row: T, index: number) => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -22,6 +26,8 @@ export const useContextMenu = () => {
       visible: true,
       position: { x: event.clientX, y: event.clientY },
       buttons,
+      row,
+      index,
     });
   }, []);
 
@@ -32,7 +38,7 @@ export const useContextMenu = () => {
     }));
   }, []);
 
-  const updateButtons = useCallback((buttons: PageButtonType[]) => {
+  const updateButtons = useCallback((buttons: MenuButtonType<T>[]) => {
     setState((prev) => ({
       ...prev,
       buttons,

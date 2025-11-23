@@ -12,8 +12,13 @@ interface DataTableToolbarProps {
 
 export default function DataTableToolbar({ buttons = [], resource, className }: DataTableToolbarProps) {
   // 依 align 分群（預設為左側）
-  const leftButtons = (buttons || []).filter((b) => b.align === "left");
+  const leftButtons = (buttons || []).filter((b) => !b.align || b.align === "left");
   const rightButtons = (buttons || []).filter((b) => b.align === "right");
+
+  // 如果沒有任何按鈕，不顯示 toolbar
+  if (leftButtons.length === 0 && rightButtons.length === 0) {
+    return null;
+  }
 
   return (
     <div

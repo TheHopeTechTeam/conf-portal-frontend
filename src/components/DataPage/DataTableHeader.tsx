@@ -84,7 +84,7 @@ export default function DataTableHeader<T>({
 
   return (
     <TableHeader className={className}>
-      <TableRow className="border-l border-b border-gray-100 dark:border-white/[0.05]">
+      <TableRow className="border-l border-b border-gray-100 dark:border-white/[0.05] sticky top-0 bg-white dark:bg-gray-900 z-10">
         {/* 選取欄位 */}
         {!singleSelect && onSelectAll && (
           <TableCell isHeader className="px-2 py-3 w-12">

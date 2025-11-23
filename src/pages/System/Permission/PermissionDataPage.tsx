@@ -1,6 +1,6 @@
 import { permissionService } from "@/api";
 import type { PermissionDetail as ApiPermissionDetail, PermissionPageItem } from "@/api/types";
-import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
+import type { DataTableColumn, MenuButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import RestoreForm from "@/components/DataPage/RestoreForm";
@@ -294,7 +294,7 @@ export default function PermissionDataPage() {
   }, [openModal, fetchPages, searchFilters, showDeleted, selectedKeys, handleBulkRestore]);
 
   // Row actions
-  const rowActions: DataTableRowAction<PermissionPageItem>[] = useMemo(
+  const rowActions: MenuButtonType<PermissionPageItem>[] = useMemo(
     () => [
       CommonRowAction.VIEW((row: PermissionPageItem) => {
         setViewing(row);
@@ -350,7 +350,7 @@ export default function PermissionDataPage() {
           openDeleteModal();
         },
         {
-          label: showDeleted ? "永久刪除" : "刪除",
+          text: showDeleted ? "永久刪除" : "刪除",
         }
       ),
     ],

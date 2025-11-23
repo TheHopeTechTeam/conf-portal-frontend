@@ -61,6 +61,15 @@ export interface BulkAction {
   ids: string[];
 }
 
+export interface LocationBase {
+  id: string;
+  name: string;
+}
+
+export interface LocationListResponse {
+  items?: LocationBase[];
+}
+
 // Location Service
 export const locationService = {
   async getPages(params: {
@@ -73,6 +82,10 @@ export const locationService = {
     roomNumber?: string;
   }) {
     return httpClient.get<LocationPagesResponse>("/api/v1/admin/location/pages", params);
+  },
+
+  async getList() {
+    return httpClient.get<LocationListResponse>("/api/v1/admin/location/list");
   },
 
   async getById(id: string) {

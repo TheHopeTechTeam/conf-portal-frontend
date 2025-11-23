@@ -4,11 +4,13 @@ import Checkbox from "@/components/ui/checkbox";
 import Input from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import TextArea from "@/components/ui/textarea";
+import { COMMON_TIMEZONES } from "@/utils/timezone";
 import { useEffect, useState } from "react";
 
 export interface ConferenceFormValues {
   id?: string;
   title: string;
+  timezone: string;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
   isActive?: boolean;
@@ -28,6 +30,7 @@ interface ConferenceDataFormProps {
 const ConferenceDataForm: React.FC<ConferenceDataFormProps> = ({ mode, defaultValues, onSubmit, onCancel, submitting }) => {
   const [values, setValues] = useState<ConferenceFormValues>({
     title: "",
+    timezone: "Asia/Taipei",
     startDate: "",
     endDate: "",
     isActive: true,
@@ -61,6 +64,7 @@ const ConferenceDataForm: React.FC<ConferenceDataFormProps> = ({ mode, defaultVa
       setValues({
         id: defaultValues.id,
         title: defaultValues.title || "",
+        timezone: defaultValues.timezone || "Asia/Taipei",
         startDate: defaultValues.startDate || "",
         endDate: defaultValues.endDate || "",
         isActive: defaultValues.isActive !== undefined ? defaultValues.isActive : true,
@@ -71,6 +75,7 @@ const ConferenceDataForm: React.FC<ConferenceDataFormProps> = ({ mode, defaultVa
     } else {
       setValues({
         title: "",
+        timezone: "Asia/Taipei",
         startDate: "",
         endDate: "",
         isActive: true,
@@ -88,6 +93,10 @@ const ConferenceDataForm: React.FC<ConferenceDataFormProps> = ({ mode, defaultVa
       next.title = "請輸入會議標題";
     } else if (values.title.length > 255) {
       next.title = "會議標題不能超過 255 個字符";
+    }
+
+    if (!values.timezone || values.timezone.trim().length === 0) {
+      next.timezone = "請選擇時區";
     }
 
     if (!values.startDate) {
@@ -126,6 +135,11 @@ const ConferenceDataForm: React.FC<ConferenceDataFormProps> = ({ mode, defaultVa
     label: location.name,
   }));
 
+  const timezoneOptions = COMMON_TIMEZONES.map((tz) => ({
+    value: tz.value,
+    label: tz.label,
+  }));
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -143,6 +157,30 @@ const ConferenceDataForm: React.FC<ConferenceDataFormProps> = ({ mode, defaultVa
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
+          <Select
+            id="locationId"
+            label="地點"
+            options={locationOptions}
+            value={values.locationId || ""}
+            onChange={(value) => setValues((v) => ({ ...v, locationId: value ? String(value) : undefined }))}
+            placeholder="請選擇地點"
+            clearable
+            disabled={loadingLocations}
+          />
+        </div>
+        <div>
+          <Select
+            id="timezone"
+            label="時區"
+            options={timezoneOptions}
+            value={values.timezone}
+            onChange={(value) => setValues((v) => ({ ...v, timezone: value ? String(value) : "Asia/Taipei" }))}
+            error={errors.timezone || undefined}
+            required
+          />
+        </div>
+
+        <div>
           <Input
             id="startDate"
             label="開始日期"
@@ -153,7 +191,6 @@ const ConferenceDataForm: React.FC<ConferenceDataFormProps> = ({ mode, defaultVa
             required
           />
         </div>
-
         <div>
           <Input
             id="endDate"
@@ -169,24 +206,9 @@ const ConferenceDataForm: React.FC<ConferenceDataFormProps> = ({ mode, defaultVa
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Select
-            id="locationId"
-            label="地點"
-            options={locationOptions}
-            value={values.locationId || ""}
-            onChange={(value) => setValues((v) => ({ ...v, locationId: value ? String(value) : undefined }))}
-            placeholder="請選擇地點"
-            clearable
-            disabled={loadingLocations}
-          />
-        </div>
-
         <div className="flex items-end">
           <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              啟用狀態 <span className="text-red-500">*</span>
-            </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">啟用狀態</label>
             <Checkbox
               id="isActive"
               checked={values.isActive !== undefined ? values.isActive : true}

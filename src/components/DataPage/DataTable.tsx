@@ -2,11 +2,12 @@ import ContextMenu from "@/components/DataPage/ContextMenu";
 import DataTableBody from "@/components/DataPage/DataTableBody";
 import DataTableFooter from "@/components/DataPage/DataTableFooter";
 import DataTableHeader from "@/components/DataPage/DataTableHeader";
+import { CommonMenuButton } from "@/components/DataPage/MenuButtonTypes";
 import { useContextMenu } from "@/components/DataPage/useContextMenu";
 import { Table } from "@/components/ui/table";
 import { usePermissions } from "@/context/AuthContext";
-import React, { useCallback, useEffect, useState } from "react";
-import { DataTablePagedData, DataTableProps, DataTableRowAction, PageButtonType } from "./types";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { DataTablePagedData, DataTableProps, MenuButtonType } from "./types";
 
 export default function DataTable<T extends Record<string, unknown>>({
   data,
@@ -27,21 +28,77 @@ export default function DataTable<T extends Record<string, unknown>>({
   rowClassName,
   rowKey = "id",
   onClearSelectionRef,
+  getReorderInfo,
+  onReorder,
+  defaultSelectedKeys = [],
 }: DataTableProps<T>) {
   const [selectedRows, setSelectedRows] = useState<T[]>([]);
-  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>(defaultSelectedKeys);
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
 
   // 權限檢查
   const { hasPermission } = usePermissions();
 
   // 右鍵選單狀態
-  const contextMenu = useContextMenu();
+  const contextMenu = useContextMenu<T>();
 
   // 處理資料格式：支援分頁資料或一般陣列
   const pagedData: DataTablePagedData<T> = Array.isArray(data) ? { page: 1, pageSize: data.length, total: data.length, items: data } : data;
 
   const { items, total, page, pageSize } = pagedData;
+
+  // 獲取 rowKey 的輔助函數
+  const getRowKeyValue = useCallback(
+    (row: T): string => {
+      return typeof rowKey === "function" ? rowKey(row) : String(row[rowKey]);
+    },
+    [rowKey]
+  );
+
+  // 計算當前頁面中應該被選中的 keys
+  const keysToSelect = useMemo(() => {
+    if (defaultSelectedKeys.length === 0 || items.length === 0) {
+      return [];
+    }
+    return defaultSelectedKeys.filter((key) => {
+      return items.some((row) => {
+        const rowKeyValue = getRowKeyValue(row);
+        return rowKeyValue === key;
+      });
+    });
+  }, [defaultSelectedKeys, items, getRowKeyValue]);
+
+  // 當 defaultSelectedKeys 或 items 變化時，同步選中狀態
+  useEffect(() => {
+    if (keysToSelect.length > 0) {
+      // 如果選中狀態不一致，更新選中狀態
+      const currentKeysSet = new Set(selectedKeys);
+      const keysToSelectSet = new Set(keysToSelect);
+      const keysMatch =
+        keysToSelect.length === selectedKeys.length &&
+        keysToSelect.every((key) => currentKeysSet.has(key)) &&
+        selectedKeys.every((key) => keysToSelectSet.has(key));
+
+      if (!keysMatch) {
+        // 找出對應的行數據
+        const rowsToSelect = items.filter((row) => {
+          const rowKeyValue = getRowKeyValue(row);
+          return keysToSelect.includes(rowKeyValue);
+        });
+
+        setSelectedRows(rowsToSelect);
+        setSelectedKeys(keysToSelect);
+        // 通知父組件選中狀態變化
+        onRowSelect?.(rowsToSelect, keysToSelect);
+      }
+    } else if (defaultSelectedKeys.length === 0 && selectedKeys.length > 0) {
+      // 如果 defaultSelectedKeys 為空，清除選中狀態
+      setSelectedRows([]);
+      setSelectedKeys([]);
+      onRowSelect?.([], []);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keysToSelect.join(","), defaultSelectedKeys.length, selectedKeys.length]);
 
   // 處理行選取
   const handleRowSelect = (row: T, checked: boolean) => {
@@ -139,7 +196,7 @@ export default function DataTable<T extends Record<string, unknown>>({
   };
 
   // 檢查行操作權限
-  const checkRowActionPermission = (action: DataTableRowAction<T>): boolean => {
+  const checkRowActionPermission = (action: MenuButtonType<T>): boolean => {
     // 如果沒有設置權限，則允許顯示
     if (!action.permission) {
       return true;
@@ -170,71 +227,94 @@ export default function DataTable<T extends Record<string, unknown>>({
     }
 
     // 生成右鍵選單按鈕
-    let contextMenuButtons: PageButtonType[] = [];
+    const contextMenuButtons: MenuButtonType<T>[] = [];
+
+    // 如果支援重新排序，添加移動選項
+    if (getReorderInfo && onReorder) {
+      const reorderInfo = getReorderInfo(row, index);
+      const rowId = typeof rowKey === "function" ? rowKey(row) : String(row[rowKey]);
+      const rowSequence = (row as { sequence?: number }).sequence ?? 0;
+
+      // 調試信息（開發時使用）
+      if (process.env.NODE_ENV === "development") {
+        console.log("Reorder Info:", {
+          index,
+          canMoveUp: reorderInfo.canMoveUp,
+          canMoveDown: reorderInfo.canMoveDown,
+          prevItem: reorderInfo.prevItem,
+          nextItem: reorderInfo.nextItem,
+        });
+      }
+
+      // 向上移動：需要 canMoveUp 為 true 且有 prevItem
+      if (reorderInfo.canMoveUp && reorderInfo.prevItem) {
+        const prevItem = reorderInfo.prevItem;
+        contextMenuButtons.push(
+          CommonMenuButton.MOVE_UP(
+            () => {
+              onReorder(rowId, rowSequence, prevItem.id, prevItem.sequence);
+              contextMenu.hideContextMenu();
+            },
+            {
+              className: "",
+            }
+          )
+        );
+      }
+
+      // 向下移動：需要 canMoveDown 為 true 且有 nextItem
+      if (reorderInfo.canMoveDown && reorderInfo.nextItem) {
+        const nextItem = reorderInfo.nextItem;
+        contextMenuButtons.push(
+          CommonMenuButton.MOVE_DOWN(
+            () => {
+              onReorder(rowId, rowSequence, nextItem.id, nextItem.sequence);
+              contextMenu.hideContextMenu();
+            },
+            {
+              className: "",
+            }
+          )
+        );
+      }
+
+      // 如果有移動選項且有 rowActions，添加分隔線
+      if (contextMenuButtons.length > 0 && rowActions) {
+        contextMenuButtons.push(CommonMenuButton.SEPARATOR());
+      }
+    }
 
     if (rowActions) {
       if (typeof rowActions === "function") {
         const actions = rowActions(row, index);
-        contextMenuButtons = actions
-          .filter((action) => {
+        contextMenuButtons.push(
+          ...actions.filter((action) => {
             // 先檢查 visible 屬性
             if (action.visible !== undefined) {
-              if (typeof action.visible === "boolean") {
-                if (!action.visible) return false;
-              } else if (typeof action.visible === "function") {
-                if (!action.visible(row)) return false;
-              }
+              const isVisible = typeof action.visible === "function" ? action.visible(row) : action.visible;
+              if (!isVisible) return false;
             }
             // 再檢查權限
             return checkRowActionPermission(action);
           })
-          .map((action) => ({
-            key: action.key,
-            text: action.label,
-            icon: action.icon,
-            onClick: () => {
-              action.onClick(row, index);
-              contextMenu.hideContextMenu();
-            },
-            disabled: action.disabled?.(row),
-            variant: "ghost" as const,
-            size: "sm" as const,
-            color: action.variant,
-            className: action.className,
-          }));
+        );
       } else {
-        contextMenuButtons = rowActions
-          .filter((action) => {
+        contextMenuButtons.push(
+          ...rowActions.filter((action) => {
             // 先檢查 visible 屬性
             if (action.visible !== undefined) {
-              if (typeof action.visible === "boolean") {
-                if (!action.visible) return false;
-              } else if (typeof action.visible === "function") {
-                if (!action.visible(row)) return false;
-              }
+              const isVisible = typeof action.visible === "function" ? action.visible(row) : action.visible;
+              if (!isVisible) return false;
             }
             // 再檢查權限
             return checkRowActionPermission(action);
           })
-          .map((action) => ({
-            key: action.key,
-            text: action.label,
-            icon: action.icon,
-            onClick: () => {
-              action.onClick(row, index);
-              contextMenu.hideContextMenu();
-            },
-            disabled: action.disabled?.(row),
-            variant: "ghost" as const,
-            size: "sm" as const,
-            color: action.variant,
-            className: action.className,
-          }));
+        );
       }
     }
 
     if (contextMenuButtons.length > 0) {
-      contextMenu.showContextMenu(event, contextMenuButtons);
+      contextMenu.showContextMenu(event, contextMenuButtons, row, index);
     }
   };
 
@@ -272,7 +352,6 @@ export default function DataTable<T extends Record<string, unknown>>({
             selectedKeys={selectedKeys}
             onRowSelect={handleRowSelect}
             onRowContextMenu={handleRowContextMenu}
-            rowActions={rowActions}
             rowKey={rowKey}
             rowClassName={rowClassName}
             loading={loading}
@@ -293,12 +372,16 @@ export default function DataTable<T extends Record<string, unknown>>({
       />
 
       {/* 右鍵選單 */}
-      <ContextMenu
-        buttons={contextMenu.buttons}
-        visible={contextMenu.visible}
-        position={contextMenu.position}
-        onClose={contextMenu.hideContextMenu}
-      />
+      {contextMenu.row !== undefined && contextMenu.index !== undefined && (
+        <ContextMenu
+          buttons={contextMenu.buttons}
+          row={contextMenu.row}
+          index={contextMenu.index}
+          visible={contextMenu.visible}
+          position={contextMenu.position}
+          onClose={contextMenu.hideContextMenu}
+        />
+      )}
     </div>
   );
 }

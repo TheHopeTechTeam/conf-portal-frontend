@@ -33,6 +33,10 @@ export interface InstructorPagesResponse {
   items?: InstructorItem[];
 }
 
+export interface InstructorListResponse {
+  items?: InstructorItem[];
+}
+
 export interface InstructorCreate {
   name: string;
   title?: string;
@@ -57,9 +61,9 @@ export interface BulkAction {
 export const instructorService = {
   async getPages(params: {
     page?: number;
-    pageSize?: number;
+    page_size?: number;
     keyword?: string;
-    orderBy?: string;
+    order_by?: string;
     descending?: boolean;
     deleted?: boolean;
   }) {
@@ -85,7 +89,10 @@ export const instructorService = {
   async restore(ids: string[]) {
     return httpClient.put<void>("/api/v1/admin/instructor/restore", { ids });
   },
+
+  async getList() {
+    return httpClient.get<InstructorListResponse>("/api/v1/admin/instructor/list");
+  },
 };
 
 export default instructorService;
-

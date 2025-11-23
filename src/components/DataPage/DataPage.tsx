@@ -1,6 +1,6 @@
 import DataTable from "./DataTable";
 import DataTableToolbar from "./DataTableToolbar";
-import { DataTableColumn, DataTablePagedData, DataTableRowAction, PageButtonType } from "./types";
+import { DataTableColumn, DataTablePagedData, MenuButtonType, PageButtonType } from "./types";
 
 interface DataPageProps<T extends Record<string, unknown>> {
   /** 表格資料 */
@@ -20,7 +20,7 @@ interface DataPageProps<T extends Record<string, unknown>> {
   /** 工具欄按鈕 */
   buttons?: PageButtonType[];
   /** 右鍵選單動作 */
-  rowActions?: DataTableRowAction<T>[] | ((row: T, index: number) => DataTableRowAction<T>[]);
+  rowActions?: MenuButtonType<T>[] | ((row: T, index: number) => MenuButtonType<T>[]);
   /** 排序變更事件 */
   onSort?: (columnKey: string | null, descending: boolean) => void;
   /** 行選擇事件 */
@@ -33,6 +33,20 @@ interface DataPageProps<T extends Record<string, unknown>> {
   className?: string;
   /** 清除選中狀態的回調 */
   onClearSelectionRef?: (clearFn: () => void) => void;
+  /** 獲取重新排序資訊的函數 */
+  getReorderInfo?: (
+    row: T,
+    index: number
+  ) => {
+    canMoveUp: boolean;
+    canMoveDown: boolean;
+    prevItem?: { id: string; sequence: number };
+    nextItem?: { id: string; sequence: number };
+  };
+  /** 重新排序事件 */
+  onReorder?: (currentId: string, currentSequence: number, targetId: string, targetSequence: number) => void;
+  /** 預設選中的鍵值列表 */
+  defaultSelectedKeys?: string[];
 }
 
 export default function DataPage<T extends Record<string, unknown>>({
@@ -51,6 +65,9 @@ export default function DataPage<T extends Record<string, unknown>>({
   onItemsPerPageChange,
   className,
   onClearSelectionRef,
+  getReorderInfo,
+  onReorder,
+  defaultSelectedKeys,
 }: DataPageProps<T>) {
   return (
     <div className={`h-full flex flex-col rounded-xl bg-white dark:bg-white/[0.03] ${className || ""}`}>
@@ -68,6 +85,9 @@ export default function DataPage<T extends Record<string, unknown>>({
           onRowSelect={onRowSelect}
           rowActions={rowActions}
           onClearSelectionRef={onClearSelectionRef}
+          getReorderInfo={getReorderInfo}
+          onReorder={onReorder}
+          defaultSelectedKeys={defaultSelectedKeys}
           pagination={{
             onPageChange: onPageChange || (() => {}),
             onItemsPerPageChange: onItemsPerPageChange || (() => {}),

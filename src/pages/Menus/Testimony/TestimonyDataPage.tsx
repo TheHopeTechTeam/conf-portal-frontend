@@ -1,5 +1,5 @@
 import { testimonyService, type TestimonyDetail } from "@/api/services/testimonyService";
-import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
+import type { DataTableColumn, MenuButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import { Modal } from "@/components/ui/modal";
@@ -261,7 +261,7 @@ export default function TestimonyDataPage() {
   }, [fetchPages, searchFilters, showDeleted]);
 
   // Row actions - 只有查看功能，不支持更新或删除
-  const rowActions: DataTableRowAction<TestimonyDetail>[] = useMemo(
+  const rowActions: MenuButtonType<TestimonyDetail>[] = useMemo(
     () => [
       CommonRowAction.VIEW((row: TestimonyDetail) => {
         setViewing(row);

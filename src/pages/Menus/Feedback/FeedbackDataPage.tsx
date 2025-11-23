@@ -1,5 +1,5 @@
 import { feedbackService, FeedbackStatus, type FeedbackDetail } from "@/api/services/feedbackService";
-import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
+import type { DataTableColumn, MenuButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import { Modal } from "@/components/ui/modal";
@@ -305,7 +305,7 @@ export default function FeedbackDataPage() {
   }, [fetchPages, searchFilters, showDeleted]);
 
   // Row actions
-  const rowActions: DataTableRowAction<FeedbackDetail>[] = useMemo(
+  const rowActions: MenuButtonType<FeedbackDetail>[] = useMemo(
     () => [
       CommonRowAction.VIEW((row: FeedbackDetail) => {
         setViewing(row);
@@ -317,7 +317,7 @@ export default function FeedbackDataPage() {
           openStatusUpdateModal();
         },
         {
-          label: "更新",
+          text: "更新",
           visible: !showDeleted, // 僅在正常模式下顯示
         }
       ),

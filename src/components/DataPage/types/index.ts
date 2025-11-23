@@ -48,32 +48,6 @@ export interface DataTableColumn<T> {
 }
 
 /**
- * 行右鍵選單動作
- */
-export interface DataTableRowAction<T> {
-  /** 動作鍵值 */
-  key: string;
-  /** 動作標籤 */
-  label: string;
-  /** 動作圖標 */
-  icon?: ReactNode;
-  /** 點擊事件 */
-  onClick: (row: T, index: number) => void;
-  /** 是否禁用 */
-  disabled?: (row: T) => boolean;
-  /** 是否可見 */
-  visible?: boolean | ((row: T) => boolean);
-  /** 動作顏色變體 */
-  variant?: "default" | "primary" | "danger" | "warning" | "success";
-  /** 自定義顏色類名 */
-  className?: string;
-  /** 权限代码或动词 */
-  /** 如果是完整权限代码（包含冒号，例如 "system:role:modify"），则直接使用 */
-  /** 如果是动词（不包含冒号，例如 "read", "create", "modify", "delete"），则与 DataPage 的 resource 参数自动拼接为 resource:verb */
-  permission?: string;
-}
-
-/**
  * 分頁資料結構
  */
 export interface DataTablePagedData<T> {
@@ -106,7 +80,7 @@ export interface DataTableProps<T> {
   /** 資源名稱（用於權限檢查） */
   resource?: string;
   /** 行右鍵選單動作 */
-  rowActions?: DataTableRowAction<T>[] | ((row: T, index: number) => DataTableRowAction<T>[]);
+  rowActions?: MenuButtonType<T>[] | ((row: T, index: number) => MenuButtonType<T>[]);
   /** 右鍵選單觸發事件 */
   onRowContextMenu?: (row: T, index: number, event: React.MouseEvent) => void;
   /** 行選取事件 */
@@ -133,6 +107,20 @@ export interface DataTableProps<T> {
   rowKey?: keyof T | ((row: T) => string);
   /** 清除選中狀態的回調 */
   onClearSelectionRef?: (clearFn: () => void) => void;
+  /** 獲取重新排序資訊的函數 */
+  getReorderInfo?: (
+    row: T,
+    index: number
+  ) => {
+    canMoveUp: boolean;
+    canMoveDown: boolean;
+    prevItem?: { id: string; sequence: number };
+    nextItem?: { id: string; sequence: number };
+  };
+  /** 重新排序事件 */
+  onReorder?: (currentId: string, currentSequence: number, targetId: string, targetSequence: number) => void;
+  /** 預設選中的鍵值列表 */
+  defaultSelectedKeys?: string[];
 }
 
 /**
@@ -217,6 +205,21 @@ export interface PageButtonType {
   /** 如果是完整权限代码（包含冒号，例如 "system:role:modify"），则直接使用 */
   /** 如果是动词（不包含冒号，例如 "read", "create", "modify", "delete"），则与 DataPage 的 resource 参数自动拼接为 resource:verb */
   permission?: string;
+}
+
+/**
+ * MenuButton 介面（繼承 PageButtonType，用於 ContextMenu，需要 row 數據）
+ * @template T - row 數據類型
+ */
+export interface MenuButtonType<T = unknown> extends Omit<PageButtonType, "onClick" | "visible" | "disabled" | "variant"> {
+  /** 點擊事件 - 接收 row 和 index，或無參數（用於不需要 row 數據的場景） */
+  onClick: ((row: T, index: number) => void) | (() => void);
+  /** 是否可見 - 支持 boolean 或函數（覆蓋 PageButtonType 的 visible） */
+  visible?: boolean | ((row: T) => boolean);
+  /** 是否禁用 - 支持 boolean 或函數（覆蓋 PageButtonType 的 disabled） */
+  disabled?: boolean | ((row: T) => boolean);
+  /** 動作顏色變體（覆蓋 PageButtonType 的 variant，添加 "default" 選項） */
+  variant?: "default" | "primary" | "danger" | "warning" | "success";
 }
 
 /**

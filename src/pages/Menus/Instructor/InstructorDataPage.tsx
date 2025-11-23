@@ -1,5 +1,5 @@
 import { instructorService, type InstructorDetail, type InstructorItem } from "@/api/services/instructorService";
-import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
+import type { DataTableColumn, MenuButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import RestoreForm from "@/components/DataPage/RestoreForm";
@@ -78,8 +78,8 @@ export default function InstructorDataPage() {
     try {
       const params = {
         page: Math.max(0, currentPage - 1),
-        pageSize: pageSize,
-        orderBy: orderBy && orderBy.trim() !== "" ? orderBy : undefined,
+        page_size: pageSize,
+        order_by: orderBy && orderBy.trim() !== "" ? orderBy : undefined,
         descending: orderBy && orderBy.trim() !== "" ? descending : undefined,
         keyword: appliedFilters.keyword || undefined,
         deleted: showDeleted || undefined,
@@ -91,9 +91,6 @@ export default function InstructorDataPage() {
       setTotal(data.total);
       // Backend page is 0-based; map back to 1-based UI if changed externally
       setCurrentPage(data.page + 1);
-      // 處理 API 可能返回 pageSize 的情況
-      const responsePageSize = data.pageSize || 10;
-      setPageSize(responsePageSize);
     } catch (e) {
       console.error("Error fetching instructor pages:", e);
       // Simplified error surfacing for demo
@@ -308,7 +305,7 @@ export default function InstructorDataPage() {
   }, [openModal, fetchPages, searchFilters, showDeleted, selectedKeys, handleBulkRestore]);
 
   // Row actions
-  const rowActions: DataTableRowAction<InstructorItem>[] = useMemo(
+  const rowActions: MenuButtonType<InstructorItem>[] = useMemo(
     () => [
       CommonRowAction.VIEW((row: InstructorItem) => {
         setViewing(row);
@@ -350,7 +347,7 @@ export default function InstructorDataPage() {
           }
         },
         {
-          label: showDeleted ? "永久刪除" : "刪除",
+          text: showDeleted ? "永久刪除" : "刪除",
         }
       ),
     ],

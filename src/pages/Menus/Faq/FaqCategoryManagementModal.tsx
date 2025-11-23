@@ -1,5 +1,5 @@
 import { faqCategoryService, type FaqCategoryBase, type FaqCategoryCreate, type FaqCategoryDetail } from "@/api/services/faqService";
-import type { DataTableColumn, DataTableRowAction } from "@/components/DataPage";
+import type { DataTableColumn, MenuButtonType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction } from "@/components/DataPage";
 import DataTable from "@/components/DataPage/DataTable";
 import DataTableToolbar from "@/components/DataPage/DataTableToolbar";
@@ -258,7 +258,7 @@ const FaqCategoryManagementModal: React.FC<FaqCategoryManagementModalProps> = ({
   );
 
   // Row actions - 使用 ContextMenu
-  const rowActions: DataTableRowAction<FaqCategoryBase>[] = useMemo(
+  const rowActions: MenuButtonType<FaqCategoryBase>[] = useMemo(
     () => [
       CommonRowAction.VIEW((row: FaqCategoryBase) => {
         handleView(row);
@@ -284,7 +284,7 @@ const FaqCategoryManagementModal: React.FC<FaqCategoryManagementModalProps> = ({
           handleDelete(row);
         },
         {
-          label: showDeleted ? "永久刪除" : "刪除",
+          text: showDeleted ? "永久刪除" : "刪除",
         }
       ),
     ],

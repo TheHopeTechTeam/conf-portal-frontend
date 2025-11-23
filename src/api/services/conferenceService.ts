@@ -9,6 +9,7 @@ export interface LocationBase {
 export interface ConferenceDetail extends Record<string, unknown> {
   id: string;
   title: string;
+  timezone: string;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
   isActive?: boolean;
@@ -22,6 +23,7 @@ export interface ConferenceDetail extends Record<string, unknown> {
 export interface ConferenceItem extends Record<string, unknown> {
   id: string;
   title: string;
+  timezone: string;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
   isActive?: boolean;
@@ -41,10 +43,11 @@ export interface ConferencePagesResponse {
 
 export interface ConferenceCreate {
   title: string;
-  startDate: string; // YYYY-MM-DD
-  endDate: string; // YYYY-MM-DD
-  isActive?: boolean;
-  locationId?: string;
+  timezone: string;
+  start_date: string; // YYYY-MM-DD
+  end_date: string; // YYYY-MM-DD
+  is_active?: boolean;
+  location_id?: string;
   remark?: string;
   description?: string;
 }
@@ -61,8 +64,8 @@ export interface BulkAction {
 }
 
 export interface ConferenceInstructorItem {
-  instructorId: string;
-  isPrimary?: boolean;
+  instructor_id: string;
+  is_primary?: boolean;
   sequence: number;
 }
 
@@ -70,18 +73,31 @@ export interface ConferenceInstructorsUpdate {
   instructors: ConferenceInstructorItem[];
 }
 
+export interface ConferenceBase {
+  id: string;
+  title: string;
+}
+
+export interface ConferenceListResponse {
+  items?: ConferenceBase[];
+}
+
 // Conference Service
 export const conferenceService = {
   async getPages(params: {
     page?: number;
-    pageSize?: number;
+    page_size?: number;
     keyword?: string;
-    orderBy?: string;
+    order_by?: string;
     descending?: boolean;
     deleted?: boolean;
-    isActive?: boolean;
+    is_active?: boolean;
   }) {
     return httpClient.get<ConferencePagesResponse>("/api/v1/admin/conference/pages", params);
+  },
+
+  async getList() {
+    return httpClient.get<ConferenceListResponse>("/api/v1/admin/conference/list");
   },
 
   async getById(id: string) {
@@ -114,4 +130,3 @@ export const conferenceService = {
 };
 
 export default conferenceService;
-

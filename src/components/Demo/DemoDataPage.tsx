@@ -1,6 +1,6 @@
 import { httpClient } from "@/api";
 import { demoService } from "@/api/services/demoService";
-import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
+import type { DataTableColumn, MenuButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage, SearchPopoverContent } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import { Modal } from "@/components/ui/modal";
@@ -274,7 +274,7 @@ export default function DemoDataPage() {
   };
 
   // Row actions
-  const rowActions: DataTableRowAction<DemoDetail>[] = useMemo(
+  const rowActions: MenuButtonType<DemoDetail>[] = useMemo(
     () => [
       CommonRowAction.EDIT((row: DemoDetail) => {
         setFormMode("edit");

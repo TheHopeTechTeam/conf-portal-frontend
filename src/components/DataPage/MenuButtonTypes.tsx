@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
-import { MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
-import { DataTableRowAction } from "./types";
+import { MdArrowDownward, MdArrowUpward, MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
+import { MenuButtonType } from "./types";
 
 // 內建行操作類型
 export enum ROW_ACTION_TYPES {
@@ -52,14 +52,14 @@ const getDefaultPermission = (type: RowActionTypeKey): string | undefined => {
 export const createRowAction = <T extends Record<string, unknown>>(
   type: RowActionTypeKey,
   onClick: (row: T, index: number) => void,
-  options: Partial<DataTableRowAction<T>> = {}
-): DataTableRowAction<T> => {
+  options: Partial<MenuButtonType<T>> = {}
+): MenuButtonType<T> => {
   const defaultPermission = getDefaultPermission(type);
   const { permission, ...restOptions } = options;
 
   return {
     key: type,
-    label: getRowActionLabel(type),
+    text: getRowActionLabel(type),
     icon: getRowActionIcon(type),
     onClick,
     // 如果 options 中沒有指定 permission，則使用默認權限
@@ -70,11 +70,52 @@ export const createRowAction = <T extends Record<string, unknown>>(
   };
 };
 
-export class CommonRowAction {
+export class CommonMenuButton {
+  static SEPARATOR = <T extends Record<string, unknown>>(options: Partial<MenuButtonType<T>> = {}): MenuButtonType<T> => {
+    return {
+      key: "separator",
+      text: "",
+      icon: null,
+      onClick: () => {},
+      variant: "default" as const,
+      disabled: true,
+      render: () => <div className="cursor-default pointer-events-none h-px bg-gray-200 dark:bg-gray-800" />,
+      ...options,
+    };
+  };
+
+  static MOVE_UP = <T extends Record<string, unknown>>(
+    onClick: (row: T, index: number) => void,
+    options: Partial<MenuButtonType<T>> = {}
+  ): MenuButtonType<T> => {
+    return {
+      key: "move-up",
+      text: "向上移動",
+      icon: <MdArrowUpward />,
+      onClick,
+      variant: "default" as const,
+      ...options,
+    };
+  };
+
+  static MOVE_DOWN = <T extends Record<string, unknown>>(
+    onClick: (row: T, index: number) => void,
+    options: Partial<MenuButtonType<T>> = {}
+  ): MenuButtonType<T> => {
+    return {
+      key: "move-down",
+      text: "向下移動",
+      icon: <MdArrowDownward />,
+      onClick,
+      variant: "default" as const,
+      ...options,
+    };
+  };
+
   static VIEW = <T extends Record<string, unknown>>(
     onClick: (row: T, index: number) => void,
-    options: Partial<DataTableRowAction<T>> = {}
-  ): DataTableRowAction<T> => {
+    options: Partial<MenuButtonType<T>> = {}
+  ): MenuButtonType<T> => {
     return createRowAction(ROW_ACTION_TYPES.VIEW, onClick, {
       ...options,
     });
@@ -82,8 +123,8 @@ export class CommonRowAction {
 
   static EDIT = <T extends Record<string, unknown>>(
     onClick: (row: T, index: number) => void,
-    options: Partial<DataTableRowAction<T>> = {}
-  ): DataTableRowAction<T> => {
+    options: Partial<MenuButtonType<T>> = {}
+  ): MenuButtonType<T> => {
     return createRowAction(ROW_ACTION_TYPES.EDIT, onClick, {
       ...options,
     });
@@ -91,8 +132,8 @@ export class CommonRowAction {
 
   static DELETE = <T extends Record<string, unknown>>(
     onClick: (row: T, index: number) => void,
-    options: Partial<DataTableRowAction<T>> = {}
-  ): DataTableRowAction<T> => {
+    options: Partial<MenuButtonType<T>> = {}
+  ): MenuButtonType<T> => {
     return createRowAction(ROW_ACTION_TYPES.DELETE, onClick, {
       variant: "danger",
       ...options,
@@ -101,8 +142,8 @@ export class CommonRowAction {
 
   static RESTORE = <T extends Record<string, unknown>>(
     onClick: (row: T, index: number) => void,
-    options: Partial<DataTableRowAction<T>> = {}
-  ): DataTableRowAction<T> => {
+    options: Partial<MenuButtonType<T>> = {}
+  ): MenuButtonType<T> => {
     return createRowAction(ROW_ACTION_TYPES.RESTORE, onClick, {
       variant: "primary",
       ...options,

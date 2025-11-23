@@ -1,8 +1,9 @@
 import { conferenceService, type ConferenceDetail, type ConferenceItem } from "@/api/services/conferenceService";
-import type { DataTableColumn, DataTableRowAction, PopoverType } from "@/components/DataPage";
+import type { DataTableColumn, MenuButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import RestoreForm from "@/components/DataPage/RestoreForm";
+import InstructorSelectionModal, { type SelectedInstructor } from "@/components/common/InstructorSelectionModal";
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
 import { PopoverPosition } from "@/const/enums";
@@ -40,9 +41,12 @@ export default function ConferenceDataPage() {
   const { isOpen: isDeleteOpen, openModal: openDeleteModal, closeModal: closeDeleteModal } = useModal(false);
   const { isOpen: isViewOpen, openModal: openViewModal, closeModal: closeViewModal } = useModal(false);
   const { isOpen: isRestoreOpen, openModal: openRestoreModal, closeModal: closeRestoreModal } = useModal(false);
+  const { isOpen: isInstructorOpen, openModal: openInstructorModal, closeModal: closeInstructorModal } = useModal(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [editing, setEditing] = useState<ConferenceDetail | null>(null);
   const [viewing, setViewing] = useState<ConferenceItem | null>(null);
+  const [editingConferenceId, setEditingConferenceId] = useState<string | null>(null);
+  const [initialInstructors, setInitialInstructors] = useState<SelectedInstructor[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [restoreIds, setRestoreIds] = useState<string[]>([]);
 
@@ -271,10 +275,13 @@ export default function ConferenceDataPage() {
     }
   };
 
-  const handleSingleRestore = async (row: ConferenceItem) => {
-    setRestoreIds([row.id]);
-    openRestoreModal();
-  };
+  const handleSingleRestore = useCallback(
+    async (row: ConferenceItem) => {
+      setRestoreIds([row.id]);
+      openRestoreModal();
+    },
+    [openRestoreModal]
+  );
 
   // Toolbar buttons
   const toolbarButtons = useMemo(() => {
@@ -345,7 +352,7 @@ export default function ConferenceDataPage() {
   }, [openModal, fetchPages, searchFilters, showDeleted, selectedKeys, handleBulkRestore]);
 
   // Row actions
-  const rowActions: DataTableRowAction<ConferenceItem>[] = useMemo(
+  const rowActions: MenuButtonType<ConferenceItem>[] = useMemo(
     () => [
       CommonRowAction.VIEW((row: ConferenceItem) => {
         setViewing(row);
@@ -367,6 +374,24 @@ export default function ConferenceDataPage() {
           visible: !showDeleted, // 僅在正常模式下顯示
         }
       ),
+      {
+        key: "editInstructors",
+        text: "編輯講者",
+        icon: <span>👤</span>,
+        onClick: async (row: ConferenceItem) => {
+          try {
+            setEditingConferenceId(row.id);
+            // Conference 目前沒有 getInstructors API，所以初始列表為空
+            // 如果需要，可以從 ConferenceDetail 中獲取，或者後續添加 API
+            setInitialInstructors([]);
+            openInstructorModal();
+          } catch (e) {
+            console.error("Error opening instructor modal:", e);
+            alert("開啟講者編輯失敗，請稍後重試");
+          }
+        },
+        visible: !showDeleted,
+      },
       CommonRowAction.RESTORE(
         async (row: ConferenceItem) => {
           handleSingleRestore(row);
@@ -387,21 +412,33 @@ export default function ConferenceDataPage() {
           }
         },
         {
-          label: showDeleted ? "永久刪除" : "刪除",
+          text: showDeleted ? "永久刪除" : "刪除",
         }
       ),
     ],
-    [openModal, openDeleteModal, openViewModal, showDeleted, fetchPages, handleSingleRestore]
+    [openModal, openDeleteModal, openViewModal, openInstructorModal, showDeleted, handleSingleRestore]
   );
 
   // Submit handlers
   const handleSubmit = async (values: ConferenceFormValues) => {
     try {
       setSubmitting(true);
+      // 轉換為 API 格式 (snake_case)
+      const apiPayload = {
+        title: values.title,
+        timezone: values.timezone,
+        start_date: values.startDate,
+        end_date: values.endDate,
+        is_active: values.isActive,
+        location_id: values.locationId || undefined,
+        remark: values.remark || undefined,
+        description: values.description || undefined,
+      };
+
       if (formMode === "create") {
-        await conferenceService.create(values);
+        await conferenceService.create(apiPayload);
       } else if (formMode === "edit" && editing?.id) {
-        await conferenceService.update(editing.id, values);
+        await conferenceService.update(editing.id, apiPayload);
       }
       closeModal();
       // Refresh list by calling fetchPages directly
@@ -430,6 +467,31 @@ export default function ConferenceDataPage() {
     }
   };
 
+  // 處理講者選擇確認
+  const handleInstructorConfirm = async (instructors: SelectedInstructor[]) => {
+    if (!editingConferenceId) return;
+
+    try {
+      setSubmitting(true);
+      // 轉換為 API 格式 (snake_case)
+      const payload = {
+        instructors: instructors.map((instructor) => ({
+          instructor_id: instructor.instructorId,
+          is_primary: instructor.isPrimary,
+          sequence: instructor.sequence,
+        })),
+      };
+      await conferenceService.updateInstructors(editingConferenceId, payload);
+      closeInstructorModal();
+      await fetchPages();
+    } catch (e) {
+      console.error("Error updating conference instructors:", e);
+      alert("更新講者列表失敗，請稍後重試");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const pagedData = useMemo(() => {
     const data = {
       page: currentPage,
@@ -447,6 +509,7 @@ export default function ConferenceDataPage() {
     return {
       id: editing.id,
       title: editing.title,
+      timezone: editing.timezone || "Asia/Taipei",
       startDate: editing.startDate,
       endDate: editing.endDate,
       isActive: editing.isActive,
@@ -513,6 +576,14 @@ export default function ConferenceDataPage() {
       <Modal title="會議詳細資料" isOpen={isViewOpen} onClose={closeViewModal} className="max-w-[900px] w-full mx-4 p-6">
         {viewing && <ConferenceDetailView conferenceId={viewing.id} />}
       </Modal>
+
+      <InstructorSelectionModal
+        isOpen={isInstructorOpen}
+        onClose={closeInstructorModal}
+        onConfirm={handleInstructorConfirm}
+        initialSelectedInstructors={initialInstructors}
+        title="編輯會議講者"
+      />
     </>
   );
 }

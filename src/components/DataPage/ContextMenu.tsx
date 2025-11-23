@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { PageButtonType } from "./types";
+import { MenuButtonType } from "./types";
 
-interface ContextMenuProps {
+interface ContextMenuProps<T = unknown> {
   /** 選單按鈕 */
-  buttons: PageButtonType[];
+  buttons: MenuButtonType<T>[];
+  /** 行數據 */
+  row: T;
+  /** 行索引 */
+  index: number;
   /** 是否顯示 */
   visible: boolean;
   /** 位置 */
@@ -14,7 +18,7 @@ interface ContextMenuProps {
   className?: string;
 }
 
-export default function ContextMenu({ buttons, visible, position, onClose, className }: ContextMenuProps) {
+export default function ContextMenu<T = unknown>({ buttons, row, index, visible, position, onClose, className }: ContextMenuProps<T>) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [adjustedPosition, setAdjustedPosition] = useState(position);
 
@@ -122,11 +126,31 @@ export default function ContextMenu({ buttons, visible, position, onClose, class
     >
       <ul className="flex flex-col">
         {buttons.map((button) => {
+          // 處理 visible
+          const isVisible = typeof button.visible === "function" ? button.visible(row) : button.visible ?? true;
+
+          if (!isVisible) return null;
+
+          // 處理 disabled
+          const isDisabled = typeof button.disabled === "function" ? button.disabled(row) : button.disabled ?? false;
+
           // 根據顏色變體決定樣式
           const getButtonStyles = () => {
             const baseStyles = "flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium disabled:opacity-50";
 
-            switch (button.color) {
+            // MenuButtonType 使用 variant，需要映射到 color
+            const color =
+              button.variant === "primary"
+                ? "primary"
+                : button.variant === "danger"
+                ? "danger"
+                : button.variant === "warning"
+                ? "warning"
+                : button.variant === "success"
+                ? "success"
+                : undefined;
+
+            switch (color) {
               case "primary":
                 return `${baseStyles} text-brand-600 hover:bg-brand-50 hover:text-brand-700 dark:text-brand-400 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-300`;
               case "danger":
@@ -140,15 +164,28 @@ export default function ContextMenu({ buttons, visible, position, onClose, class
             }
           };
 
+          // 如果有 render 函數，使用自定義渲染
+          if (button.render) {
+            return (
+              <li key={button.key} className="border-b border-gray-200 last:border-b-0 dark:border-gray-800">
+                {button.render()}
+              </li>
+            );
+          }
+
           return (
             <li key={button.key} className="border-b border-gray-200 last:border-b-0 dark:border-gray-800">
               <button
                 className={`${getButtonStyles()} ${button.className || ""}`}
                 onClick={() => {
-                  button.onClick?.();
+                  if (button.onClick.length === 0) {
+                    (button.onClick as () => void)();
+                  } else {
+                    (button.onClick as (row: T, index: number) => void)(row, index);
+                  }
                   onClose();
                 }}
-                disabled={button.disabled}
+                disabled={isDisabled}
               >
                 {button.icon && <span className="flex-shrink-0">{button.icon}</span>}
                 <span className="whitespace-nowrap">{button.text}</span>

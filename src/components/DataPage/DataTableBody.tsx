@@ -3,7 +3,7 @@ import Spinner from "@/components/ui/spinner";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
 import Tooltip from "@/components/ui/tooltip";
 import { Fragment } from "react";
-import { DataTableColumn, DataTableRowAction } from "./types";
+import { DataTableColumn } from "./types";
 
 interface DataTableBodyProps<T> {
   /** 表格資料 */
@@ -20,8 +20,6 @@ interface DataTableBodyProps<T> {
   onRowSelect: (row: T, checked: boolean) => void;
   /** 右鍵選單事件 */
   onRowContextMenu?: (row: T, index: number, event: React.MouseEvent) => void;
-  /** 行操作 */
-  rowActions?: DataTableRowAction<T>[] | ((row: T, index: number) => DataTableRowAction<T>[]);
   /** 行鍵值 */
   rowKey?: keyof T | ((row: T) => string);
   /** 行樣式類名 */
@@ -126,7 +124,13 @@ export default function DataTableBody<T extends Record<string, unknown>>({
     const wrapContent = column.tooltipWrapContent !== undefined ? column.tooltipWrapContent : true;
 
     return (
-      <Tooltip content={tooltipText} wrapContent={wrapContent} className={column.tooltipWidth || ""} contentClassName={column.tooltipWidth || ""} placement="bottom">
+      <Tooltip
+        content={tooltipText}
+        wrapContent={wrapContent}
+        className={column.tooltipWidth || ""}
+        contentClassName={column.tooltipWidth || ""}
+        placement="bottom"
+      >
         <span className="cursor-help truncate block">{renderCellValue(column, row, index)}</span>
       </Tooltip>
     );
