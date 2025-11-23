@@ -1,6 +1,6 @@
-import { AppRoute } from "@/types/route";
 import WorkshopManagement from "@/pages/Menus/Workshop/WorkshopManagement";
-import Blank from "@/pages/Blank";
+import WorkshopRegistrationManagement from "@/pages/Menus/WorkshopRegistration/WorkshopRegistrationManagement";
+import { AppRoute } from "@/types/route";
 
 export const workshopRoutes: AppRoute[] = [
   {
@@ -14,8 +14,8 @@ export const workshopRoutes: AppRoute[] = [
     },
   },
   {
-    path: "/workshop/registration",
-    element: <Blank />,
+    path: "/workshop/registrations",
+    element: <WorkshopRegistrationManagement />,
     meta: {
       title: "Workshop Registration",
       description: "Workshop registration page",

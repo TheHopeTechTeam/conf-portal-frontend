@@ -9,6 +9,7 @@ import InstructorManagement from "@/pages/Menus/Instructor/InstructorManagement"
 import LocationManagement from "@/pages/Menus/Location/LocationManagement";
 import TestimonyManagement from "@/pages/Menus/Testimony/TestimonyManagement";
 import WorkshopManagement from "@/pages/Menus/Workshop/WorkshopManagement";
+import WorkshopRegistrationManagement from "@/pages/Menus/WorkshopRegistration/WorkshopRegistrationManagement";
 import PermissionManagement from "@/pages/System/Permission/PermissionManagement";
 import ResourceManagement from "@/pages/System/Resource/ResourceManagement";
 import RoleManagement from "@/pages/System/Role/RoleManagement";
@@ -25,7 +26,7 @@ const componentRegistry: Record<string, React.ComponentType> = {
   CONFERENCE_EVENT_SCHEDULE: EventScheduleManagement,
   // WORKSHOP /workshop
   WORKSHOP_BASIC: WorkshopManagement,
-  WORKSHOP_REGISTRATION: Blank,
+  WORKSHOP_REGISTRATION: WorkshopRegistrationManagement,
   // CONTENT /content
   CONTENT_FILE: FileManagement,
   CONTENT_INSTRUCTOR: InstructorManagement,
