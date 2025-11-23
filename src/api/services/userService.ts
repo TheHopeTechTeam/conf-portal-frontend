@@ -1,4 +1,4 @@
-import { httpClient } from "@/api";
+import { API_ENDPOINTS, httpClient } from "@/api";
 
 export interface UserDetail {
   id: string;
@@ -75,43 +75,43 @@ export const userService = {
     is_admin?: boolean;
     is_ministry?: boolean;
   }) {
-    return httpClient.get<UserPagesResponse>("/api/v1/admin/user/pages", params);
+    return httpClient.get<UserPagesResponse>(API_ENDPOINTS.USER.PAGES, params);
   },
 
   async getById(id: string) {
-    return httpClient.get<UserDetail>(`/api/v1/admin/user/${id}`);
+    return httpClient.get<UserDetail>(API_ENDPOINTS.USER.DETAIL(id));
   },
 
   async create(payload: UserCreate) {
-    return httpClient.post<{ id: string }>("/api/v1/admin/user/", payload);
+    return httpClient.post<{ id: string }>(API_ENDPOINTS.USER.CREATE, payload);
   },
 
   async updateCurrentUser(payload: UserUpdate) {
-    return httpClient.put<void>("/api/v1/admin/user/me", payload);
+    return httpClient.put<void>(API_ENDPOINTS.USER.UPDATE_ME, payload);
   },
 
   async update(id: string, payload: UserUpdate) {
-    return httpClient.put<void>(`/api/v1/admin/user/${id}`, payload);
+    return httpClient.put<void>(API_ENDPOINTS.USER.UPDATE(id), payload);
   },
 
   async remove(id: string, payload: UserDelete) {
-    return httpClient.request<void>({ method: "DELETE", url: `/api/v1/admin/user/${id}`, data: payload });
+    return httpClient.request<void>({ method: "DELETE", url: API_ENDPOINTS.USER.DELETE(id), data: payload });
   },
 
   async restore(ids: string[]) {
-    return httpClient.put<void>("/api/v1/admin/user/restore", { ids });
+    return httpClient.put<void>(API_ENDPOINTS.USER.RESTORE, { ids });
   },
 
   async bindRoles(userId: string, roleIds: string[]) {
-    return httpClient.post<void>(`/api/v1/admin/user/${userId}/bind_role`, { role_ids: roleIds });
+    return httpClient.post<void>(API_ENDPOINTS.USER.BIND_ROLE(userId), { role_ids: roleIds });
   },
 
   async getUserRoles(userId: string) {
-    return httpClient.get<{ role_ids: string[] }>(`/api/v1/admin/user/${userId}/roles`);
+    return httpClient.get<{ role_ids: string[] }>(API_ENDPOINTS.USER.ROLES(userId));
   },
 
   async getCurrentUser() {
-    return httpClient.get<UserDetail>("/api/v1/admin/user/me");
+    return httpClient.get<UserDetail>(API_ENDPOINTS.USER.ME);
   },
 };
 

@@ -1,4 +1,4 @@
-import { httpClient } from "@/api";
+import { API_ENDPOINTS, httpClient } from "@/api";
 
 // Workshop Types
 export interface LocationBase {
@@ -115,39 +115,39 @@ export const workshopService = {
     start_datatime?: string; // snake_case for API, ISO 8601 datetime
     end_datatime?: string; // snake_case for API, ISO 8601 datetime
   }) {
-    return httpClient.get<WorkshopPagesResponse>("/api/v1/admin/workshop/pages", params);
+    return httpClient.get<WorkshopPagesResponse>(API_ENDPOINTS.WORKSHOPS.PAGES, params);
   },
 
   async getById(id: string) {
-    return httpClient.get<WorkshopDetail>(`/api/v1/admin/workshop/${id}`);
+    return httpClient.get<WorkshopDetail>(API_ENDPOINTS.WORKSHOPS.DETAIL(id));
   },
 
   async create(payload: WorkshopCreate) {
-    return httpClient.post<{ id: string }>("/api/v1/admin/workshop/", payload);
+    return httpClient.post<{ id: string }>(API_ENDPOINTS.WORKSHOPS.CREATE, payload);
   },
 
   async update(id: string, payload: WorkshopUpdate) {
-    return httpClient.put<void>(`/api/v1/admin/workshop/${id}`, payload);
+    return httpClient.put<void>(API_ENDPOINTS.WORKSHOPS.UPDATE(id), payload);
   },
 
   async changeSequence(payload: WorkshopChangeSequence) {
-    return httpClient.put<void>(`/api/v1/admin/workshop/${payload.id}/sequence`, payload);
+    return httpClient.put<void>(API_ENDPOINTS.WORKSHOPS.CHANGE_SEQUENCE(payload.id), payload);
   },
 
   async getInstructors(workshopId: string) {
-    return httpClient.get<WorkshopInstructors>(`/api/v1/admin/workshop/instructors/${workshopId}`);
+    return httpClient.get<WorkshopInstructors>(API_ENDPOINTS.WORKSHOPS.INSTRUCTORS(workshopId));
   },
 
   async updateInstructors(workshopId: string, payload: WorkshopInstructorsUpdate) {
-    return httpClient.put<void>(`/api/v1/admin/workshop/instructors/${workshopId}`, payload);
+    return httpClient.put<void>(API_ENDPOINTS.WORKSHOPS.UPDATE_INSTRUCTORS(workshopId), payload);
   },
 
   async remove(id: string, payload: WorkshopDelete) {
-    return httpClient.request<void>({ method: "DELETE", url: `/api/v1/admin/workshop/${id}`, data: payload });
+    return httpClient.request<void>({ method: "DELETE", url: API_ENDPOINTS.WORKSHOPS.DELETE(id), data: payload });
   },
 
   async restore(ids: string[]) {
-    return httpClient.put<void>("/api/v1/admin/workshop/restore", { ids });
+    return httpClient.put<void>(API_ENDPOINTS.WORKSHOPS.RESTORE, { ids });
   },
 };
 

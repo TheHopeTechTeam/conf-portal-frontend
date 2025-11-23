@@ -1,4 +1,4 @@
-import { httpClient } from "@/api";
+import { API_ENDPOINTS, httpClient } from "@/api";
 import { userService, type UserDetail } from "./userService";
 import { workshopService, type WorkshopDetail } from "./workshopService";
 
@@ -60,23 +60,23 @@ export const workshopRegistrationService = {
     user_id?: string; // snake_case for API
     is_registered?: boolean; // snake_case for API
   }) {
-    return httpClient.get<WorkshopRegistrationPagesResponse>("/api/v1/admin/workshop_registration/pages", params);
+    return httpClient.get<WorkshopRegistrationPagesResponse>(API_ENDPOINTS.WORKSHOP_REGISTRATIONS.PAGES, params);
   },
 
   async getById(id: string) {
-    return httpClient.get<WorkshopRegistrationDetail>(`/api/v1/admin/workshop_registration/${id}`);
+    return httpClient.get<WorkshopRegistrationDetail>(API_ENDPOINTS.WORKSHOP_REGISTRATIONS.DETAIL(id));
   },
 
   async create(payload: WorkshopRegistrationCreate) {
-    return httpClient.post<{ id: string }>("/api/v1/admin/workshop_registration/", payload);
+    return httpClient.post<{ id: string }>(API_ENDPOINTS.WORKSHOP_REGISTRATIONS.CREATE, payload);
   },
 
   async unregister(id: string) {
-    return httpClient.post<void>(`/api/v1/admin/workshop_registration/${id}/unregister`);
+    return httpClient.post<void>(API_ENDPOINTS.WORKSHOP_REGISTRATIONS.UNREGISTER(id));
   },
 
   async remove(id: string, payload: WorkshopRegistrationDelete) {
-    return httpClient.request<void>({ method: "DELETE", url: `/api/v1/admin/workshop_registration/${id}`, data: payload });
+    return httpClient.request<void>({ method: "DELETE", url: API_ENDPOINTS.WORKSHOP_REGISTRATIONS.DELETE(id), data: payload });
   },
 };
 

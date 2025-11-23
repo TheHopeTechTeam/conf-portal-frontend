@@ -1,4 +1,4 @@
-import { httpClient } from "@/api";
+import { API_ENDPOINTS, httpClient } from "@/api";
 import { FileGridItem } from "@/pages/Menus/File/types";
 
 // Location Types
@@ -81,31 +81,31 @@ export const locationService = {
     deleted?: boolean;
     roomNumber?: string;
   }) {
-    return httpClient.get<LocationPagesResponse>("/api/v1/admin/location/pages", params);
+    return httpClient.get<LocationPagesResponse>(API_ENDPOINTS.LOCATIONS.PAGES, params);
   },
 
   async getList() {
-    return httpClient.get<LocationListResponse>("/api/v1/admin/location/list");
+    return httpClient.get<LocationListResponse>(API_ENDPOINTS.LOCATIONS.LIST);
   },
 
   async getById(id: string) {
-    return httpClient.get<LocationDetail>(`/api/v1/admin/location/${id}`);
+    return httpClient.get<LocationDetail>(API_ENDPOINTS.LOCATIONS.DETAIL(id));
   },
 
   async create(payload: LocationCreate) {
-    return httpClient.post<{ id: string }>("/api/v1/admin/location/", payload);
+    return httpClient.post<{ id: string }>(API_ENDPOINTS.LOCATIONS.CREATE, payload);
   },
 
   async update(id: string, payload: LocationUpdate) {
-    return httpClient.put<void>(`/api/v1/admin/location/${id}`, payload);
+    return httpClient.put<void>(API_ENDPOINTS.LOCATIONS.UPDATE(id), payload);
   },
 
   async remove(id: string, payload: LocationDelete) {
-    return httpClient.request<void>({ method: "DELETE", url: `/api/v1/admin/location/${id}`, data: payload });
+    return httpClient.request<void>({ method: "DELETE", url: API_ENDPOINTS.LOCATIONS.DELETE(id), data: payload });
   },
 
   async restore(ids: string[]) {
-    return httpClient.put<void>("/api/v1/admin/location/restore", { ids });
+    return httpClient.put<void>(API_ENDPOINTS.LOCATIONS.RESTORE, { ids });
   },
 };
 

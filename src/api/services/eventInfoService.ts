@@ -1,4 +1,4 @@
-import { httpClient } from "@/api";
+import { API_ENDPOINTS, httpClient } from "@/api";
 
 // Event Info Types
 export interface EventInfoItem {
@@ -41,23 +41,23 @@ export type EventInfoUpdate = EventInfoCreate;
 // Event Info Service
 export const eventInfoService = {
   async getList(conferenceId: string) {
-    return httpClient.get<EventInfoList>(`/api/v1/admin/event_info/${conferenceId}/list`);
+    return httpClient.get<EventInfoList>(API_ENDPOINTS.EVENT_INFO.LIST(conferenceId));
   },
 
   async getById(id: string) {
-    return httpClient.get<EventInfoDetail>(`/api/v1/admin/event_info/${id}`);
+    return httpClient.get<EventInfoDetail>(API_ENDPOINTS.EVENT_INFO.DETAIL(id));
   },
 
   async create(payload: EventInfoCreate) {
-    return httpClient.post<{ id: string }>("/api/v1/admin/event_info/", payload);
+    return httpClient.post<{ id: string }>(API_ENDPOINTS.EVENT_INFO.CREATE, payload);
   },
 
   async update(id: string, payload: EventInfoUpdate) {
-    return httpClient.put<void>(`/api/v1/admin/event_info/${id}`, payload);
+    return httpClient.put<void>(API_ENDPOINTS.EVENT_INFO.UPDATE(id), payload);
   },
 
   async remove(id: string) {
-    return httpClient.request<void>({ method: "DELETE", url: `/api/v1/admin/event_info/${id}` });
+    return httpClient.request<void>({ method: "DELETE", url: API_ENDPOINTS.EVENT_INFO.DELETE(id) });
   },
 };
 

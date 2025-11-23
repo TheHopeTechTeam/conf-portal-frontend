@@ -1,4 +1,4 @@
-import { httpClient } from "@/api";
+import { API_ENDPOINTS, httpClient } from "@/api";
 
 export enum FeedbackStatus {
   PENDING = 0, // 待處理
@@ -45,15 +45,15 @@ export const feedbackService = {
     deleted?: boolean;
     status?: FeedbackStatus;
   }) {
-    return httpClient.get<FeedbackPagesResponse>("/api/v1/admin/feedback/pages", params);
+    return httpClient.get<FeedbackPagesResponse>(API_ENDPOINTS.FEEDBACKS.PAGES, params);
   },
 
   async getById(id: string) {
-    return httpClient.get<FeedbackDetail>(`/api/v1/admin/feedback/${id}`);
+    return httpClient.get<FeedbackDetail>(API_ENDPOINTS.FEEDBACKS.DETAIL(id));
   },
 
   async update(id: string, payload: FeedbackUpdate) {
-    return httpClient.put<void>(`/api/v1/admin/feedback/${id}`, payload);
+    return httpClient.put<void>(API_ENDPOINTS.FEEDBACKS.UPDATE(id), payload);
   },
 };
 

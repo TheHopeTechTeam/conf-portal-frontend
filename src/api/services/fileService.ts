@@ -1,4 +1,4 @@
-import { httpClient } from "@/api";
+import { API_ENDPOINTS, httpClient } from "@/api";
 import type { AxiosProgressEvent } from "axios";
 import type {
   BatchFileUploadResponse,
@@ -11,7 +11,7 @@ import type {
 export const fileService = {
   // 獲取檔案分頁列表
   async getPages(params: FilePagesParams) {
-    return httpClient.get<FilePagesResponse>("/api/v1/admin/file/pages", params);
+    return httpClient.get<FilePagesResponse>(API_ENDPOINTS.FILES.PAGES, params);
   },
 
   // 批量上傳檔案
@@ -23,7 +23,7 @@ export const fileService = {
 
     return httpClient.request<BatchFileUploadResponse>({
       method: "POST",
-      url: "/api/v1/admin/file/batch_upload",
+      url: API_ENDPOINTS.FILES.BATCH_UPLOAD,
       data: formData,
       headers: {
         "Content-Type": "multipart/form-data",
@@ -38,7 +38,7 @@ export const fileService = {
 
     return httpClient.request<{ id: string; duplicate?: boolean }>({
       method: "POST",
-      url: "/api/v1/admin/file/upload",
+      url: API_ENDPOINTS.FILES.UPLOAD,
       data: formData,
       headers: {
         "Content-Type": "multipart/form-data",
@@ -58,7 +58,7 @@ export const fileService = {
   async bulkDelete(payload: BulkDeleteRequest) {
     return httpClient.request<BulkDeleteResponse>({
       method: "DELETE",
-      url: "/api/v1/admin/file/bulk",
+      url: API_ENDPOINTS.FILES.BULK_DELETE,
       data: payload,
     });
   },

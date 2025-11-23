@@ -1,4 +1,4 @@
-import { httpClient } from "@/api";
+import { API_ENDPOINTS, httpClient } from "@/api";
 
 // FAQ Category Types
 export interface FaqCategoryBase extends Record<string, unknown> {
@@ -87,27 +87,27 @@ export interface FaqDelete {
 // FAQ Category Service
 export const faqCategoryService = {
   async getList(params?: { deleted?: boolean }) {
-    return httpClient.get<FaqCategoryList>("/api/v1/admin/faq/category/list", params);
+    return httpClient.get<FaqCategoryList>(API_ENDPOINTS.FAQ_CATEGORIES.LIST, params);
   },
 
   async getById(id: string) {
-    return httpClient.get<FaqCategoryDetail>(`/api/v1/admin/faq/category/${id}`);
+    return httpClient.get<FaqCategoryDetail>(API_ENDPOINTS.FAQ_CATEGORIES.DETAIL(id));
   },
 
   async create(payload: FaqCategoryCreate) {
-    return httpClient.post<{ id: string }>("/api/v1/admin/faq/category", payload);
+    return httpClient.post<{ id: string }>(API_ENDPOINTS.FAQ_CATEGORIES.CREATE, payload);
   },
 
   async update(id: string, payload: FaqCategoryUpdate) {
-    return httpClient.put<void>(`/api/v1/admin/faq/category/${id}`, payload);
+    return httpClient.put<void>(API_ENDPOINTS.FAQ_CATEGORIES.UPDATE(id), payload);
   },
 
   async remove(id: string, payload: FaqCategoryDelete) {
-    return httpClient.request<void>({ method: "DELETE", url: `/api/v1/admin/faq/category/${id}`, data: payload });
+    return httpClient.request<void>({ method: "DELETE", url: API_ENDPOINTS.FAQ_CATEGORIES.DELETE(id), data: payload });
   },
 
   async restore(ids: string[]) {
-    return httpClient.put<void>("/api/v1/admin/faq/category/restore", { ids });
+    return httpClient.put<void>(API_ENDPOINTS.FAQ_CATEGORIES.RESTORE, { ids });
   },
 };
 
@@ -122,27 +122,27 @@ export const faqService = {
     deleted?: boolean;
     categoryId?: string;
   }) {
-    return httpClient.get<FaqPagesResponse>("/api/v1/admin/faq/pages", params);
+    return httpClient.get<FaqPagesResponse>(API_ENDPOINTS.FAQS.PAGES, params);
   },
 
   async getById(id: string) {
-    return httpClient.get<FaqDetail>(`/api/v1/admin/faq/${id}`);
+    return httpClient.get<FaqDetail>(API_ENDPOINTS.FAQS.DETAIL(id));
   },
 
   async create(payload: FaqCreate) {
-    return httpClient.post<{ id: string }>("/api/v1/admin/faq/", payload);
+    return httpClient.post<{ id: string }>(API_ENDPOINTS.FAQS.CREATE, payload);
   },
 
   async update(id: string, payload: FaqUpdate) {
-    return httpClient.put<void>(`/api/v1/admin/faq/${id}`, payload);
+    return httpClient.put<void>(API_ENDPOINTS.FAQS.UPDATE(id), payload);
   },
 
   async remove(id: string, payload: FaqDelete) {
-    return httpClient.request<void>({ method: "DELETE", url: `/api/v1/admin/faq/${id}`, data: payload });
+    return httpClient.request<void>({ method: "DELETE", url: API_ENDPOINTS.FAQS.DELETE(id), data: payload });
   },
 
   async restore(ids: string[]) {
-    return httpClient.put<void>("/api/v1/admin/faq/restore", { ids });
+    return httpClient.put<void>(API_ENDPOINTS.FAQS.RESTORE, { ids });
   },
 };
 

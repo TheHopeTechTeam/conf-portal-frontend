@@ -1,4 +1,4 @@
-import { httpClient } from "@/api";
+import { API_ENDPOINTS, httpClient } from "@/api";
 
 export interface TestimonyDetail extends Record<string, unknown> {
   id: string;
@@ -29,11 +29,11 @@ export const testimonyService = {
     deleted?: boolean;
     share?: boolean;
   }) {
-    return httpClient.get<TestimonyPagesResponse>("/api/v1/admin/testimony/pages", params);
+    return httpClient.get<TestimonyPagesResponse>(API_ENDPOINTS.TESTIMONIES.PAGES, params);
   },
 
   async getById(id: string) {
-    return httpClient.get<TestimonyDetail>(`/api/v1/admin/testimony/${id}`);
+    return httpClient.get<TestimonyDetail>(API_ENDPOINTS.TESTIMONIES.DETAIL(id));
   },
 };
 

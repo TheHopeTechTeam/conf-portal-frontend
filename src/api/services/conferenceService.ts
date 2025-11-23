@@ -1,4 +1,4 @@
-import { httpClient } from "@/api";
+import { API_ENDPOINTS, httpClient } from "@/api";
 
 // Conference Types
 export interface LocationBase {
@@ -104,43 +104,43 @@ export const conferenceService = {
     deleted?: boolean;
     is_active?: boolean;
   }) {
-    return httpClient.get<ConferencePagesResponse>("/api/v1/admin/conference/pages", params);
+    return httpClient.get<ConferencePagesResponse>(API_ENDPOINTS.CONFERENCES.PAGES, params);
   },
 
   async getList() {
-    return httpClient.get<ConferenceListResponse>("/api/v1/admin/conference/list");
+    return httpClient.get<ConferenceListResponse>(API_ENDPOINTS.CONFERENCES.LIST);
   },
 
   async getById(id: string) {
-    return httpClient.get<ConferenceDetail>(`/api/v1/admin/conference/${id}`);
+    return httpClient.get<ConferenceDetail>(API_ENDPOINTS.CONFERENCES.DETAIL(id));
   },
 
   async getActive() {
-    return httpClient.get<ConferenceItem>("/api/v1/admin/conference/active");
+    return httpClient.get<ConferenceItem>(API_ENDPOINTS.CONFERENCES.ACTIVE);
   },
 
   async create(payload: ConferenceCreate) {
-    return httpClient.post<{ id: string }>("/api/v1/admin/conference/", payload);
+    return httpClient.post<{ id: string }>(API_ENDPOINTS.CONFERENCES.CREATE, payload);
   },
 
   async update(id: string, payload: ConferenceUpdate) {
-    return httpClient.put<void>(`/api/v1/admin/conference/${id}`, payload);
+    return httpClient.put<void>(API_ENDPOINTS.CONFERENCES.UPDATE(id), payload);
   },
 
   async getInstructors(conferenceId: string) {
-    return httpClient.get<ConferenceInstructors>(`/api/v1/admin/conference/instructors/${conferenceId}`);
+    return httpClient.get<ConferenceInstructors>(API_ENDPOINTS.CONFERENCES.INSTRUCTORS(conferenceId));
   },
 
   async updateInstructors(id: string, payload: ConferenceInstructorsUpdate) {
-    return httpClient.put<void>(`/api/v1/admin/conference/instructors/${id}`, payload);
+    return httpClient.put<void>(API_ENDPOINTS.CONFERENCES.UPDATE_INSTRUCTORS(id), payload);
   },
 
   async remove(id: string, payload: ConferenceDelete) {
-    return httpClient.request<void>({ method: "DELETE", url: `/api/v1/admin/conference/${id}`, data: payload });
+    return httpClient.request<void>({ method: "DELETE", url: API_ENDPOINTS.CONFERENCES.DELETE(id), data: payload });
   },
 
   async restore(ids: string[]) {
-    return httpClient.put<void>("/api/v1/admin/conference/restore", { ids });
+    return httpClient.put<void>(API_ENDPOINTS.CONFERENCES.RESTORE, { ids });
   },
 };
 

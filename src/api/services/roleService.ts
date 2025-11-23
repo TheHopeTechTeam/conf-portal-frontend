@@ -99,7 +99,7 @@ class RoleService {
   }
 
   async getList(): Promise<ApiResponse<RoleListResponse>> {
-    return httpClient.get<RoleListResponse>("/api/v1/admin/role/list");
+    return httpClient.get<RoleListResponse>(API_ENDPOINTS.ROLES.LIST);
   }
 }
 

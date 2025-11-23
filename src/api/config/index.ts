@@ -24,6 +24,7 @@ export const API_ENDPOINTS = {
   // 角色管理（管理員）
   ROLES: {
     PAGES: `${ADMIN_API_PREFIX}/role/pages`,
+    LIST: `${ADMIN_API_PREFIX}/role/list`,
     CREATE: `${ADMIN_API_PREFIX}/role`,
     DETAIL: (id: string) => `${ADMIN_API_PREFIX}/role/${id}`,
     UPDATE: (id: string) => `${ADMIN_API_PREFIX}/role/${id}`,
@@ -53,7 +54,7 @@ export const API_ENDPOINTS = {
   // 資源管理（管理員）
   RESOURCES: {
     LIST: `${ADMIN_API_PREFIX}/resource/list`,
-    CREATE: `${ADMIN_API_PREFIX}/resource/`,
+    CREATE: `${ADMIN_API_PREFIX}/resource`,
     DETAIL: (id: string) => `${ADMIN_API_PREFIX}/resource/${id}`,
     UPDATE: (id: string) => `${ADMIN_API_PREFIX}/resource/${id}`,
     DELETE: (id: string) => `${ADMIN_API_PREFIX}/resource/${id}`,
@@ -67,15 +68,38 @@ export const API_ENDPOINTS = {
 
   // 會議管理
   CONFERENCES: {
-    LIST: "/conferences",
-    CREATE: "/conferences",
-    DETAIL: (id: string) => `/conferences/${id}`,
-    UPDATE: (id: string) => `/conferences/${id}`,
-    DELETE: (id: string) => `/conferences/${id}`,
-    PUBLISH: (id: string) => `/conferences/${id}/publish`,
-    CANCEL: (id: string) => `/conferences/${id}/cancel`,
-    INSTRUCTORS: (id: string) => `/conferences/${id}/instructors`,
-    PARTICIPANTS: (id: string) => `/conferences/${id}/participants`,
+    PAGES: `${ADMIN_API_PREFIX}/conference/pages`,
+    LIST: `${ADMIN_API_PREFIX}/conference/list`,
+    CREATE: `${ADMIN_API_PREFIX}/conference`,
+    ACTIVE: `${ADMIN_API_PREFIX}/conference/active`,
+    DETAIL: (id: string) => `${ADMIN_API_PREFIX}/conference/${id}`,
+    UPDATE: (id: string) => `${ADMIN_API_PREFIX}/conference/${id}`,
+    DELETE: (id: string) => `${ADMIN_API_PREFIX}/conference/${id}`,
+    INSTRUCTORS: (id: string) => `${ADMIN_API_PREFIX}/conference/instructors/${id}`,
+    UPDATE_INSTRUCTORS: (id: string) => `${ADMIN_API_PREFIX}/conference/instructors/${id}`,
+    RESTORE: `${ADMIN_API_PREFIX}/conference/restore`,
+  },
+
+  // 工作坊管理
+  WORKSHOPS: {
+    PAGES: `${ADMIN_API_PREFIX}/workshop/pages`,
+    CREATE: `${ADMIN_API_PREFIX}/workshop`,
+    DETAIL: (id: string) => `${ADMIN_API_PREFIX}/workshop/${id}`,
+    UPDATE: (id: string) => `${ADMIN_API_PREFIX}/workshop/${id}`,
+    DELETE: (id: string) => `${ADMIN_API_PREFIX}/workshop/${id}`,
+    RESTORE: `${ADMIN_API_PREFIX}/workshop/restore`,
+    CHANGE_SEQUENCE: (id: string) => `${ADMIN_API_PREFIX}/workshop/${id}/sequence`,
+    INSTRUCTORS: (id: string) => `${ADMIN_API_PREFIX}/workshop/instructors/${id}`,
+    UPDATE_INSTRUCTORS: (id: string) => `${ADMIN_API_PREFIX}/workshop/instructors/${id}`,
+  },
+
+  // 工作坊報名管理
+  WORKSHOP_REGISTRATIONS: {
+    PAGES: `${ADMIN_API_PREFIX}/workshop_registration/pages`,
+    CREATE: `${ADMIN_API_PREFIX}/workshop_registration`,
+    DETAIL: (id: string) => `${ADMIN_API_PREFIX}/workshop_registration/${id}`,
+    DELETE: (id: string) => `${ADMIN_API_PREFIX}/workshop_registration/${id}`,
+    UNREGISTER: (id: string) => `${ADMIN_API_PREFIX}/workshop_registration/${id}/unregister`,
   },
 
   // 日誌管理
@@ -110,7 +134,96 @@ export const API_ENDPOINTS = {
 
   // 用戶管理（管理員）
   USER: {
+    PAGES: `${ADMIN_API_PREFIX}/user/pages`,
+    LIST: `${ADMIN_API_PREFIX}/user/list`,
+    CREATE: `${ADMIN_API_PREFIX}/user`,
+    DETAIL: (id: string) => `${ADMIN_API_PREFIX}/user/${id}`,
+    UPDATE: (id: string) => `${ADMIN_API_PREFIX}/user/${id}`,
+    DELETE: (id: string) => `${ADMIN_API_PREFIX}/user/${id}`,
+    RESTORE: `${ADMIN_API_PREFIX}/user/restore`,
     ME: `${ADMIN_API_PREFIX}/user/me`,
+    UPDATE_ME: `${ADMIN_API_PREFIX}/user/me`,
+    BIND_ROLE: (id: string) => `${ADMIN_API_PREFIX}/user/${id}/bind_role`,
+    ROLES: (id: string) => `${ADMIN_API_PREFIX}/user/${id}/roles`,
+  },
+
+  // 講師管理
+  INSTRUCTORS: {
+    PAGES: `${ADMIN_API_PREFIX}/instructor/pages`,
+    LIST: `${ADMIN_API_PREFIX}/instructor/list`,
+    CREATE: `${ADMIN_API_PREFIX}/instructor`,
+    DETAIL: (id: string) => `${ADMIN_API_PREFIX}/instructor/${id}`,
+    UPDATE: (id: string) => `${ADMIN_API_PREFIX}/instructor/${id}`,
+    DELETE: (id: string) => `${ADMIN_API_PREFIX}/instructor/${id}`,
+    RESTORE: `${ADMIN_API_PREFIX}/instructor/restore`,
+  },
+
+  // 地點管理
+  LOCATIONS: {
+    PAGES: `${ADMIN_API_PREFIX}/location/pages`,
+    LIST: `${ADMIN_API_PREFIX}/location/list`,
+    CREATE: `${ADMIN_API_PREFIX}/location`,
+    DETAIL: (id: string) => `${ADMIN_API_PREFIX}/location/${id}`,
+    UPDATE: (id: string) => `${ADMIN_API_PREFIX}/location/${id}`,
+    DELETE: (id: string) => `${ADMIN_API_PREFIX}/location/${id}`,
+    RESTORE: `${ADMIN_API_PREFIX}/location/restore`,
+  },
+
+  // 活動資訊管理
+  EVENT_INFO: {
+    LIST: (conferenceId: string) => `${ADMIN_API_PREFIX}/event_info/${conferenceId}/list`,
+    CREATE: `${ADMIN_API_PREFIX}/event_info`,
+    DETAIL: (id: string) => `${ADMIN_API_PREFIX}/event_info/${id}`,
+    UPDATE: (id: string) => `${ADMIN_API_PREFIX}/event_info/${id}`,
+    DELETE: (id: string) => `${ADMIN_API_PREFIX}/event_info/${id}`,
+  },
+
+  // 檔案管理
+  FILES: {
+    PAGES: `${ADMIN_API_PREFIX}/file/pages`,
+    UPLOAD: `${ADMIN_API_PREFIX}/file/upload`,
+    BATCH_UPLOAD: `${ADMIN_API_PREFIX}/file/batch_upload`,
+    BULK_DELETE: `${ADMIN_API_PREFIX}/file/bulk`,
+  },
+
+  // FAQ 分類管理
+  FAQ_CATEGORIES: {
+    LIST: `${ADMIN_API_PREFIX}/faq/category/list`,
+    CREATE: `${ADMIN_API_PREFIX}/faq/category`,
+    DETAIL: (id: string) => `${ADMIN_API_PREFIX}/faq/category/${id}`,
+    UPDATE: (id: string) => `${ADMIN_API_PREFIX}/faq/category/${id}`,
+    DELETE: (id: string) => `${ADMIN_API_PREFIX}/faq/category/${id}`,
+    RESTORE: `${ADMIN_API_PREFIX}/faq/category/restore`,
+  },
+
+  // FAQ 管理
+  FAQS: {
+    PAGES: `${ADMIN_API_PREFIX}/faq/pages`,
+    CREATE: `${ADMIN_API_PREFIX}/faq`,
+    DETAIL: (id: string) => `${ADMIN_API_PREFIX}/faq/${id}`,
+    UPDATE: (id: string) => `${ADMIN_API_PREFIX}/faq/${id}`,
+    DELETE: (id: string) => `${ADMIN_API_PREFIX}/faq/${id}`,
+    RESTORE: `${ADMIN_API_PREFIX}/faq/restore`,
+  },
+
+  // 見證管理
+  TESTIMONIES: {
+    PAGES: `${ADMIN_API_PREFIX}/testimony/pages`,
+    DETAIL: (id: string) => `${ADMIN_API_PREFIX}/testimony/${id}`,
+  },
+
+  // 示範管理
+  DEMOS: {
+    CREATE: `${ADMIN_API_PREFIX}/demo`,
+    UPDATE: (id: string) => `${ADMIN_API_PREFIX}/demo/${id}`,
+    DELETE: (id: string) => `${ADMIN_API_PREFIX}/demo/${id}`,
+  },
+
+  // 意見回饋管理
+  FEEDBACKS: {
+    PAGES: `${ADMIN_API_PREFIX}/feedback/pages`,
+    DETAIL: (id: string) => `${ADMIN_API_PREFIX}/feedback/${id}`,
+    UPDATE: (id: string) => `${ADMIN_API_PREFIX}/feedback/${id}`,
   },
 } as const;
 

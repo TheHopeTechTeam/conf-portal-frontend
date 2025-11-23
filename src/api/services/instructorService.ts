@@ -1,4 +1,4 @@
-import { httpClient } from "@/api";
+import { API_ENDPOINTS, httpClient } from "@/api";
 import { FileGridItem } from "@/pages/Menus/File/types";
 
 // Instructor Types
@@ -67,31 +67,31 @@ export const instructorService = {
     descending?: boolean;
     deleted?: boolean;
   }) {
-    return httpClient.get<InstructorPagesResponse>("/api/v1/admin/instructor/pages", params);
+    return httpClient.get<InstructorPagesResponse>(API_ENDPOINTS.INSTRUCTORS.PAGES, params);
   },
 
   async getById(id: string) {
-    return httpClient.get<InstructorDetail>(`/api/v1/admin/instructor/${id}`);
+    return httpClient.get<InstructorDetail>(API_ENDPOINTS.INSTRUCTORS.DETAIL(id));
   },
 
   async create(payload: InstructorCreate) {
-    return httpClient.post<{ id: string }>("/api/v1/admin/instructor/", payload);
+    return httpClient.post<{ id: string }>(API_ENDPOINTS.INSTRUCTORS.CREATE, payload);
   },
 
   async update(id: string, payload: InstructorUpdate) {
-    return httpClient.put<void>(`/api/v1/admin/instructor/${id}`, payload);
+    return httpClient.put<void>(API_ENDPOINTS.INSTRUCTORS.UPDATE(id), payload);
   },
 
   async remove(id: string, payload: InstructorDelete) {
-    return httpClient.request<void>({ method: "DELETE", url: `/api/v1/admin/instructor/${id}`, data: payload });
+    return httpClient.request<void>({ method: "DELETE", url: API_ENDPOINTS.INSTRUCTORS.DELETE(id), data: payload });
   },
 
   async restore(ids: string[]) {
-    return httpClient.put<void>("/api/v1/admin/instructor/restore", { ids });
+    return httpClient.put<void>(API_ENDPOINTS.INSTRUCTORS.RESTORE, { ids });
   },
 
   async getList() {
-    return httpClient.get<InstructorListResponse>("/api/v1/admin/instructor/list");
+    return httpClient.get<InstructorListResponse>(API_ENDPOINTS.INSTRUCTORS.LIST);
   },
 };
 
