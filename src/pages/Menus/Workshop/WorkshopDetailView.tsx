@@ -1,7 +1,7 @@
 import { workshopService, type WorkshopDetail } from "@/api/services/workshopService";
 import Input from "@/components/ui/input";
 import TextArea from "@/components/ui/textarea";
-import { DateUtil } from "@/utils/dateUtil";
+import moment from "moment-timezone";
 import { useEffect, useState } from "react";
 
 interface WorkshopDetailViewProps {
@@ -66,7 +66,28 @@ const WorkshopDetailView: React.FC<WorkshopDetailViewProps> = ({ workshopId }) =
             id="startTime"
             label="開始時間"
             type="text"
-            value={workshopData.startTime ? DateUtil.format(workshopData.startTime, "YYYY-MM-DD HH:mm") : "未知"}
+            value={
+              workshopData.startTime && workshopData.timezone
+                ? (() => {
+                    try {
+                      let momentDate = moment(workshopData.startTime);
+                      if (!momentDate.isValid()) {
+                        return workshopData.startTime;
+                      }
+                      momentDate = momentDate.tz(workshopData.timezone);
+                      const formattedDate = momentDate.format("YYYY-MM-DD HH:mm");
+                      const offset = momentDate.utcOffset();
+                      const hours = Math.floor(Math.abs(offset) / 60);
+                      const sign = offset >= 0 ? "+" : "-";
+                      const utcOffset = `UTC${sign}${hours}`;
+                      return `${formattedDate} (${utcOffset})`;
+                    } catch (error) {
+                      console.error("Error formatting startTime:", error);
+                      return workshopData.startTime;
+                    }
+                  })()
+                : "未知"
+            }
             disabled
           />
         </div>
@@ -76,29 +97,38 @@ const WorkshopDetailView: React.FC<WorkshopDetailViewProps> = ({ workshopId }) =
             id="endTime"
             label="結束時間"
             type="text"
-            value={workshopData.endTime ? DateUtil.format(workshopData.endTime, "YYYY-MM-DD HH:mm") : "未知"}
+            value={
+              workshopData.endTime && workshopData.timezone
+                ? (() => {
+                    try {
+                      let momentDate = moment(workshopData.endTime);
+                      if (!momentDate.isValid()) {
+                        return workshopData.endTime;
+                      }
+                      momentDate = momentDate.tz(workshopData.timezone);
+                      const formattedDate = momentDate.format("YYYY-MM-DD HH:mm");
+                      const offset = momentDate.utcOffset();
+                      const hours = Math.floor(Math.abs(offset) / 60);
+                      const sign = offset >= 0 ? "+" : "-";
+                      const utcOffset = `UTC${sign}${hours}`;
+                      return `${formattedDate} (${utcOffset})`;
+                    } catch (error) {
+                      console.error("Error formatting endTime:", error);
+                      return workshopData.endTime;
+                    }
+                  })()
+                : "未知"
+            }
             disabled
           />
         </div>
 
         <div>
-          <Input
-            id="location"
-            label="地點"
-            type="text"
-            value={workshopData.location?.name || "未設置"}
-            disabled
-          />
+          <Input id="location" label="地點" type="text" value={workshopData.location?.name || "未設置"} disabled />
         </div>
 
         <div>
-          <Input
-            id="conference"
-            label="會議"
-            type="text"
-            value={workshopData.conference?.title || "未設置"}
-            disabled
-          />
+          <Input id="conference" label="會議" type="text" value={workshopData.conference?.title || "未設置"} disabled />
         </div>
 
         <div>
@@ -136,4 +166,3 @@ const WorkshopDetailView: React.FC<WorkshopDetailViewProps> = ({ workshopId }) =
 };
 
 export default WorkshopDetailView;
-

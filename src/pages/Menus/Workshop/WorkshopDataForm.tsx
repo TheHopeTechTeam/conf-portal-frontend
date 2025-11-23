@@ -6,7 +6,7 @@ import Input from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import TextArea from "@/components/ui/textarea";
 import TimePicker from "@/components/ui/time-picker";
-import { COMMON_TIMEZONES, convertDateTimeLocalToISO, formatDateTimeLocal } from "@/utils/timezone";
+import { COMMON_TIMEZONES, convertDateTimeLocalToISO } from "@/utils/timezone";
 import moment from "moment-timezone";
 import { useEffect, useState } from "react";
 
@@ -20,7 +20,7 @@ export interface WorkshopFormValues {
   endTime: string; // HH:mm
   locationId?: string;
   conferenceId?: string;
-  participantLimit?: number;
+  participantsLimit?: number;
   remark?: string;
   description?: string;
 }
@@ -43,7 +43,7 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
     endTime: "",
     locationId: undefined,
     conferenceId: undefined,
-    participantLimit: undefined,
+    participantsLimit: undefined,
     remark: "",
     description: "",
   });
@@ -101,26 +101,19 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
 
   useEffect(() => {
     if (defaultValues) {
-      // Parse startTime and endTime from defaultValues (ISO format)
-      // defaultValues.startTime and endTime are in ISO format, need to convert to local timezone
-      const startDateTime = defaultValues.startTime
-        ? formatDateTimeLocal(defaultValues.startTime, defaultValues.timezone || "Asia/Taipei")
-        : "";
-      const endDateTime = defaultValues.endTime ? formatDateTimeLocal(defaultValues.endTime, defaultValues.timezone || "Asia/Taipei") : "";
-      const [startDate, startTime] = startDateTime ? startDateTime.split("T") : ["", ""];
-      const [endDate, endTime] = endDateTime ? endDateTime.split("T") : ["", ""];
-
+      // defaultValues already contains startDate, startTime, endDate, endTime as separate fields
+      // (converted from ISO format in WorkshopDataPage.tsx)
       setValues({
         id: defaultValues.id,
         title: defaultValues.title || "",
         timezone: defaultValues.timezone || "Asia/Taipei",
-        startDate: startDate || "",
-        startTime: startTime || "",
-        endDate: endDate || "",
-        endTime: endTime || "",
+        startDate: defaultValues.startDate || "",
+        startTime: defaultValues.startTime || "",
+        endDate: defaultValues.endDate || "",
+        endTime: defaultValues.endTime || "",
         locationId: defaultValues.locationId,
         conferenceId: defaultValues.conferenceId,
-        participantLimit: defaultValues.participantLimit,
+        participantsLimit: defaultValues.participantsLimit,
         remark: defaultValues.remark || "",
         description: defaultValues.description || "",
       });
@@ -134,7 +127,7 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
         endTime: "",
         locationId: undefined,
         conferenceId: undefined,
-        participantLimit: undefined,
+        participantsLimit: undefined,
         remark: "",
         description: "",
       });
@@ -193,10 +186,6 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
 
     if (!values.conferenceId) {
       next.conferenceId = "請選擇會議";
-    }
-
-    if (values.participantLimit !== undefined && values.participantLimit < 1) {
-      next.participantLimit = "參與者人數限制必須大於 0";
     }
 
     if (values.remark && values.remark.length > 256) {
@@ -310,12 +299,12 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
             label="參與者人數限制"
             type="number"
             placeholder="留空表示無限制"
-            value={values.participantLimit?.toString() || ""}
+            value={values.participantsLimit?.toString() || ""}
             onChange={(e) => {
               const value = e.target.value;
               setValues((v) => ({
                 ...v,
-                participantLimit: value === "" ? undefined : parseInt(value, 10),
+                participantsLimit: value === "" ? undefined : parseInt(value, 10),
               }));
             }}
             error={errors.participantLimit || undefined}

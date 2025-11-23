@@ -71,25 +71,14 @@ export const getTimezoneOffset = (timezone: string): string => {
  */
 export const formatDateTimeLocal = (dateTimeString: string, timezone: string): string => {
   try {
-    // Remove timezone info if present
-    let cleanString = dateTimeString.trim();
-    if (cleanString.endsWith("Z")) {
-      cleanString = cleanString.slice(0, -1);
-    }
-    const timezoneOffsetPattern = /([+-]\d{2}):(\d{2})$/;
-    if (timezoneOffsetPattern.test(cleanString)) {
-      cleanString = cleanString.replace(timezoneOffsetPattern, "");
-    }
-    const millisecondsPattern = /\.\d{1,3}$/;
-    if (millisecondsPattern.test(cleanString)) {
-      cleanString = cleanString.replace(millisecondsPattern, "");
-    }
-
-    // Parse with timezone
-    const momentDate = moment.tz(cleanString, "YYYY-MM-DDTHH:mm:ss", timezone);
+    // 先解析 ISO 字符串（可能是 UTC 或帶時區的格式）
+    let momentDate = moment(dateTimeString);
     if (!momentDate.isValid()) {
       return dateTimeString;
     }
+
+    // 轉換到指定時區
+    momentDate = momentDate.tz(timezone);
 
     // Format as datetime-local input format: YYYY-MM-DDTHH:mm
     return momentDate.format("YYYY-MM-DDTHH:mm");

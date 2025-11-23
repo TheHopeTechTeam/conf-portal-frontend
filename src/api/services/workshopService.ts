@@ -17,7 +17,7 @@ export interface WorkshopDetail extends Record<string, unknown> {
   timezone: string;
   startTime: string; // ISO 8601 datetime
   endTime: string; // ISO 8601 datetime
-  participantLimit?: number;
+  participantsLimit?: number;
   remark?: string;
   sequence: number;
   location: LocationBase;
@@ -31,7 +31,7 @@ export interface WorkshopItem extends Record<string, unknown> {
   timezone: string;
   startTime: string; // ISO 8601 datetime
   endTime: string; // ISO 8601 datetime
-  participantLimit?: number;
+  participantsLimit?: number;
   remark?: string;
   sequence: number;
 }
@@ -152,4 +152,3 @@ export const workshopService = {
 };
 
 export default workshopService;
-

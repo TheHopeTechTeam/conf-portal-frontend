@@ -11,11 +11,11 @@ import { useModal } from "@/hooks/useModal";
 import { formatDateTimeLocal } from "@/utils/timezone";
 import moment from "moment-timezone";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MdCoPresent } from "react-icons/md";
 import WorkshopDataForm, { type WorkshopFormValues } from "./WorkshopDataForm";
 import WorkshopDeleteForm from "./WorkshopDeleteForm";
 import WorkshopDetailView from "./WorkshopDetailView";
 import WorkshopSearchPopover, { type WorkshopSearchFilters } from "./WorkshopSearchPopover";
-import { MdCoPresent } from "react-icons/md";
 
 export default function WorkshopDataPage() {
   const [currentPage, setCurrentPage] = useState(1); // 1-based for UI
@@ -222,7 +222,7 @@ export default function WorkshopDataPage() {
         },
       },
       {
-        key: "participantLimit",
+        key: "participantsLimit",
         label: "人數限制",
         sortable: false,
         width: "w-24",
@@ -569,7 +569,7 @@ export default function WorkshopDataPage() {
         end_datetime: values.endTime,
         location_id: values.locationId!,
         conference_id: values.conferenceId!,
-        participant_limit: values.participantLimit,
+        participants_limit: values.participantsLimit,
         remark: values.remark || undefined,
         description: values.description || undefined,
       };
@@ -662,7 +662,7 @@ export default function WorkshopDataPage() {
       endTime: endTime || "",
       locationId: editing.location?.id,
       conferenceId: editing.conference?.id,
-      participantLimit: editing.participantLimit,
+      participantsLimit: editing.participantsLimit as number | undefined,
       remark: editing.remark,
       description: editing.description,
     };
