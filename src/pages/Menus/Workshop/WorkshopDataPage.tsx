@@ -8,12 +8,14 @@ import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
 import { PopoverPosition } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
+import { formatDateTimeLocal } from "@/utils/timezone";
 import moment from "moment-timezone";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import WorkshopDataForm, { type WorkshopFormValues } from "./WorkshopDataForm";
 import WorkshopDeleteForm from "./WorkshopDeleteForm";
 import WorkshopDetailView from "./WorkshopDetailView";
 import WorkshopSearchPopover, { type WorkshopSearchFilters } from "./WorkshopSearchPopover";
+import { MdCoPresent } from "react-icons/md";
 
 export default function WorkshopDataPage() {
   const [currentPage, setCurrentPage] = useState(1); // 1-based for UI
@@ -505,8 +507,8 @@ export default function WorkshopDataPage() {
       ),
       {
         key: "editInstructors",
-        label: "編輯講者",
-        icon: <span>👤</span>,
+        text: "編輯講者",
+        icon: <MdCoPresent />,
         onClick: async (row: WorkshopPageItem) => {
           try {
             setEditingWorkshopId(row.id);
@@ -643,12 +645,21 @@ export default function WorkshopDataPage() {
   const editingFormValues = useMemo<WorkshopFormValues | null>(() => {
     if (!editing) return null;
 
+    // Parse startTime and endTime from ISO format to date and time parts
+    const timezone = editing.timezone || "Asia/Taipei";
+    const startDateTime = editing.startTime ? formatDateTimeLocal(editing.startTime, timezone) : "";
+    const endDateTime = editing.endTime ? formatDateTimeLocal(editing.endTime, timezone) : "";
+    const [startDate, startTime] = startDateTime ? startDateTime.split("T") : ["", ""];
+    const [endDate, endTime] = endDateTime ? endDateTime.split("T") : ["", ""];
+
     return {
       id: editing.id,
       title: editing.title,
       timezone: editing.timezone,
-      startTime: editing.startTime,
-      endTime: editing.endTime,
+      startDate: startDate || "",
+      startTime: startTime || "",
+      endDate: endDate || "",
+      endTime: endTime || "",
       locationId: editing.location?.id,
       conferenceId: editing.conference?.id,
       participantLimit: editing.participantLimit,

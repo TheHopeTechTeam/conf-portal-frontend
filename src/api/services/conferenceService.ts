@@ -67,10 +67,21 @@ export interface ConferenceInstructorItem {
   instructor_id: string;
   is_primary?: boolean;
   sequence: number;
+  name: string;
+}
+
+export interface ConferenceInstructors {
+  items: ConferenceInstructorItem[];
+}
+
+export interface ConferenceInstructorBase {
+  instructor_id: string;
+  is_primary?: boolean;
+  sequence: number;
 }
 
 export interface ConferenceInstructorsUpdate {
-  instructors: ConferenceInstructorItem[];
+  instructors: ConferenceInstructorBase[];
 }
 
 export interface ConferenceBase {
@@ -114,6 +125,10 @@ export const conferenceService = {
 
   async update(id: string, payload: ConferenceUpdate) {
     return httpClient.put<void>(`/api/v1/admin/conference/${id}`, payload);
+  },
+
+  async getInstructors(conferenceId: string) {
+    return httpClient.get<ConferenceInstructors>(`/api/v1/admin/conference/instructors/${conferenceId}`);
   },
 
   async updateInstructors(id: string, payload: ConferenceInstructorsUpdate) {

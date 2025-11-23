@@ -266,19 +266,27 @@ const InstructorSelectionModal: React.FC<InstructorSelectionModalProps> = ({
   }, []);
 
   // 處理主講者切換
-  const handleTogglePrimary = useCallback((index: number) => {
+  const handleTogglePrimary = useCallback((index: number, checked: boolean) => {
     setSelectedInstructors((prev) => {
       const newList = [...prev];
-      if (newList[index].isPrimary) {
-        // 如果取消主講者，不允許（至少需要一個主講者）
-        return prev;
+
+      if (!checked) {
+        // 如果取消主講者，檢查是否還有其他主講者
+        const otherPrimaryCount = newList.filter((item, idx) => idx !== index && item.isPrimary).length;
+        if (otherPrimaryCount === 0 && newList.length > 1) {
+          // 如果沒有其他主講者且還有其他講者，不允許取消（至少需要一個主講者）
+          return prev;
+        }
+        // 允許取消主講者
+        newList[index].isPrimary = false;
       } else {
         // 設置新的主講者，取消其他主講者
         newList.forEach((item, idx) => {
           item.isPrimary = idx === index;
         });
-        return newList;
       }
+
+      return newList;
     });
   }, []);
 
@@ -293,7 +301,17 @@ const InstructorSelectionModal: React.FC<InstructorSelectionModalProps> = ({
         align: "center",
         render: (_value: unknown, row: SelectedInstructor) => {
           const index = selectedInstructors.findIndex((i) => i.instructorId === row.instructorId);
-          return <Checkbox id={`primary-${row.instructorId}`} checked={row.isPrimary} onChange={() => handleTogglePrimary(index)} />;
+          if (index === -1) return null; // 如果找不到對應的項，不渲染
+
+          return (
+            <Checkbox
+              id={`primary-${row.instructorId}`}
+              checked={row.isPrimary}
+              onChange={(checked) => {
+                handleTogglePrimary(index, checked);
+              }}
+            />
+          );
         },
       },
       {

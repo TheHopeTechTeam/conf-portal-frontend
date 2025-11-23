@@ -4,7 +4,7 @@ import { CalendarEvent } from "@/components/calendar";
 import Calendar from "@/components/calendar/Calendar";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import ContextMenu from "@/components/DataPage/ContextMenu";
-import { PageButtonType } from "@/components/DataPage/types";
+import { MenuButtonType } from "@/components/DataPage/types";
 import { useContextMenu } from "@/components/DataPage/useContextMenu";
 import Button from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -125,7 +125,7 @@ export default function EventScheduleCalendar({ conference }: EventScheduleCalen
   const [deleting, setDeleting] = useState(false);
 
   // Context menu
-  const contextMenu = useContextMenu();
+  const contextMenu = useContextMenu<EventInfoItem>();
 
   // Fetch events
   const fetchEvents = useCallback(async () => {
@@ -261,32 +261,32 @@ export default function EventScheduleCalendar({ conference }: EventScheduleCalen
       return;
     }
 
-    const eventId = event.item.id as string;
-    const buttons: PageButtonType[] = [
+    const eventItem = event.item as EventInfoItem;
+    const buttons: MenuButtonType<EventInfoItem>[] = [
       {
         key: "view",
         text: "檢視",
         icon: <MdVisibility className="size-4" />,
-        onClick: () => handleViewEvent(eventId),
-        color: "default",
+        onClick: () => handleViewEvent(eventItem.id),
+        variant: "default",
       },
       {
         key: "edit",
         text: "編輯",
         icon: <MdEdit className="size-4" />,
-        onClick: () => handleEditEvent(eventId),
-        color: "primary",
+        onClick: () => handleEditEvent(eventItem.id),
+        variant: "primary",
       },
       {
         key: "delete",
         text: "刪除",
         icon: <MdDelete className="size-4" />,
-        onClick: () => handleDeleteEvent(eventId),
-        color: "danger",
+        onClick: () => handleDeleteEvent(eventItem.id),
+        variant: "danger",
       },
     ];
 
-    contextMenu.showContextMenu(mouseEvent, buttons);
+    contextMenu.showContextMenu(mouseEvent, buttons, eventItem, 0);
   };
 
   // Handle form submit
@@ -362,12 +362,16 @@ export default function EventScheduleCalendar({ conference }: EventScheduleCalen
       </div>
 
       {/* Context Menu */}
-      <ContextMenu
-        buttons={contextMenu.buttons}
-        visible={contextMenu.visible}
-        position={contextMenu.position}
-        onClose={contextMenu.hideContextMenu}
-      />
+      {contextMenu.row && contextMenu.index !== undefined && (
+        <ContextMenu
+          buttons={contextMenu.buttons}
+          row={contextMenu.row}
+          index={contextMenu.index}
+          visible={contextMenu.visible}
+          position={contextMenu.position}
+          onClose={contextMenu.hideContextMenu}
+        />
+      )}
 
       {/* Form Modal */}
       <Modal

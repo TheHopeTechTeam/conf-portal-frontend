@@ -10,6 +10,7 @@ import { PopoverPosition } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MdCoPresent } from "react-icons/md";
 import ConferenceDataForm, { type ConferenceFormValues } from "./ConferenceDataForm";
 import ConferenceDeleteForm from "./ConferenceDeleteForm";
 import ConferenceDetailView from "./ConferenceDetailView";
@@ -377,17 +378,24 @@ export default function ConferenceDataPage() {
       {
         key: "editInstructors",
         text: "編輯講者",
-        icon: <span>👤</span>,
+        icon: <MdCoPresent />,
         onClick: async (row: ConferenceItem) => {
           try {
             setEditingConferenceId(row.id);
-            // Conference 目前沒有 getInstructors API，所以初始列表為空
-            // 如果需要，可以從 ConferenceDetail 中獲取，或者後續添加 API
-            setInitialInstructors([]);
+            // 獲取當前的講者列表
+            const response = await conferenceService.getInstructors(row.id);
+            const instructors: SelectedInstructor[] =
+              response.data.items?.map((item) => ({
+                instructorId: item.instructor_id,
+                name: item.name,
+                isPrimary: item.is_primary || false,
+                sequence: item.sequence,
+              })) || [];
+            setInitialInstructors(instructors);
             openInstructorModal();
           } catch (e) {
-            console.error("Error opening instructor modal:", e);
-            alert("開啟講者編輯失敗，請稍後重試");
+            console.error("Error fetching conference instructors:", e);
+            alert("載入講者列表失敗，請稍後重試");
           }
         },
         visible: !showDeleted,
