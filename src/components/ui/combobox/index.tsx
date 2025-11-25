@@ -35,6 +35,10 @@ interface ComboBoxProps<T = any> {
   onCreateOption?: (query: string) => T;
   clearable?: boolean;
   size?: "sm" | "md" | "lg";
+  onQueryChange?: (query: string) => void;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 const defaultFilterFunction = <T,>(option: ComboBoxOption<T>, query: string): boolean => {
@@ -84,13 +88,20 @@ export const ComboBox = <T = any,>({
   onCreateOption,
   clearable = false,
   size = "md",
+  onQueryChange,
+  inputRef: externalInputRef,
+  onFocus: externalOnFocus,
+  onBlur: externalOnBlur,
 }: ComboBoxProps<T>) => {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const comboboxRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const internalInputRef = useRef<HTMLInputElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
+
+  // 使用外部 ref 或內部 ref
+  const inputRef = externalInputRef || internalInputRef;
 
   // 找到當前選中的選項
   const selectedOption = options.find((option) => option.value === value) || null;
@@ -140,6 +151,8 @@ export const ComboBox = <T = any,>({
     setQuery(newQuery);
     setIsOpen(true);
     setFocusedIndex(-1);
+    // 觸發 onQueryChange 回調
+    onQueryChange?.(newQuery);
   };
 
   // 處理輸入框失去焦點
@@ -150,6 +163,8 @@ export const ComboBox = <T = any,>({
         setIsOpen(false);
         setQuery("");
         setFocusedIndex(-1);
+        // 觸發 onBlur 回調
+        externalOnBlur?.();
       }
     }, 200);
   };
@@ -276,7 +291,10 @@ export const ComboBox = <T = any,>({
             value={displayText}
             onChange={handleInputChange}
             onBlur={handleInputBlur}
-            onFocus={() => setIsOpen(true)}
+            onFocus={() => {
+              setIsOpen(true);
+              externalOnFocus?.();
+            }}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             disabled={disabled}

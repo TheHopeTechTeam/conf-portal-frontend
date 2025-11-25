@@ -1,5 +1,12 @@
 import { API_ENDPOINTS, httpClient } from "@/api";
 
+export interface UserBase {
+  id: string;
+  phoneNumber?: string;
+  email?: string;
+  displayName?: string;
+}
+
 export interface UserDetail {
   id: string;
   phone_number: string;
@@ -62,6 +69,10 @@ export interface UserPagesResponse {
   items?: UserDetail[];
 }
 
+export interface UserListResponse {
+  items?: UserBase[];
+}
+
 export const userService = {
   async getPages(params: {
     page?: number;
@@ -76,6 +87,10 @@ export const userService = {
     is_ministry?: boolean;
   }) {
     return httpClient.get<UserPagesResponse>(API_ENDPOINTS.USER.PAGES, params);
+  },
+
+  async getList(params: { keyword?: string }) {
+    return httpClient.get<UserListResponse>(API_ENDPOINTS.USER.LIST, params);
   },
 
   async getById(id: string) {

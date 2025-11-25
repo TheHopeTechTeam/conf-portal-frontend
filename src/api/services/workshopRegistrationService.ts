@@ -1,18 +1,11 @@
 import { API_ENDPOINTS, httpClient } from "@/api";
-import { userService, type UserDetail } from "./userService";
+import { UserBase, userService, type UserDetail } from "./userService";
 import { workshopService, type WorkshopDetail } from "./workshopService";
 
 // Workshop Registration Types
 export interface WorkshopBase {
   id: string;
   title: string;
-}
-
-export interface UserBase {
-  id: string;
-  phoneNumber?: string;
-  email?: string;
-  displayName?: string;
 }
 
 export interface WorkshopRegistrationDetail {
