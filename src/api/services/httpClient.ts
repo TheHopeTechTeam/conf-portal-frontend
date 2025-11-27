@@ -1,8 +1,9 @@
 // HTTP 客戶端服務 - 使用 axios
 import type { ApiError, ApiResponse } from "@/api";
 import { API_ENDPOINTS, ERROR_MESSAGES, REQUEST_CONFIG } from "@/api";
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, HttpStatusCode } from "axios";
 import { TokenResponse } from "@/api/types";
+import { notificationManager } from "@/utils/notificationManager";
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, HttpStatusCode } from "axios";
 
 // 請求攔截器型別
 type RequestInterceptor = (config: AxiosRequestConfig) => AxiosRequestConfig | Promise<AxiosRequestConfig>;
@@ -71,29 +72,92 @@ class HttpClient {
   }
 
   // 處理錯誤
-  private handleError(error: AxiosError): ApiError {
+  private handleError(error: AxiosError, showNotification: boolean = false): ApiError {
     if (error.code === "ECONNABORTED") {
-      return {
+      const apiError = {
         code: 408,
         message: ERROR_MESSAGES.TIMEOUT_ERROR,
       };
+      if (showNotification) {
+        notificationManager.show({
+          variant: "error",
+          title: "請求超時",
+          description: ERROR_MESSAGES.TIMEOUT_ERROR,
+          position: "top-right",
+        });
+      }
+      return apiError;
     }
 
     if (!error.response) {
-      return {
+      const apiError = {
         code: 0,
         message: ERROR_MESSAGES.NETWORK_ERROR,
       };
+      if (showNotification) {
+        notificationManager.show({
+          variant: "error",
+          title: "網路錯誤",
+          description: ERROR_MESSAGES.NETWORK_ERROR,
+          position: "top-right",
+        });
+      }
+      return apiError;
     }
 
     const status = error.response.status;
     const message = (error.response.data as { message?: string })?.message || this.getErrorMessage(status);
 
-    return {
+    const apiError = {
       code: status,
       message,
       details: error.response.data,
     };
+
+    // 對特定錯誤顯示通知
+    if (showNotification) {
+      this.showErrorNotification(status, message);
+    }
+
+    return apiError;
+  }
+
+  // 顯示錯誤通知
+  private showErrorNotification(status: number, message: string): void {
+    let variant: "error" | "warning" = "error";
+    let title = "操作失敗";
+
+    switch (status) {
+      case HttpStatusCode.Unauthorized:
+        // 401 錯誤通常會在 refresh token 失敗時處理，這裡不顯示
+        return;
+      case HttpStatusCode.Forbidden:
+        title = "權限不足";
+        variant = "warning";
+        break;
+      case HttpStatusCode.NotFound:
+        title = "資源不存在";
+        variant = "warning";
+        break;
+      case HttpStatusCode.InternalServerError:
+        title = "伺服器錯誤";
+        break;
+      default:
+        if (status >= 500) {
+          title = "伺服器錯誤";
+        } else if (status >= 400) {
+          title = "請求錯誤";
+          variant = "warning";
+        }
+    }
+
+    notificationManager.show({
+      variant,
+      title,
+      description: message,
+      position: "top-right",
+      hideDuration: 5000,
+    });
   }
 
   // 根據狀態碼取得錯誤訊息
@@ -151,7 +215,9 @@ class HttpClient {
         code: processedResponse.status,
       };
     } catch (error) {
-      const apiError = this.handleError(error as AxiosError);
+      // 判斷是否應該顯示通知（排除 refresh token 請求，避免重複通知）
+      const shouldShowNotification = !this.isRefreshRequest(config);
+      const apiError = this.handleError(error as AxiosError, shouldShowNotification);
 
       // 若為 401，嘗試使用 refresh token 重新取得 access token 並重試一次
       console.log("apiError", apiError);
@@ -171,6 +237,13 @@ class HttpClient {
           };
         } catch (retryError) {
           // 刷新或重試仍失敗，清理並導回登入
+          notificationManager.show({
+            variant: "warning",
+            title: "登入已過期",
+            description: "請重新登入",
+            position: "top-center",
+            hideDuration: 5000,
+          });
           this.clearAuthAndRedirect();
           const finalError = this.handleError(retryError as AxiosError);
           const processedFinalError = await this.executeErrorInterceptors(finalError);

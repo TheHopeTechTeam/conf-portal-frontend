@@ -217,6 +217,7 @@ export const API_ENDPOINTS = {
     CREATE: `${ADMIN_API_PREFIX}/demo`,
     UPDATE: (id: string) => `${ADMIN_API_PREFIX}/demo/${id}`,
     DELETE: (id: string) => `${ADMIN_API_PREFIX}/demo/${id}`,
+    RESTORE: `${ADMIN_API_PREFIX}/demo/restore`,
   },
 
   // 意見回饋管理

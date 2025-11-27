@@ -34,6 +34,10 @@ export const demoService = {
   async remove(id: string, payload: DemoDelete) {
     return httpClient.request<void>({ method: "DELETE", url: API_ENDPOINTS.DEMOS.DELETE(id), data: payload });
   },
+
+  async restore(ids: string[]) {
+    return httpClient.put<void>(API_ENDPOINTS.DEMOS.RESTORE, { ids });
+  },
 };
 
 export default demoService;

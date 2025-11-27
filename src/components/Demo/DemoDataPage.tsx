@@ -3,9 +3,11 @@ import { demoService } from "@/api/services/demoService";
 import type { DataTableColumn, MenuButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage, SearchPopoverContent } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
+import RestoreForm from "@/components/DataPage/RestoreForm";
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
 import { Gender, PopoverPosition } from "@/const/enums";
+import { useNotification } from "@/context/NotificationContext";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -43,13 +45,19 @@ export default function DemoDataPage() {
   const [items, setItems] = useState<DemoDetail[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+
+  // Notification
+  const { showNotification } = useNotification();
 
   // Modal state
   const { isOpen, openModal, closeModal } = useModal(false);
   const { isOpen: isDeleteOpen, openModal: openDeleteModal, closeModal: closeDeleteModal } = useModal(false);
+  const { isOpen: isRestoreOpen, openModal: openRestoreModal, closeModal: closeRestoreModal } = useModal(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [editing, setEditing] = useState<DemoDetail | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [restoreIds, setRestoreIds] = useState<string[]>([]);
 
   // Fetch function - 使用 useRef 避免不必要的重新創建
   const fetchPagesRef = useRef({
@@ -94,12 +102,16 @@ export default function DemoDataPage() {
       setPageSize(data.page_size);
     } catch (e) {
       console.error("Error fetching pages:", e);
-      // Simplified error surfacing for demo
-      alert("載入失敗，請稍後重試");
+      showNotification({
+        variant: "error",
+        title: "載入失敗",
+        description: "無法載入資料，請稍後重試",
+        position: "top-right",
+      });
     } finally {
       setLoading(false);
     }
-  }, []); // 空依賴項，避免重新創建
+  }, [showNotification]); // 包含 showNotification 依賴
 
   // Columns definition
   const columns: DataTableColumn<DemoDetail>[] = useMemo(
@@ -186,6 +198,48 @@ export default function DemoDataPage() {
     []
   );
 
+  const handleRowSelect = (_selectedRows: DemoDetail[], selectedKeys: string[]) => {
+    setSelectedKeys(selectedKeys);
+  };
+
+  const handleBulkRestore = useCallback(() => {
+    setRestoreIds(selectedKeys);
+    openRestoreModal();
+  }, [selectedKeys, openRestoreModal]);
+
+  const handleRestoreConfirm = async (ids: string[]) => {
+    try {
+      setSubmitting(true);
+      await demoService.restore(ids);
+      showNotification({
+        variant: "success",
+        title: "還原成功",
+        description: `已成功還原 ${ids.length} 個項目`,
+      });
+      await fetchPages();
+      closeRestoreModal();
+      setSelectedKeys([]);
+    } catch (e) {
+      console.error(e);
+      showNotification({
+        variant: "error",
+        title: "還原失敗",
+        description: "無法還原資料，請稍後再試",
+        position: "top-right",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSingleRestore = useCallback(
+    (row: DemoDetail) => {
+      setRestoreIds([row.id]);
+      openRestoreModal();
+    },
+    [openRestoreModal]
+  );
+
   // Toolbar buttons
   const toolbarButtons = useMemo(() => {
     // 使用 popoverCallback 模式，使用統一的 trigger 樣式
@@ -236,7 +290,22 @@ export default function DemoDataPage() {
       ),
       CommonPageButton.REFRESH(() => {
         fetchPages();
+        showNotification({
+          variant: "info",
+          title: "重新載入",
+          description: "正在重新載入資料...",
+          hideDuration: 2000,
+        });
       }),
+      CommonPageButton.RESTORE(
+        () => {
+          handleBulkRestore();
+        },
+        {
+          visible: showDeleted,
+          disabled: selectedKeys.length === 0,
+        }
+      ),
       CommonPageButton.RECYCLE(
         () => {
           setShowDeleted(!showDeleted);
@@ -245,7 +314,7 @@ export default function DemoDataPage() {
         { className: getRecycleButtonClassName(showDeleted) }
       ),
     ];
-  }, [openModal, fetchPages, showDeleted, searchDraft]);
+  }, [openModal, fetchPages, showDeleted, searchDraft, showNotification, handleBulkRestore, selectedKeys]);
 
   // Trigger fetch on dependencies change
   useEffect(() => {
@@ -276,17 +345,35 @@ export default function DemoDataPage() {
   // Row actions
   const rowActions: MenuButtonType<DemoDetail>[] = useMemo(
     () => [
-      CommonRowAction.EDIT((row: DemoDetail) => {
-        setFormMode("edit");
-        setEditing(row);
-        openModal();
-      }),
-      CommonRowAction.DELETE((row: DemoDetail) => {
-        setEditing(row);
-        openDeleteModal();
-      }),
+      CommonRowAction.EDIT(
+        (row: DemoDetail) => {
+          setFormMode("edit");
+          setEditing(row);
+          openModal();
+        },
+        {
+          visible: !showDeleted, // 僅在正常模式下顯示
+        }
+      ),
+      CommonRowAction.RESTORE(
+        async (row: DemoDetail) => {
+          handleSingleRestore(row);
+        },
+        {
+          visible: showDeleted, // 僅在回收桶模式下顯示
+        }
+      ),
+      CommonRowAction.DELETE(
+        (row: DemoDetail) => {
+          setEditing(row);
+          openDeleteModal();
+        },
+        {
+          text: showDeleted ? "永久刪除" : "刪除",
+        }
+      ),
     ],
-    [openModal, openDeleteModal]
+    [openModal, openDeleteModal, showDeleted, handleSingleRestore]
   );
 
   // Submit handlers
@@ -295,15 +382,31 @@ export default function DemoDataPage() {
       setSubmitting(true);
       if (formMode === "create") {
         await demoService.create(values);
+        showNotification({
+          variant: "success",
+          title: "新增成功",
+          description: `已成功新增「${values.name}」`,
+        });
       } else if (formMode === "edit" && editing?.id) {
         await demoService.update(editing.id, values);
+        showNotification({
+          variant: "success",
+          title: "更新成功",
+          description: `已成功更新「${values.name}」`,
+        });
       }
       closeModal();
       // Refresh list by calling fetchPages directly
       await fetchPages();
     } catch (e) {
       console.error(e);
-      alert("儲存失敗，請稍後再試");
+      showNotification({
+        variant: "error",
+        title: "儲存失敗",
+        description: "無法儲存資料，請稍後再試",
+        position: "top-right",
+        hideDuration: 10000,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -313,13 +416,27 @@ export default function DemoDataPage() {
     try {
       setSubmitting(true);
       if (!editing?.id) return;
+
+      const deletedItem = editing;
       await demoService.remove(editing.id, { reason, permanent: !!permanent });
+
+      showNotification({
+        variant: "success",
+        title: permanent ? "永久刪除成功" : "刪除成功",
+        description: `已成功${permanent ? "永久刪除" : "刪除"}「${deletedItem.name}」`,
+      });
+
       closeDeleteModal();
       // Refresh list by calling fetchPages directly
       await fetchPages();
     } catch (e) {
       console.error(e);
-      alert("刪除失敗，請稍後再試");
+      showNotification({
+        variant: "error",
+        title: "刪除失敗",
+        description: "無法刪除資料，請稍後再試",
+        position: "top-right",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -341,6 +458,7 @@ export default function DemoDataPage() {
         data={pagedData}
         columns={columns}
         loading={loading}
+        singleSelect={!showDeleted}
         orderBy={orderBy}
         descending={descending}
         buttons={toolbarButtons}
@@ -348,6 +466,7 @@ export default function DemoDataPage() {
         onSort={handleSort}
         onPageChange={handlePageChange}
         onItemsPerPageChange={handleItemsPerPageChange}
+        onRowSelect={handleRowSelect}
       />
 
       <Modal
@@ -359,8 +478,23 @@ export default function DemoDataPage() {
         <DemoDataForm mode={formMode} defaultValues={editing} onSubmit={handleSubmit} onCancel={closeModal} submitting={submitting} />
       </Modal>
 
-      <Modal title="確認刪除" isOpen={isDeleteOpen} onClose={closeDeleteModal} className="max-w-[560px] w-full mx-4 p-6">
-        <DemoDeleteForm onSubmit={handleDelete} onCancel={closeDeleteModal} submitting={submitting} />
+      <Modal
+        title={showDeleted ? "確認永久刪除 Demo" : "確認刪除 Demo"}
+        isOpen={isDeleteOpen}
+        onClose={closeDeleteModal}
+        className="max-w-[560px] w-full mx-4 p-6"
+      >
+        <DemoDeleteForm onSubmit={handleDelete} onCancel={closeDeleteModal} submitting={submitting} isPermanent={showDeleted} />
+      </Modal>
+
+      <Modal title="還原 Demo" isOpen={isRestoreOpen} onClose={closeRestoreModal} className="max-w-[500px] w-full mx-4 p-6">
+        <RestoreForm
+          ids={restoreIds}
+          entityName="Demo 資料"
+          onSubmit={handleRestoreConfirm}
+          onCancel={closeRestoreModal}
+          submitting={submitting}
+        />
       </Modal>
     </>
   );

@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
 import { RouterProvider } from "react-router";
+import NotificationContainer from "./components/ui/notification/NotificationContainer";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { MenuProvider, useMenuData } from "./context/MenuContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import { routeFilterManager } from "./utils/route-filter-manager";
 
 export default function App() {
   return (
     <AuthProvider>
       <MenuProvider>
-        <AppContent />
+        <NotificationProvider>
+          <AppContent />
+          <NotificationContainer />
+        </NotificationProvider>
       </MenuProvider>
     </AuthProvider>
   );
