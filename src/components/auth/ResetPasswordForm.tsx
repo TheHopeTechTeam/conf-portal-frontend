@@ -5,6 +5,48 @@ import { useEffect, useState } from "react";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { Link, useNavigate, useSearchParams } from "react-router";
 
+interface PasswordValidationStatus {
+  hasLowerCase: boolean;
+  hasUpperCase: boolean;
+  hasNumber: boolean;
+  hasSpecialChar: boolean;
+  hasMinLength: boolean;
+}
+
+const validatePasswordStrength = (password: string): { isValid: boolean; message: string } => {
+  if (password.length < 8) {
+    return { isValid: false, message: "密碼長度至少需要 8 個字元" };
+  }
+
+  if (!/[a-z]/.test(password)) {
+    return { isValid: false, message: "密碼至少需要包含一個小寫字母" };
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    return { isValid: false, message: "密碼至少需要包含一個大寫字母" };
+  }
+
+  if (!/[0-9]/.test(password)) {
+    return { isValid: false, message: "密碼至少需要包含一個數字" };
+  }
+
+  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
+    return { isValid: false, message: "密碼至少需要包含一個特殊字元 (!@#$%^&* 等)" };
+  }
+
+  return { isValid: true, message: "" };
+};
+
+const getPasswordValidationStatus = (password: string): PasswordValidationStatus => {
+  return {
+    hasLowerCase: /[a-z]/.test(password),
+    hasUpperCase: /[A-Z]/.test(password),
+    hasNumber: /[0-9]/.test(password),
+    hasSpecialChar: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
+    hasMinLength: password.length >= 8,
+  };
+};
+
 export default function ResetPasswordForm() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -18,6 +60,8 @@ export default function ResetPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const passwordValidationStatus = getPasswordValidationStatus(newPassword);
 
   useEffect(() => {
     if (!token) {
@@ -39,8 +83,9 @@ export default function ResetPasswordForm() {
       return;
     }
 
-    if (newPassword.length < 8) {
-      setError("密碼長度至少需要 8 個字元");
+    const passwordValidation = validatePasswordStrength(newPassword);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.message);
       return;
     }
 
@@ -128,12 +173,65 @@ export default function ResetPasswordForm() {
                   }
                   iconPosition="right"
                   iconClick={() => setShowPassword(!showPassword)}
-                  placeholder="至少 8 個字元"
+                  placeholder="請輸入符合強度要求的密碼"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  min={8}
                 />
+                {newPassword && (
+                  <div className="mt-2 space-y-1">
+                    <div
+                      className={`text-xs flex items-center ${
+                        passwordValidationStatus.hasMinLength ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
+                      <span className={`mr-2 ${passwordValidationStatus.hasMinLength ? "text-green-600 dark:text-green-400" : ""}`}>
+                        {passwordValidationStatus.hasMinLength ? "✓" : "✗"}
+                      </span>
+                      長度大於 8 個字元
+                    </div>
+                    <div
+                      className={`text-xs flex items-center ${
+                        passwordValidationStatus.hasLowerCase ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
+                      <span className={`mr-2 ${passwordValidationStatus.hasLowerCase ? "text-green-600 dark:text-green-400" : ""}`}>
+                        {passwordValidationStatus.hasLowerCase ? "✓" : "✗"}
+                      </span>
+                      至少一個小寫字母
+                    </div>
+                    <div
+                      className={`text-xs flex items-center ${
+                        passwordValidationStatus.hasUpperCase ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
+                      <span className={`mr-2 ${passwordValidationStatus.hasUpperCase ? "text-green-600 dark:text-green-400" : ""}`}>
+                        {passwordValidationStatus.hasUpperCase ? "✓" : "✗"}
+                      </span>
+                      至少一個大寫字母
+                    </div>
+                    <div
+                      className={`text-xs flex items-center ${
+                        passwordValidationStatus.hasNumber ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
+                      <span className={`mr-2 ${passwordValidationStatus.hasNumber ? "text-green-600 dark:text-green-400" : ""}`}>
+                        {passwordValidationStatus.hasNumber ? "✓" : "✗"}
+                      </span>
+                      至少一個數字
+                    </div>
+                    <div
+                      className={`text-xs flex items-center ${
+                        passwordValidationStatus.hasSpecialChar ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
+                      <span className={`mr-2 ${passwordValidationStatus.hasSpecialChar ? "text-green-600 dark:text-green-400" : ""}`}>
+                        {passwordValidationStatus.hasSpecialChar ? "✓" : "✗"}
+                      </span>
+                      至少一個特殊字元 (!@#$%^&* 等)
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
