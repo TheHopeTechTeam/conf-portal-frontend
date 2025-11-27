@@ -88,10 +88,6 @@ export default function PermissionDataPage() {
         setTotal(data.total);
         // Backend page is 0-based; map back to 1-based UI if changed externally
         setCurrentPage(data.page + 1);
-        // 處理 API 可能返回 pageSize 或 page_size 的情況
-        const responsePageSize = data.page_size || 10;
-        console.log("pageSize from API:", responsePageSize);
-        setPageSize(responsePageSize);
       } else {
         console.error("Failed to fetch permissions:", response.message);
         setItems([]);

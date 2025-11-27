@@ -108,8 +108,8 @@ export default function FeedbackDataPage() {
     try {
       const params = {
         page: Math.max(0, currentPage - 1),
-        pageSize: pageSize,
-        orderBy: orderBy && orderBy.trim() !== "" ? orderBy : undefined,
+        page_size: pageSize,
+        order_by: orderBy && orderBy.trim() !== "" ? orderBy : undefined,
         descending: orderBy && orderBy.trim() !== "" ? descending : undefined,
         keyword: appliedFilters.keyword || undefined,
         status: appliedFilters.status,
@@ -122,9 +122,6 @@ export default function FeedbackDataPage() {
       setTotal(data.total);
       // Backend page is 0-based; map back to 1-based UI if changed externally
       setCurrentPage(data.page + 1);
-      // 處理 API 可能返回 pageSize 的情況
-      const responsePageSize = data.pageSize || 10;
-      setPageSize(responsePageSize);
     } catch (e) {
       console.error("Error fetching feedback pages:", e);
       // Simplified error surfacing for demo

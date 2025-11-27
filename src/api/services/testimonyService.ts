@@ -22,9 +22,9 @@ export interface TestimonyPagesResponse {
 export const testimonyService = {
   async getPages(params: {
     page?: number;
-    pageSize?: number;
+    page_size?: number;
     keyword?: string;
-    orderBy?: string;
+    order_by?: string;
     descending?: boolean;
     deleted?: boolean;
     share?: boolean;

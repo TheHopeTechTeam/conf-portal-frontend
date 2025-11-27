@@ -115,12 +115,12 @@ export const faqCategoryService = {
 export const faqService = {
   async getPages(params: {
     page?: number;
-    pageSize?: number;
+    page_size?: number;
     keyword?: string;
-    orderBy?: string;
+    order_by?: string;
     descending?: boolean;
     deleted?: boolean;
-    categoryId?: string;
+    category_id?: string;
   }) {
     return httpClient.get<FaqPagesResponse>(API_ENDPOINTS.FAQS.PAGES, params);
   },

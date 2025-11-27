@@ -60,7 +60,6 @@ export default function RoleDataPage() {
         setItems(data.items || []);
         setTotal(data.total);
         setCurrentPage((data.page ?? 0) + 1);
-        setPageSize(data.page_size || pageSize);
       } else {
         setItems([]);
         setTotal(0);

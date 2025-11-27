@@ -97,9 +97,6 @@ export default function ConferenceDataPage() {
       setTotal(data.total);
       // Backend page is 0-based; map back to 1-based UI if changed externally
       setCurrentPage(data.page + 1);
-      // 處理 API 可能返回 pageSize 的情況
-      const responsePageSize = data.pageSize || 10;
-      setPageSize(responsePageSize);
     } catch (e) {
       console.error("Error fetching conference pages:", e);
       // Simplified error surfacing for demo

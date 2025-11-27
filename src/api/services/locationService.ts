@@ -74,12 +74,12 @@ export interface LocationListResponse {
 export const locationService = {
   async getPages(params: {
     page?: number;
-    pageSize?: number;
+    page_size?: number;
     keyword?: string;
-    orderBy?: string;
+    order_by?: string;
     descending?: boolean;
     deleted?: boolean;
-    roomNumber?: string;
+    room_number?: string;
   }) {
     return httpClient.get<LocationPagesResponse>(API_ENDPOINTS.LOCATIONS.PAGES, params);
   },
