@@ -9,6 +9,7 @@ import Button from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { ModalForm, type ModalFormHandle } from "@/components/ui/modal/modal-form";
 import { Select } from "@/components/ui/select";
+import { Resource, Verb } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { MdCheckBox, MdCheckBoxOutlineBlank, MdUpload } from "react-icons/md";
@@ -262,7 +263,7 @@ const FilePage = () => {
         variant: "primary",
         size: "md",
         onClick: openUploadModal,
-        permission: "create",
+        permission: Verb.Create,
       },
       {
         key: "selectAll",
@@ -272,14 +273,14 @@ const FilePage = () => {
         disabled: files.length === 0,
         size: "md",
         onClick: handleSelectAll,
-        permission: "delete",
+        permission: Verb.Delete,
       },
       CommonPageButton.BULK_DELETE(handleBatchDelete, {
         align: "left",
         tooltip: "批量刪除",
         size: "md",
         disabled: selectedKeys.length === 0,
-        permission: "delete",
+        permission: Verb.Delete,
       }),
       CommonPageButton.REFRESH(() => {
         refetchFiles();
@@ -308,7 +309,7 @@ const FilePage = () => {
             />
           </div>
         ),
-        permission: "read",
+        permission: Verb.Read,
       },
     ];
   }, [selectedKeys.length, handleBatchDelete, sortOrder, openUploadModal, refetchFiles, isAllSelected, handleSelectAll, files.length]);
@@ -325,7 +326,7 @@ const FilePage = () => {
     <>
       <div className="flex flex-col rounded-xl bg-white dark:bg-white/[0.03] h-full">
         {/* Toolbar */}
-        <DataTableToolbar buttons={toolbarButtons} resource="content:file" />
+        <DataTableToolbar buttons={toolbarButtons} resource={Resource.ContentFile} />
         <div className="flex-1 min-h-0">
           <div className="h-full flex flex-col">
             <div className="grow max-w-full overflow-x-auto overflow-y-auto custom-scrollbar border-x border-b border-gray-100 dark:border-white/[0.05]">

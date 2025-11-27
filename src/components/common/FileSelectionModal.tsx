@@ -9,6 +9,7 @@ import Button from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { ModalForm, type ModalFormHandle } from "@/components/ui/modal/modal-form";
 import { Select } from "@/components/ui/select";
+import { Resource, Verb } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import FileGrid from "@/pages/Menus/File/FileGrid";
 import FileUploadForm, { type FileUploadFormHandle } from "@/pages/Menus/File/FileUploadForm";
@@ -252,7 +253,7 @@ const FileSelectionModal: React.FC<FileSelectionModalProps> = ({
         variant: "primary",
         size: "md",
         onClick: openUploadModal,
-        permission: "create",
+        permission: Verb.Create,
       },
     ];
 
@@ -284,8 +285,8 @@ const FileSelectionModal: React.FC<FileSelectionModalProps> = ({
             />
           </div>
         ),
-        permission: "read",
-      },
+        permission: Verb.Read,
+      }
     );
 
     return buttons;
@@ -308,7 +309,7 @@ const FileSelectionModal: React.FC<FileSelectionModalProps> = ({
         <div className="flex flex-col flex-1 min-h-0 max-h-[calc(90vh-120px)]">
           {/* Toolbar - 固定 */}
           <div className="shrink-0">
-            <DataTableToolbar buttons={toolbarButtons} resource="content:file" />
+            <DataTableToolbar buttons={toolbarButtons} resource={Resource.ContentFile} />
           </div>
 
           {/* 內容區域 - 可滾動 */}

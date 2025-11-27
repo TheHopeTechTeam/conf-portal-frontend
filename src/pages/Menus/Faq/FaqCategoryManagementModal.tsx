@@ -11,6 +11,7 @@ import Input from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import TextArea from "@/components/ui/textarea";
 import Tooltip from "@/components/ui/tooltip";
+import { Resource } from "@/const/enums";
 import { DateUtil } from "@/utils/dateUtil";
 import { useEffect, useMemo, useState } from "react";
 
@@ -320,13 +321,13 @@ const FaqCategoryManagementModal: React.FC<FaqCategoryManagementModalProps> = ({
     <>
       <Modal title="分類管理" isOpen={isOpen} onClose={onClose} className="max-w-[900px] w-full mx-4 p-6">
         <div className="space-y-4 h-[calc(100vh-300px)] flex flex-col">
-          <DataTableToolbar buttons={toolbarButtons} resource="support:faq:category" />
+          <DataTableToolbar buttons={toolbarButtons} resource={Resource.SupportFaq} />
           <div className="flex-1 min-h-0 overflow-hidden">
             <DataTable<FaqCategoryBase>
               data={categories}
               columns={columns}
               loading={loading}
-              resource="support:faq:category"
+              resource={Resource.SupportFaq}
               rowActions={rowActions}
               onRowSelect={handleRowSelect}
               emptyMessage="暫無分類資料"

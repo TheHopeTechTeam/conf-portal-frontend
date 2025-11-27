@@ -1,3 +1,4 @@
+import { Verb } from "@/const/enums";
 import { ReactNode } from "react";
 import {
   MdAdd,
@@ -82,15 +83,15 @@ export const getPageButtonText = (type: PageButtonTypeKey): string => {
 // 按鈕類型對應的默認權限動詞
 const getDefaultPermission = (type: PageButtonTypeKey): string | undefined => {
   const permissionMap: Partial<Record<PageButtonTypeKey, string>> = {
-    [PAGE_BUTTON_TYPES.SEARCH]: "read",
-    [PAGE_BUTTON_TYPES.ADD]: "create",
-    [PAGE_BUTTON_TYPES.REFRESH]: "read",
-    [PAGE_BUTTON_TYPES.BULK_DELETE]: "delete",
-    [PAGE_BUTTON_TYPES.RECYCLE]: "delete",
-    [PAGE_BUTTON_TYPES.RESTORE]: "modify",
-    [PAGE_BUTTON_TYPES.EDIT]: "modify",
-    [PAGE_BUTTON_TYPES.DELETE]: "delete",
-    [PAGE_BUTTON_TYPES.VIEW]: "read",
+    [PAGE_BUTTON_TYPES.SEARCH]: Verb.Read,
+    [PAGE_BUTTON_TYPES.ADD]: Verb.Create,
+    [PAGE_BUTTON_TYPES.REFRESH]: Verb.Read,
+    [PAGE_BUTTON_TYPES.BULK_DELETE]: Verb.Delete,
+    [PAGE_BUTTON_TYPES.RECYCLE]: Verb.Delete,
+    [PAGE_BUTTON_TYPES.RESTORE]: Verb.Modify,
+    [PAGE_BUTTON_TYPES.EDIT]: Verb.Modify,
+    [PAGE_BUTTON_TYPES.DELETE]: Verb.Delete,
+    [PAGE_BUTTON_TYPES.VIEW]: Verb.Read,
     // DOWNLOAD, COPY, EXPORT 沒有默認權限（可選）
   };
 

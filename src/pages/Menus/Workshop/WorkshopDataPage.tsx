@@ -6,7 +6,7 @@ import RestoreForm from "@/components/DataPage/RestoreForm";
 import InstructorSelectionModal, { type SelectedInstructor } from "@/components/common/InstructorSelectionModal";
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
-import { PopoverPosition } from "@/const/enums";
+import { PopoverPosition, Resource } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { formatDateTimeLocal } from "@/utils/timezone";
 import moment from "moment-timezone";
@@ -677,7 +677,7 @@ export default function WorkshopDataPage() {
         singleSelect={!showDeleted}
         orderBy={orderBy}
         descending={descending}
-        resource="workshop:workshops"
+        resource={Resource.WorkshopWorkshops}
         buttons={toolbarButtons}
         rowActions={rowActions}
         onSort={handleSort}

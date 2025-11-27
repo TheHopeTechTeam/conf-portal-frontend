@@ -25,6 +25,46 @@ export enum PopoverPosition {
   LeftBottom = "left_bottom",
 }
 
+export enum Verb {
+  Read = "read",
+  Create = "create",
+  Modify = "modify",
+  Delete = "delete",
+}
+
+export enum Resource {
+  // General resources
+  // [comms]
+  CommsNotification = "comms:notification",
+  CommsNotificationHistory = "comms:notification_history",
+
+  // [conference]
+  ConferenceConferences = "conference:conferences",
+  ConferenceEventSchedule = "conference:event_schedule",
+
+  // [content]
+  ContentFile = "content:file",
+  ContentInstructor = "content:instructor",
+  ContentLocation = "content:location",
+  ContentTestimony = "content:testimony",
+
+  // [support]
+  SupportFaq = "support:faq",
+  SupportFeedback = "support:feedback",
+
+  // [workshop]
+  WorkshopRegistration = "workshop:registration",
+  WorkshopWorkshops = "workshop:workshops",
+
+  // System resources
+  SystemFcmDevice = "system:fcm_device",
+  SystemLog = "system:log",
+  SystemPermission = "system:permission",
+  SystemResource = "system:resource",
+  SystemRole = "system:role",
+  SystemUser = "system:user",
+}
+
 export const CountryCodes: CountryCode[] = [
   { name: "USA", code: "+1" }, // 美國（United States）
   { name: "CAN", code: "+1" }, // 加拿大（Canada）

@@ -1,3 +1,4 @@
+import { Verb } from "@/const/enums";
 import { ReactNode } from "react";
 import { MdArrowDownward, MdArrowUpward, MdDelete, MdEdit, MdRestore, MdVisibility } from "react-icons/md";
 import { MenuButtonType } from "./types";
@@ -39,10 +40,10 @@ export const getRowActionLabel = (type: RowActionTypeKey): string => {
 // 行操作類型對應的默認權限動詞
 const getDefaultPermission = (type: RowActionTypeKey): string | undefined => {
   const permissionMap: Record<RowActionTypeKey, string> = {
-    [ROW_ACTION_TYPES.VIEW]: "read",
-    [ROW_ACTION_TYPES.EDIT]: "modify",
-    [ROW_ACTION_TYPES.DELETE]: "delete",
-    [ROW_ACTION_TYPES.RESTORE]: "modify",
+    [ROW_ACTION_TYPES.VIEW]: Verb.Read,
+    [ROW_ACTION_TYPES.EDIT]: Verb.Modify,
+    [ROW_ACTION_TYPES.DELETE]: Verb.Delete,
+    [ROW_ACTION_TYPES.RESTORE]: Verb.Modify,
   };
 
   return permissionMap[type];

@@ -4,7 +4,7 @@ import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPa
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
-import { PopoverPosition } from "@/const/enums";
+import { PopoverPosition, Resource } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -361,7 +361,7 @@ export default function FeedbackDataPage() {
         singleSelect
         orderBy={orderBy}
         descending={descending}
-        resource="support:feedback"
+        resource={Resource.SupportFeedback}
         buttons={toolbarButtons}
         rowActions={rowActions}
         onSort={handleSort}

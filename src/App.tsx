@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { RouterProvider } from "react-router";
-import DevModeIndicator from "./components/common/DevModeIndicator";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { MenuProvider, useMenuData } from "./context/MenuContext";
 import { routeFilterManager } from "./utils/route-filter-manager";
@@ -66,7 +65,6 @@ function AppContent() {
 
   return (
     <>
-      <DevModeIndicator />
       <RouterProvider router={router} />
     </>
   );

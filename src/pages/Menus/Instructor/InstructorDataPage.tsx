@@ -5,7 +5,7 @@ import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes
 import RestoreForm from "@/components/DataPage/RestoreForm";
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
-import { PopoverPosition } from "@/const/enums";
+import { PopoverPosition, Resource } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -428,7 +428,7 @@ export default function InstructorDataPage() {
         singleSelect={!showDeleted}
         orderBy={orderBy}
         descending={descending}
-        resource="content:instructor"
+        resource={Resource.ContentInstructor}
         buttons={toolbarButtons}
         rowActions={rowActions}
         onSort={handleSort}

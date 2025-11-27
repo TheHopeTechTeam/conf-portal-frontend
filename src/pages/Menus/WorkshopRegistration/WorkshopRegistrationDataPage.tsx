@@ -11,7 +11,7 @@ import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes
 import SearchPopoverContent from "@/components/DataPage/SearchPopoverContent";
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
-import { PopoverPosition } from "@/const/enums";
+import { PopoverPosition, Resource } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import moment from "moment";
 import React, { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -389,7 +389,7 @@ const WorkshopRegistrationDataPage: React.FC = () => {
         singleSelect={!showDeleted}
         orderBy={orderBy}
         descending={descending}
-        resource="workshop:registration"
+        resource={Resource.WorkshopRegistration}
         buttons={toolbarButtons}
         rowActions={rowActions}
         onSort={handleSort}

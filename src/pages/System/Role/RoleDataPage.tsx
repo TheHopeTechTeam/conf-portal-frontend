@@ -6,7 +6,7 @@ import Button from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { ModalForm, type ModalFormHandle } from "@/components/ui/modal/modal-form";
 import Tooltip from "@/components/ui/tooltip";
-import { PopoverPosition } from "@/const/enums";
+import { PopoverPosition, Resource } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -311,7 +311,7 @@ export default function RoleDataPage() {
         singleSelect={!showDeleted}
         orderBy={orderBy}
         descending={descending}
-        resource="system:role"
+        resource={Resource.SystemRole}
         buttons={toolbarButtons}
         rowActions={rowActions}
         onSort={handleSort}
