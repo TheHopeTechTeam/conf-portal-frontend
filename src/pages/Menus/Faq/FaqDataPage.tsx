@@ -6,6 +6,7 @@ import RestoreForm from "@/components/DataPage/RestoreForm";
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
 import { PopoverPosition, Resource, Verb } from "@/const/enums";
+import { useNotification } from "@/context/NotificationContext";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -36,6 +37,9 @@ export default function FaqDataPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+
+  // Notification
+  const { showNotification } = useNotification();
 
   // Modal state
   const { isOpen, openModal, closeModal } = useModal(false);
@@ -97,12 +101,16 @@ export default function FaqDataPage() {
       setCurrentPage(data.page + 1);
     } catch (e) {
       console.error("Error fetching faq pages:", e);
-      // Simplified error surfacing for demo
-      alert("載入失敗，請稍後重試");
+      showNotification({
+        variant: "error",
+        title: "載入失敗",
+        description: "無法載入常見問題資料，請稍後重試",
+        position: "top-right",
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showNotification]);
 
   // Columns definition
   const columns: DataTableColumn<FaqItem>[] = useMemo(
@@ -236,11 +244,22 @@ export default function FaqDataPage() {
     try {
       setSubmitting(true);
       await faqService.restore(ids);
+      showNotification({
+        variant: "success",
+        title: "還原成功",
+        description: `已成功還原 ${ids.length} 個常見問題`,
+      });
       await fetchPages();
       closeRestoreModal();
+      setSelectedKeys([]);
     } catch (e) {
       console.error(e);
-      alert("批量還原失敗，請稍後再試");
+      showNotification({
+        variant: "error",
+        title: "還原失敗",
+        description: "無法還原常見問題，請稍後再試",
+        position: "top-right",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -346,7 +365,12 @@ export default function FaqDataPage() {
             openModal();
           } catch (e) {
             console.error("Error fetching faq detail:", e);
-            alert("載入常見問題詳情失敗，請稍後重試");
+            showNotification({
+              variant: "error",
+              title: "載入失敗",
+              description: "無法載入常見問題詳情，請稍後重試",
+              position: "top-right",
+            });
           }
         },
         {
@@ -369,7 +393,12 @@ export default function FaqDataPage() {
             openDeleteModal();
           } catch (e) {
             console.error("Error fetching faq detail:", e);
-            alert("載入常見問題詳情失敗，請稍後重試");
+            showNotification({
+              variant: "error",
+              title: "載入失敗",
+              description: "無法載入常見問題詳情，請稍後重試",
+              position: "top-right",
+            });
           }
         },
         {
@@ -386,15 +415,30 @@ export default function FaqDataPage() {
       setSubmitting(true);
       if (formMode === "create") {
         await faqService.create(values);
+        showNotification({
+          variant: "success",
+          title: "新增成功",
+          description: `已成功新增常見問題「${values.question}」`,
+        });
       } else if (formMode === "edit" && editing?.id) {
         await faqService.update(editing.id, values);
+        showNotification({
+          variant: "success",
+          title: "更新成功",
+          description: `已成功更新常見問題「${values.question}」`,
+        });
       }
       closeModal();
       // Refresh list by calling fetchPages directly
       await fetchPages();
     } catch (e) {
       console.error(e);
-      alert("儲存失敗，請稍後再試");
+      showNotification({
+        variant: "error",
+        title: "儲存失敗",
+        description: "無法儲存常見問題資料，請稍後再試",
+        position: "top-right",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -404,13 +448,24 @@ export default function FaqDataPage() {
     try {
       setSubmitting(true);
       if (!editing?.id) return;
+      const deletedFaq = editing;
       await faqService.remove(editing.id, { reason, permanent: !!permanent });
+      showNotification({
+        variant: "success",
+        title: permanent ? "永久刪除成功" : "刪除成功",
+        description: `已成功${permanent ? "永久刪除" : "刪除"}常見問題「${deletedFaq.question}」`,
+      });
       closeDeleteModal();
       // Refresh list by calling fetchPages directly
       await fetchPages();
     } catch (e) {
       console.error(e);
-      alert("刪除失敗，請稍後再試");
+      showNotification({
+        variant: "error",
+        title: "刪除失敗",
+        description: "無法刪除常見問題，請稍後再試",
+        position: "top-right",
+      });
     } finally {
       setSubmitting(false);
     }

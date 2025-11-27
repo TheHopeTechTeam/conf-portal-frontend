@@ -7,6 +7,7 @@ import InstructorSelectionModal, { type SelectedInstructor } from "@/components/
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
 import { PopoverPosition, Resource } from "@/const/enums";
+import { useNotification } from "@/context/NotificationContext";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -36,6 +37,9 @@ export default function ConferenceDataPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+
+  // Notification
+  const { showNotification } = useNotification();
 
   // Modal state
   const { isOpen, openModal, closeModal } = useModal(false);
@@ -99,12 +103,16 @@ export default function ConferenceDataPage() {
       setCurrentPage(data.page + 1);
     } catch (e) {
       console.error("Error fetching conference pages:", e);
-      // Simplified error surfacing for demo
-      alert("載入失敗，請稍後重試");
+      showNotification({
+        variant: "error",
+        title: "載入失敗",
+        description: "無法載入會議資料，請稍後重試",
+        position: "top-right",
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showNotification]);
 
   // Columns definition
   const columns: DataTableColumn<ConferenceItem>[] = useMemo(
@@ -263,11 +271,22 @@ export default function ConferenceDataPage() {
     try {
       setSubmitting(true);
       await conferenceService.restore(ids);
+      showNotification({
+        variant: "success",
+        title: "還原成功",
+        description: `已成功還原 ${ids.length} 個會議`,
+      });
       await fetchPages();
       closeRestoreModal();
+      setSelectedKeys([]);
     } catch (e) {
       console.error(e);
-      alert("批量還原失敗，請稍後再試");
+      showNotification({
+        variant: "error",
+        title: "還原失敗",
+        description: "無法還原會議，請稍後再試",
+        position: "top-right",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -365,7 +384,12 @@ export default function ConferenceDataPage() {
             openModal();
           } catch (e) {
             console.error("Error fetching conference detail:", e);
-            alert("載入會議詳情失敗，請稍後重試");
+            showNotification({
+              variant: "error",
+              title: "載入失敗",
+              description: "無法載入會議詳情，請稍後重試",
+              position: "top-right",
+            });
           }
         },
         {
@@ -392,7 +416,12 @@ export default function ConferenceDataPage() {
             openInstructorModal();
           } catch (e) {
             console.error("Error fetching conference instructors:", e);
-            alert("載入講者列表失敗，請稍後重試");
+            showNotification({
+              variant: "error",
+              title: "載入失敗",
+              description: "無法載入講者列表，請稍後重試",
+              position: "top-right",
+            });
           }
         },
         visible: !showDeleted,
@@ -413,7 +442,12 @@ export default function ConferenceDataPage() {
             openDeleteModal();
           } catch (e) {
             console.error("Error fetching conference detail:", e);
-            alert("載入會議詳情失敗，請稍後重試");
+            showNotification({
+              variant: "error",
+              title: "載入失敗",
+              description: "無法載入會議詳情，請稍後重試",
+              position: "top-right",
+            });
           }
         },
         {
@@ -421,7 +455,7 @@ export default function ConferenceDataPage() {
         }
       ),
     ],
-    [openModal, openDeleteModal, openViewModal, openInstructorModal, showDeleted, handleSingleRestore]
+    [openModal, openDeleteModal, openViewModal, openInstructorModal, showDeleted, handleSingleRestore, showNotification]
   );
 
   // Submit handlers
@@ -442,15 +476,30 @@ export default function ConferenceDataPage() {
 
       if (formMode === "create") {
         await conferenceService.create(apiPayload);
+        showNotification({
+          variant: "success",
+          title: "新增成功",
+          description: `已成功新增會議「${values.title}」`,
+        });
       } else if (formMode === "edit" && editing?.id) {
         await conferenceService.update(editing.id, apiPayload);
+        showNotification({
+          variant: "success",
+          title: "更新成功",
+          description: `已成功更新會議「${values.title}」`,
+        });
       }
       closeModal();
       // Refresh list by calling fetchPages directly
       await fetchPages();
     } catch (e) {
       console.error(e);
-      alert("儲存失敗，請稍後再試");
+      showNotification({
+        variant: "error",
+        title: "儲存失敗",
+        description: "無法儲存會議資料，請稍後再試",
+        position: "top-right",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -460,13 +509,24 @@ export default function ConferenceDataPage() {
     try {
       setSubmitting(true);
       if (!editing?.id) return;
+      const deletedConference = editing;
       await conferenceService.remove(editing.id, { reason, permanent: !!permanent });
+      showNotification({
+        variant: "success",
+        title: permanent ? "永久刪除成功" : "刪除成功",
+        description: `已成功${permanent ? "永久刪除" : "刪除"}會議「${deletedConference.title}」`,
+      });
       closeDeleteModal();
       // Refresh list by calling fetchPages directly
       await fetchPages();
     } catch (e) {
       console.error(e);
-      alert("刪除失敗，請稍後再試");
+      showNotification({
+        variant: "error",
+        title: "刪除失敗",
+        description: "無法刪除會議，請稍後再試",
+        position: "top-right",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -487,11 +547,21 @@ export default function ConferenceDataPage() {
         })),
       };
       await conferenceService.updateInstructors(editingConferenceId, payload);
+      showNotification({
+        variant: "success",
+        title: "更新成功",
+        description: "已成功更新講者列表",
+      });
       closeInstructorModal();
       await fetchPages();
     } catch (e) {
       console.error("Error updating conference instructors:", e);
-      alert("更新講者列表失敗，請稍後重試");
+      showNotification({
+        variant: "error",
+        title: "更新失敗",
+        description: "無法更新講者列表，請稍後重試",
+        position: "top-right",
+      });
     } finally {
       setSubmitting(false);
     }

@@ -7,6 +7,7 @@ import RestoreForm from "@/components/DataPage/RestoreForm";
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
 import { Gender, PopoverPosition, Resource } from "@/const/enums";
+import { useNotification } from "@/context/NotificationContext";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -55,6 +56,9 @@ export default function UserDataPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+
+  // Notification
+  const { showNotification } = useNotification();
 
   // Modal state
   const { isOpen, openModal, closeModal } = useModal(false);
@@ -123,12 +127,16 @@ export default function UserDataPage() {
       setCurrentPage(data.page + 1);
     } catch (e) {
       console.error("Error fetching user pages:", e);
-      // Simplified error surfacing for demo
-      alert("載入失敗，請稍後重試");
+      showNotification({
+        variant: "error",
+        title: "載入失敗",
+        description: "無法載入用戶資料，請稍後重試",
+        position: "top-right",
+      });
     } finally {
       setLoading(false);
     }
-  }, []); // 移除 clearSelection 依賴
+  }, [showNotification]); // 包含 showNotification 依賴
 
   // Columns definition
   const columns: DataTableColumn<UserDetail>[] = useMemo(
@@ -329,11 +337,22 @@ export default function UserDataPage() {
     try {
       setSubmitting(true);
       await userService.restore(ids);
+      showNotification({
+        variant: "success",
+        title: "還原成功",
+        description: `已成功還原 ${ids.length} 個用戶`,
+      });
       await fetchPages();
       closeRestoreModal();
+      setSelectedKeys([]);
     } catch (e) {
       console.error(e);
-      alert("批量還原失敗，請稍後再試");
+      showNotification({
+        variant: "error",
+        title: "還原失敗",
+        description: "無法還原用戶，請稍後再試",
+        position: "top-right",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -473,7 +492,12 @@ export default function UserDataPage() {
         // 創建模式下需要密碼字段（表單驗證已確保存在）
         const { password, password_confirm, ...restValues } = values;
         if (!password || !password_confirm) {
-          alert("請輸入密碼");
+          showNotification({
+            variant: "warning",
+            title: "驗證失敗",
+            description: "請輸入密碼",
+            position: "top-center",
+          });
           return;
         }
         await userService.create({
@@ -481,6 +505,11 @@ export default function UserDataPage() {
           password,
           password_confirm,
         } as Parameters<typeof userService.create>[0]);
+        showNotification({
+          variant: "success",
+          title: "新增成功",
+          description: `已成功新增用戶「${values.display_name || values.email}」`,
+        });
       } else if (formMode === "edit" && editing?.id) {
         // 編輯模式下不發送密碼字段（UserDataForm 已處理）
         await userService.update(editing.id, {
@@ -495,13 +524,23 @@ export default function UserDataPage() {
           is_ministry: values.is_ministry,
           remark: values.remark,
         });
+        showNotification({
+          variant: "success",
+          title: "更新成功",
+          description: `已成功更新用戶「${values.display_name || values.email}」`,
+        });
       }
       closeModal();
       // Refresh list by calling fetchPages directly
       await fetchPages();
     } catch (e) {
       console.error(e);
-      alert("儲存失敗，請稍後再試");
+      showNotification({
+        variant: "error",
+        title: "儲存失敗",
+        description: "無法儲存用戶資料，請稍後再試",
+        position: "top-right",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -511,13 +550,24 @@ export default function UserDataPage() {
     try {
       setSubmitting(true);
       if (!editing?.id) return;
+      const deletedUser = editing;
       await userService.remove(editing.id, { reason, permanent: !!permanent });
+      showNotification({
+        variant: "success",
+        title: permanent ? "永久刪除成功" : "刪除成功",
+        description: `已成功${permanent ? "永久刪除" : "刪除"}用戶「${deletedUser.display_name || deletedUser.email}」`,
+      });
       closeDeleteModal();
       // Refresh list by calling fetchPages directly
       await fetchPages();
     } catch (e) {
       console.error(e);
-      alert("刪除失敗，請稍後再試");
+      showNotification({
+        variant: "error",
+        title: "刪除失敗",
+        description: "無法刪除用戶，請稍後再試",
+        position: "top-right",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -528,12 +578,22 @@ export default function UserDataPage() {
       setSubmitting(true);
       if (!bindingUser?.id) return;
       await userService.bindRoles(bindingUser.id, roleIds);
+      showNotification({
+        variant: "success",
+        title: "綁定成功",
+        description: "已成功更新用戶角色",
+      });
       closeBindRoleModal();
       // Refresh list by calling fetchPages directly
       await fetchPages();
     } catch (e) {
       console.error(e);
-      alert("綁定角色失敗，請稍後再試");
+      showNotification({
+        variant: "error",
+        title: "綁定失敗",
+        description: "無法綁定角色，請稍後再試",
+        position: "top-right",
+      });
     } finally {
       setSubmitting(false);
     }

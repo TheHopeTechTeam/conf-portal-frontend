@@ -6,6 +6,7 @@ import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes
 import RestoreForm from "@/components/DataPage/RestoreForm";
 import { Modal } from "@/components/ui/modal";
 import { PopoverPosition, Resource } from "@/const/enums";
+import { useNotification } from "@/context/NotificationContext";
 import { useModal } from "@/hooks/useModal";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MdCheck, MdClose } from "react-icons/md";
@@ -27,6 +28,9 @@ export default function PermissionDataPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+
+  // Notification
+  const { showNotification } = useNotification();
 
   // Modal state
   const { isOpen, openModal, closeModal } = useModal(false);
@@ -90,17 +94,27 @@ export default function PermissionDataPage() {
         setCurrentPage(data.page + 1);
       } else {
         console.error("Failed to fetch permissions:", response.message);
+        showNotification({
+          variant: "error",
+          title: "載入失敗",
+          description: response.message || "無法載入權限資料",
+          position: "top-right",
+        });
         setItems([]);
         setTotal(0);
       }
     } catch (e) {
       console.error("Error fetching permission pages:", e);
-      // Simplified error surfacing for demo
-      alert("載入失敗，請稍後重試");
+      showNotification({
+        variant: "error",
+        title: "載入失敗",
+        description: "無法載入權限資料，請稍後重試",
+        position: "top-right",
+      });
     } finally {
       setLoading(false);
     }
-  }, []); // 移除 clearSelection 依賴
+  }, [showNotification]); // 包含 showNotification 依賴
 
   // Columns definition
   const columns: DataTableColumn<PermissionPageItem>[] = useMemo(
@@ -210,11 +224,22 @@ export default function PermissionDataPage() {
     try {
       setSubmitting(true);
       await permissionService.restore(ids);
+      showNotification({
+        variant: "success",
+        title: "還原成功",
+        description: `已成功還原 ${ids.length} 個權限`,
+      });
       await fetchPages();
       closeRestoreModal();
+      setSelectedKeys([]);
     } catch (e) {
       console.error(e);
-      alert("批量還原失敗，請稍後再試");
+      showNotification({
+        variant: "error",
+        title: "還原失敗",
+        description: "無法還原權限，請稍後再試",
+        position: "top-right",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -319,11 +344,21 @@ export default function PermissionDataPage() {
               });
               openModal();
             } else {
-              alert("載入權限詳情失敗，請稍後再試");
+              showNotification({
+                variant: "error",
+                title: "載入失敗",
+                description: "無法載入權限詳情，請稍後再試",
+                position: "top-right",
+              });
             }
           } catch (e) {
             console.error("Error fetching permission detail:", e);
-            alert("載入權限詳情失敗，請稍後再試");
+            showNotification({
+              variant: "error",
+              title: "載入失敗",
+              description: "無法載入權限詳情，請稍後再試",
+              position: "top-right",
+            });
           } finally {
             setSubmitting(false);
           }
@@ -350,7 +385,7 @@ export default function PermissionDataPage() {
         }
       ),
     ],
-    [openModal, openDeleteModal, openViewModal, showDeleted, fetchPages, setSubmitting]
+    [openModal, openDeleteModal, openViewModal, showDeleted, fetchPages, setSubmitting, showNotification]
   );
 
   // Submit handlers
@@ -359,15 +394,30 @@ export default function PermissionDataPage() {
       setSubmitting(true);
       if (formMode === "create") {
         await permissionService.create(values);
+        showNotification({
+          variant: "success",
+          title: "新增成功",
+          description: `已成功新增權限「${values.displayName}」`,
+        });
       } else if (formMode === "edit" && editing?.id) {
         await permissionService.update(editing.id, values);
+        showNotification({
+          variant: "success",
+          title: "更新成功",
+          description: `已成功更新權限「${values.displayName}」`,
+        });
       }
       closeModal();
       // Refresh list by calling fetchPages directly
       await fetchPages();
     } catch (e) {
       console.error(e);
-      alert("儲存失敗，請稍後再試");
+      showNotification({
+        variant: "error",
+        title: "儲存失敗",
+        description: "無法儲存權限資料，請稍後再試",
+        position: "top-right",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -377,13 +427,24 @@ export default function PermissionDataPage() {
     try {
       setSubmitting(true);
       if (!editing?.id) return;
+      const deletedPermission = editing;
       await permissionService.remove(editing.id, { reason, permanent: !!permanent });
+      showNotification({
+        variant: "success",
+        title: permanent ? "永久刪除成功" : "刪除成功",
+        description: `已成功${permanent ? "永久刪除" : "刪除"}權限「${deletedPermission.displayName}」`,
+      });
       closeDeleteModal();
       // Refresh list by calling fetchPages directly
       await fetchPages();
     } catch (e) {
       console.error(e);
-      alert("刪除失敗，請稍後再試");
+      showNotification({
+        variant: "error",
+        title: "刪除失敗",
+        description: "無法刪除權限，請稍後再試",
+        position: "top-right",
+      });
     } finally {
       setSubmitting(false);
     }

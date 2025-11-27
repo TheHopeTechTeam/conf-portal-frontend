@@ -47,8 +47,14 @@ const ConferenceDataForm: React.FC<ConferenceDataFormProps> = ({ mode, defaultVa
     const fetchLocations = async () => {
       try {
         setLoadingLocations(true);
-        const response = await locationService.getPages({ page: 0, pageSize: 1000, deleted: false });
-        setLocations(response.data.items || []);
+        const response = await locationService.getList();
+        const locationItems = response.data.items || [];
+        setLocations(
+          locationItems.map((item) => ({
+            id: item.id,
+            name: item.name,
+          }))
+        );
       } catch (e) {
         console.error("Error fetching locations:", e);
       } finally {

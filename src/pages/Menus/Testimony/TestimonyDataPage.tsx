@@ -5,6 +5,7 @@ import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
 import { PopoverPosition, Resource } from "@/const/enums";
+import { useNotification } from "@/context/NotificationContext";
 import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -31,6 +32,9 @@ export default function TestimonyDataPage() {
   const [items, setItems] = useState<TestimonyDetail[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  // Notification
+  const { showNotification } = useNotification();
 
   // Modal state
   const { isOpen: isViewOpen, openModal: openViewModal, closeModal: closeViewModal } = useModal(false);
@@ -79,12 +83,16 @@ export default function TestimonyDataPage() {
       setCurrentPage(data.page + 1);
     } catch (e) {
       console.error("Error fetching testimony pages:", e);
-      // Simplified error surfacing for demo
-      alert("載入失敗，請稍後重試");
+      showNotification({
+        variant: "error",
+        title: "載入失敗",
+        description: "無法載入見證資料，請稍後重試",
+        position: "top-right",
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showNotification]);
 
   // Columns definition
   const columns: DataTableColumn<TestimonyDetail>[] = useMemo(
