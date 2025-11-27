@@ -8,7 +8,7 @@ interface PageButtonGroupProps {
   /** 顯示模式 */
   mode: "toolbar" | "contextmenu";
   /** 資源名稱（用於權限檢查） */
-  resource: string;
+  resource?: string;
   /** 容器樣式類名 */
   className?: string;
   /** 按鈕間距 */
@@ -33,7 +33,7 @@ export default function PageButtonGroup({
   // 检查按钮权限
   const checkButtonPermission = (button: PageButtonType): boolean => {
     // 如果没有设置权限，则允许显示
-    if (!button.permission) {
+    if (!button.permission || !resource) {
       return true;
     }
 

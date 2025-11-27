@@ -308,6 +308,7 @@ export default function RoleDataPage() {
         data={pagedData}
         columns={columns}
         loading={loading}
+        singleSelect={!showDeleted}
         orderBy={orderBy}
         descending={descending}
         resource="system:role"

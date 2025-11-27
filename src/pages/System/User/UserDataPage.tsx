@@ -555,6 +555,7 @@ export default function UserDataPage() {
         data={pagedData}
         columns={columns}
         loading={loading}
+        singleSelect={!showDeleted}
         orderBy={orderBy}
         descending={descending}
         resource="system:user"

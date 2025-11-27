@@ -343,7 +343,6 @@ export default function DemoDataPage() {
         loading={loading}
         orderBy={orderBy}
         descending={descending}
-        resource="demo:demo"
         buttons={toolbarButtons}
         rowActions={rowActions}
         onSort={handleSort}

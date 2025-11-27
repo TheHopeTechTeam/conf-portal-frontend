@@ -16,7 +16,7 @@ interface DataPageProps<T extends Record<string, unknown>> {
   /** 是否降序（外部控制） */
   descending?: boolean;
   /** 資源名稱（用於權限檢查，例如 "user"） */
-  resource: string;
+  resource?: string;
   /** 工具欄按鈕 */
   buttons?: PageButtonType[];
   /** 右鍵選單動作 */

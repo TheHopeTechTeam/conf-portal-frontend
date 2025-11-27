@@ -5,7 +5,7 @@ interface DataTableToolbarProps {
   /** 工具欄按鈕 */
   buttons?: PageButtonType[];
   /** 資源名稱（用於權限檢查） */
-  resource: string;
+  resource?: string;
   /** 容器樣式類名 */
   className?: string;
 }

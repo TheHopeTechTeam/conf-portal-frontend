@@ -425,6 +425,7 @@ export default function InstructorDataPage() {
         data={pagedData}
         columns={columns}
         loading={loading}
+        singleSelect={!showDeleted}
         orderBy={orderBy}
         descending={descending}
         resource="content:instructor"

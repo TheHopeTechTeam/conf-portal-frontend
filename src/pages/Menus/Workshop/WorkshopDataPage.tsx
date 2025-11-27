@@ -674,6 +674,7 @@ export default function WorkshopDataPage() {
         data={pagedData}
         columns={columns}
         loading={loading}
+        singleSelect={!showDeleted}
         orderBy={orderBy}
         descending={descending}
         resource="workshop:workshops"

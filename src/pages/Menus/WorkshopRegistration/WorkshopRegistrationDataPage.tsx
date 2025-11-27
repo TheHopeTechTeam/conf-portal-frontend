@@ -386,6 +386,7 @@ const WorkshopRegistrationDataPage: React.FC = () => {
         data={pagedData}
         columns={columns}
         loading={loading}
+        singleSelect={!showDeleted}
         orderBy={orderBy}
         descending={descending}
         resource="workshop:registration"

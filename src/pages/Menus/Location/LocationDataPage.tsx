@@ -446,6 +446,7 @@ export default function LocationDataPage() {
         data={pagedData}
         columns={columns}
         loading={loading}
+        singleSelect={!showDeleted}
         orderBy={orderBy}
         descending={descending}
         resource="content:location"

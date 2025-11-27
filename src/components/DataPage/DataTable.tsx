@@ -6,7 +6,7 @@ import { CommonMenuButton } from "@/components/DataPage/MenuButtonTypes";
 import { useContextMenu } from "@/components/DataPage/useContextMenu";
 import { Table } from "@/components/ui/table";
 import { usePermissions } from "@/context/AuthContext";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DataTablePagedData, DataTableProps, MenuButtonType } from "./types";
 
 export default function DataTable<T extends Record<string, unknown>>({
@@ -33,7 +33,7 @@ export default function DataTable<T extends Record<string, unknown>>({
   defaultSelectedKeys = [],
 }: DataTableProps<T>) {
   const [selectedRows, setSelectedRows] = useState<T[]>([]);
-  const [selectedKeys, setSelectedKeys] = useState<string[]>(defaultSelectedKeys);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>(defaultSelectedKeys || []);
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
 
   // 權限檢查
@@ -55,9 +55,13 @@ export default function DataTable<T extends Record<string, unknown>>({
     [rowKey]
   );
 
+  // 使用 ref 追蹤上一次的 defaultSelectedKeys，只在真正改變時才同步
+  const prevDefaultSelectedKeysRef = useRef<string[]>(defaultSelectedKeys || []);
+  const isInitialMountRef = useRef(true);
+
   // 計算當前頁面中應該被選中的 keys
   const keysToSelect = useMemo(() => {
-    if (defaultSelectedKeys.length === 0 || items.length === 0) {
+    if (!defaultSelectedKeys || defaultSelectedKeys.length === 0 || items.length === 0) {
       return [];
     }
     return defaultSelectedKeys.filter((key) => {
@@ -68,18 +72,22 @@ export default function DataTable<T extends Record<string, unknown>>({
     });
   }, [defaultSelectedKeys, items, getRowKeyValue]);
 
-  // 當 defaultSelectedKeys 或 items 變化時，同步選中狀態
+  // 只在 defaultSelectedKeys 真正改變時才同步選中狀態（不干擾用戶手動選擇）
   useEffect(() => {
-    if (keysToSelect.length > 0) {
-      // 如果選中狀態不一致，更新選中狀態
-      const currentKeysSet = new Set(selectedKeys);
-      const keysToSelectSet = new Set(keysToSelect);
-      const keysMatch =
-        keysToSelect.length === selectedKeys.length &&
-        keysToSelect.every((key) => currentKeysSet.has(key)) &&
-        selectedKeys.every((key) => keysToSelectSet.has(key));
+    const prevKeys = prevDefaultSelectedKeysRef.current;
+    const currentKeys = defaultSelectedKeys || [];
 
-      if (!keysMatch) {
+    // 檢查 defaultSelectedKeys 是否真的改變了
+    const keysChanged =
+      prevKeys.length !== currentKeys.length ||
+      !prevKeys.every((key) => currentKeys.includes(key)) ||
+      !currentKeys.every((key) => prevKeys.includes(key));
+
+    // 只在以下情況同步：
+    // 1. 首次掛載時（isInitialMountRef.current === true）
+    // 2. defaultSelectedKeys 真正改變時（keysChanged === true）
+    if (isInitialMountRef.current || keysChanged) {
+      if (keysToSelect.length > 0) {
         // 找出對應的行數據
         const rowsToSelect = items.filter((row) => {
           const rowKeyValue = getRowKeyValue(row);
@@ -90,15 +98,19 @@ export default function DataTable<T extends Record<string, unknown>>({
         setSelectedKeys(keysToSelect);
         // 通知父組件選中狀態變化
         onRowSelect?.(rowsToSelect, keysToSelect);
+      } else if (isInitialMountRef.current && currentKeys.length === 0) {
+        // 只在首次掛載且 defaultSelectedKeys 為空時才清除選中狀態
+        setSelectedRows([]);
+        setSelectedKeys([]);
+        onRowSelect?.([], []);
       }
-    } else if (defaultSelectedKeys.length === 0 && selectedKeys.length > 0) {
-      // 如果 defaultSelectedKeys 為空，清除選中狀態
-      setSelectedRows([]);
-      setSelectedKeys([]);
-      onRowSelect?.([], []);
+
+      // 更新 ref
+      prevDefaultSelectedKeysRef.current = currentKeys;
+      isInitialMountRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keysToSelect.join(","), defaultSelectedKeys.length, selectedKeys.length]);
+  }, [keysToSelect.join(","), defaultSelectedKeys?.join(",") || ""]);
 
   // 處理行選取
   const handleRowSelect = (row: T, checked: boolean) => {
@@ -198,12 +210,8 @@ export default function DataTable<T extends Record<string, unknown>>({
   // 檢查行操作權限
   const checkRowActionPermission = (action: MenuButtonType<T>): boolean => {
     // 如果沒有設置權限，則允許顯示
-    if (!action.permission) {
-      return true;
-    }
-
     // 如果沒有 resource，則允許顯示（向後兼容）
-    if (!resource) {
+    if (!action.permission || !resource) {
       return true;
     }
 

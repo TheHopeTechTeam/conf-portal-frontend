@@ -400,7 +400,6 @@ export default function PermissionDataPage() {
       total,
       items,
     };
-    console.log("pagedData:", data);
     return data;
   }, [currentPage, pageSize, total, items]);
 
@@ -410,6 +409,7 @@ export default function PermissionDataPage() {
         data={pagedData}
         columns={columns}
         loading={loading}
+        singleSelect={!showDeleted}
         orderBy={orderBy}
         descending={descending}
         resource="system:permission"

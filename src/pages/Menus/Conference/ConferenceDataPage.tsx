@@ -533,6 +533,7 @@ export default function ConferenceDataPage() {
         data={pagedData}
         columns={columns}
         loading={loading}
+        singleSelect={!showDeleted}
         orderBy={orderBy}
         descending={descending}
         resource="conference:conferences"
