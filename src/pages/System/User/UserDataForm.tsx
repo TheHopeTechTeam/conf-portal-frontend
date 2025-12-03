@@ -6,7 +6,7 @@ import { Select } from "@/components/ui/select";
 import TextArea from "@/components/ui/textarea";
 import { CountryCodes } from "@/const/enums";
 import { usePermissions } from "@/context/AuthContext";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 
 export interface UserFormValues {
@@ -35,13 +35,9 @@ interface UserDataFormProps {
 
 const UserDataForm: React.FC<UserDataFormProps> = ({ mode, defaultValues, onSubmit, onCancel, submitting }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const { hasRole } = usePermissions();
+  const { isSuperAdmin } = usePermissions();
 
   // 檢查當前用戶是否為 superadmin
-  const isSuperAdmin = useMemo(() => {
-    return hasRole("superadmin");
-  }, [hasRole]);
-
   const [values, setValues] = useState<UserFormValues>({
     phone_number: "",
     email: "",

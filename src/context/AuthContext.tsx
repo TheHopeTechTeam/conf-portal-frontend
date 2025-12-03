@@ -259,6 +259,10 @@ export function usePermissions() {
     return roles.every((role) => hasRole(role));
   };
 
+  const isSuperAdmin = () => {
+    return hasRole("superadmin");
+  };
+
   return {
     hasPermission,
     hasRole,
@@ -266,5 +270,6 @@ export function usePermissions() {
     hasAllPermissions,
     hasAnyRole,
     hasAllRoles,
+    isSuperAdmin,
   };
 }
