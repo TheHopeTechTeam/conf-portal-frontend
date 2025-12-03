@@ -34,11 +34,24 @@ export interface TokenResponse {
   expiresIn: number;
 }
 
-// 錯誤型別
+// 後端錯誤回應原始格式
+// e.g. { detail: "Unauthorized", debug_detail: null, url: "http://127.0.0.1:8000/..." }
+export interface BackendErrorDetail {
+  detail?: string;
+  debug_detail?: unknown;
+  url?: string;
+  // 保留其餘欄位，方便除錯或未來擴充
+  [key: string]: unknown;
+}
+
+// 前端統一錯誤型別
 export interface ApiError {
+  // HTTP 狀態碼（0 代表純網路錯誤）
   code: number;
+  // 給使用者看的主要訊息（通常來自後端 detail，或本地預設文案）
   message: string;
-  details?: any;
+  // 後端回傳的完整錯誤內容
+  details?: BackendErrorDetail;
 }
 
 // 載入狀態型別

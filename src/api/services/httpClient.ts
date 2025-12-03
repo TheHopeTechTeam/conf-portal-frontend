@@ -72,92 +72,71 @@ class HttpClient {
   }
 
   // 處理錯誤
-  private handleError(error: AxiosError, showNotification: boolean = false): ApiError {
+  // - 網路層錯誤（timeout / 無回應）在這裡統一顯示通知
+  // - 其餘帶有 HTTP status 的錯誤只轉成 ApiError 交由 services 層決定是否顯示通知
+  private handleError(error: AxiosError): ApiError {
     if (error.code === "ECONNABORTED") {
-      const apiError = {
-        code: 408,
+      const apiError: ApiError = {
+        code: HttpStatusCode.RequestTimeout,
         message: ERROR_MESSAGES.TIMEOUT_ERROR,
       };
-      if (showNotification) {
-        notificationManager.show({
-          variant: "error",
-          title: "請求超時",
-          description: ERROR_MESSAGES.TIMEOUT_ERROR,
-          position: "top-right",
-        });
-      }
+      notificationManager.show({
+        variant: "error",
+        title: "請求超時",
+        description: ERROR_MESSAGES.TIMEOUT_ERROR,
+        position: "top-right",
+      });
       return apiError;
     }
 
-    if (!error.response) {
-      const apiError = {
-        code: 0,
-        message: ERROR_MESSAGES.NETWORK_ERROR,
+    // 檢查是否有 HTTP 響應（正常情況）
+    if (error.response) {
+      const status = error.response.status;
+      const response_data = error.response.data as { detail?: string; debug_detail?: unknown; url?: string; message?: string } | undefined;
+
+      // 優先使用後端的 detail 當作訊息，沒有時才使用 message 或預設錯誤文案
+      const backend_detail = response_data?.detail;
+      const fallback_message = response_data?.message;
+      const message = (typeof backend_detail === "string" && backend_detail) || fallback_message || this.getErrorMessage(status);
+
+      const apiError: ApiError = {
+        code: status,
+        message,
+        details: {
+          detail: backend_detail,
+          debug_detail: response_data?.debug_detail,
+          url: response_data?.url,
+          // 保留原始資料以利除錯（若有額外欄位）
+          ...response_data,
+        },
       };
-      if (showNotification) {
-        notificationManager.show({
-          variant: "error",
-          title: "網路錯誤",
-          description: ERROR_MESSAGES.NETWORK_ERROR,
-          position: "top-right",
-        });
-      }
       return apiError;
     }
 
-    const status = error.response.status;
-    const message = (error.response.data as { message?: string })?.message || this.getErrorMessage(status);
+    // 沒有完整的 response 對象，但可能仍有狀態碼信息
+    // 檢查 error 對象本身是否有 status 屬性（某些特殊情況，如攔截器修改後的錯誤）
+    const errorWithStatus = error as AxiosError & { status?: number };
+    if (errorWithStatus.status && typeof errorWithStatus.status === "number") {
+      const status = errorWithStatus.status;
+      const apiError: ApiError = {
+        code: status,
+        message: this.getErrorMessage(status),
+      };
+      return apiError;
+    }
 
-    const apiError = {
-      code: status,
-      message,
-      details: error.response.data,
+    // 真正的網路層錯誤（沒有任何 HTTP 狀態碼信息）
+    const apiError: ApiError = {
+      code: 0,
+      message: ERROR_MESSAGES.NETWORK_ERROR,
     };
-
-    // 對特定錯誤顯示通知
-    if (showNotification) {
-      this.showErrorNotification(status, message);
-    }
-
-    return apiError;
-  }
-
-  // 顯示錯誤通知
-  private showErrorNotification(status: number, message: string): void {
-    let variant: "error" | "warning" = "error";
-    let title = "操作失敗";
-
-    switch (status) {
-      case HttpStatusCode.Unauthorized:
-        // 401 錯誤通常會在 refresh token 失敗時處理，這裡不顯示
-        return;
-      case HttpStatusCode.Forbidden:
-        title = "權限不足";
-        variant = "warning";
-        break;
-      case HttpStatusCode.NotFound:
-        title = "資源不存在";
-        variant = "warning";
-        break;
-      case HttpStatusCode.InternalServerError:
-        title = "伺服器錯誤";
-        break;
-      default:
-        if (status >= 500) {
-          title = "伺服器錯誤";
-        } else if (status >= 400) {
-          title = "請求錯誤";
-          variant = "warning";
-        }
-    }
-
     notificationManager.show({
-      variant,
-      title,
-      description: message,
+      variant: "error",
+      title: "網路錯誤",
+      description: ERROR_MESSAGES.NETWORK_ERROR,
       position: "top-right",
-      hideDuration: 5000,
     });
+    return apiError;
   }
 
   // 根據狀態碼取得錯誤訊息
@@ -215,13 +194,11 @@ class HttpClient {
         code: processedResponse.status,
       };
     } catch (error) {
-      // 判斷是否應該顯示通知（排除 refresh token 請求，避免重複通知）
-      const shouldShowNotification = !this.isRefreshRequest(config);
-      const apiError = this.handleError(error as AxiosError, shouldShowNotification);
+      const apiError = this.handleError(error as AxiosError);
 
       // 若為 401，嘗試使用 refresh token 重新取得 access token 並重試一次
-      console.log("apiError", apiError);
-      if (apiError.code === HttpStatusCode.Unauthorized && !this.isRefreshRequest(config)) {
+      // 但登入請求不應該嘗試 refresh token（登入失敗本身就是要處理的情況）
+      if (apiError.code === HttpStatusCode.Unauthorized && !this.isRefreshRequest(config) && !this.isLoginRequest(config)) {
         try {
           await this.getOrCreateRefreshPromise();
 
@@ -236,16 +213,14 @@ class HttpClient {
             code: processedRetryResponse.status,
           };
         } catch (retryError) {
-          // 刷新或重試仍失敗，清理並導回登入
-          notificationManager.show({
-            variant: "warning",
-            title: "登入已過期",
-            description: "請重新登入",
-            position: "top-center",
-            hideDuration: 5000,
-          });
-          this.clearAuthAndRedirect();
-          const finalError = this.handleError(retryError as AxiosError);
+          // 刷新或重試仍失敗，拋出錯誤交由 service 層處理（清理認證狀態、顯示通知等）
+          // 檢查錯誤是否已經是 ApiError（如 refresh token 失敗時拋出的）
+          let finalError: ApiError;
+          if (retryError && typeof retryError === "object" && "code" in retryError && typeof (retryError as ApiError).code === "number") {
+            finalError = retryError as ApiError;
+          } else {
+            finalError = this.handleError(retryError as AxiosError);
+          }
           const processedFinalError = await this.executeErrorInterceptors(finalError);
           throw processedFinalError;
         }
@@ -355,6 +330,12 @@ class HttpClient {
     return url === API_ENDPOINTS.AUTH.REFRESH;
   }
 
+  // 判斷是否為登入請求
+  private isLoginRequest(config: AxiosRequestConfig): boolean {
+    const url = typeof config.url === "string" ? config.url : "";
+    return url === API_ENDPOINTS.AUTH.LOGIN;
+  }
+
   // 建立或取得現有刷新流程 Promise（避免並行重複刷新）
   private async getOrCreateRefreshPromise(): Promise<string> {
     if (this.refreshPromise) return this.refreshPromise;
@@ -379,30 +360,59 @@ class HttpClient {
     }
 
     // 直接使用 axiosInstance 呼叫 refresh 端點，避免套用 Authorization 標頭
-    const response = await this.axiosInstance.post(API_ENDPOINTS.AUTH.REFRESH, {
-      refresh_token: storedRefreshToken,
-    });
+    try {
+      const response = await this.axiosInstance.post(API_ENDPOINTS.AUTH.REFRESH, {
+        refresh_token: storedRefreshToken,
+      });
 
-    const data = response.data as TokenResponse;
-    const newAccessToken = data.accessToken;
-    const newRefreshToken = data.refreshToken;
+      const data = response.data as TokenResponse;
+      const newAccessToken = data.accessToken;
+      const newRefreshToken = data.refreshToken;
 
-    if (!newAccessToken) {
-      throw {
-        code: HttpStatusCode.Unauthorized,
-        message: "Failed to refresh access token",
-      } as ApiError;
+      if (!newAccessToken) {
+        throw {
+          code: HttpStatusCode.Unauthorized,
+          message: "Failed to refresh access token",
+        } as ApiError;
+      }
+
+      // 存儲新的 access token（記住我模式）
+      localStorage.setItem("auth_token", newAccessToken);
+
+      // 如果有新的 refresh token，也存儲起來
+      if (newRefreshToken) {
+        localStorage.setItem("refresh_token", newRefreshToken);
+      }
+
+      return newAccessToken;
+    } catch (error) {
+      // 如果 refresh API 調用失敗（如返回 401），轉換成 ApiError
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response) {
+          const status = axiosError.response.status;
+          const response_data = axiosError.response.data as
+            | { detail?: string; debug_detail?: unknown; url?: string; message?: string }
+            | undefined;
+          const backend_detail = response_data?.detail;
+          const fallback_message = response_data?.message;
+          const message = (typeof backend_detail === "string" && backend_detail) || fallback_message || this.getErrorMessage(status);
+
+          throw {
+            code: status,
+            message,
+            details: {
+              detail: backend_detail,
+              debug_detail: response_data?.debug_detail,
+              url: response_data?.url,
+              ...response_data,
+            },
+          } as ApiError;
+        }
+      }
+      // 其他錯誤直接重新拋出
+      throw error;
     }
-
-    // 存儲新的 access token（記住我模式）
-    localStorage.setItem("auth_token", newAccessToken);
-
-    // 如果有新的 refresh token，也存儲起來
-    if (newRefreshToken) {
-      localStorage.setItem("refresh_token", newRefreshToken);
-    }
-
-    return newAccessToken;
   }
 
   // 從存儲獲取 token（支援 rememberMe）
@@ -413,26 +423,6 @@ class HttpClient {
 
     // 再檢查 localStorage（記住我模式）
     return localStorage.getItem("auth_token");
-  }
-
-  // 清空本地認證資訊並導向登入頁
-  private clearAuthAndRedirect(): void {
-    // 清理 localStorage
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("refresh_token_expiry");
-    localStorage.removeItem("user_data");
-    localStorage.removeItem("remember_me");
-
-    // 清理 sessionStorage
-    sessionStorage.removeItem("auth_token");
-    sessionStorage.removeItem("refresh_token");
-    sessionStorage.removeItem("user_data");
-
-    // 導向登入頁
-    if (window.location.pathname !== "/signin") {
-      window.location.href = "/signin";
-    }
   }
 }
 

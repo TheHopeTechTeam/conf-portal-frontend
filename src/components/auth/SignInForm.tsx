@@ -1,7 +1,7 @@
 import Button from "@/components/ui/button";
 import Checkbox from "@/components/ui/checkbox";
 import Input from "@/components/ui/input";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
@@ -13,6 +13,18 @@ export default function SignInForm() {
   const [isChecked, setIsChecked] = useState(false);
   const navigate = useNavigate();
   const { login, isLoading, error, isAuthenticated } = useAuth();
+
+  // 驗證表單是否有效
+  const isFormValid = useMemo(() => {
+    // 檢查 email 是否為空或符合 email 格式
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isValidEmail = email.trim().length > 0 && emailRegex.test(email.trim());
+
+    // 檢查 password 是否不為空
+    const isValidPassword = password.trim().length > 0;
+
+    return isValidEmail && isValidPassword;
+  }, [email, password]);
 
   // 如果已經登入，重導向到主頁
   useEffect(() => {
@@ -86,7 +98,7 @@ export default function SignInForm() {
                 </div>
                 {error && <p className="text-sm text-error-500">{error}</p>}
                 <div>
-                  <Button btnType="submit" className="w-full" size="sm" disabled={isLoading}>
+                  <Button btnType="submit" className="w-full" size="sm" disabled={isLoading || !isFormValid}>
                     {isLoading ? "Signing in..." : "Sign in"}
                   </Button>
                 </div>

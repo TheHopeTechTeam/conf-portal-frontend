@@ -1,8 +1,9 @@
 // 認證服務
-import { IS_SKIP_AUTH } from "@/config/env";
+import { API_ENDPOINTS, HTTP_STATUS } from "@/api/config";
+import type { ApiError, ApiResponse, TokenResponse } from "@/api/types";
+import { IS_DEV, IS_SKIP_AUTH } from "@/config/env";
 import type { AuthError, LoginCredentials, LoginResponse, User } from "@/types/auth";
-import { API_ENDPOINTS } from "@/api/config";
-import type { ApiResponse, TokenResponse } from "@/api/types";
+import { notificationManager } from "@/utils/notificationManager";
 import { httpClient } from "./httpClient";
 
 // 後端回應型別（管理員認證 API）
@@ -114,6 +115,11 @@ class AuthService {
         message: response.message,
       };
     } catch (error) {
+      // 處理 ApiError 並顯示通知
+      if (error && typeof error === "object" && "code" in error && typeof (error as ApiError).code === "number") {
+        const apiError = error as ApiError;
+        this.showAuthErrorNotification(apiError, "login");
+      }
       throw this.handleAuthError(error);
     }
   }
@@ -166,6 +172,8 @@ class AuthService {
           message: response.message,
         };
       } catch (error) {
+        // 處理 ApiError，但在初始化階段可能不需要顯示通知（避免干擾）
+        // 如果需要顯示，可以在呼叫方決定
         throw this.handleAuthError(error);
       } finally {
         // 清理 in-flight
@@ -184,10 +192,7 @@ class AuthService {
         throw new Error("No refresh token available");
       }
 
-      const response = await httpClient.post<TokenResponse>(
-        API_ENDPOINTS.AUTH.REFRESH,
-        { refresh_token: refreshToken }
-      );
+      const response = await httpClient.post<TokenResponse>(API_ENDPOINTS.AUTH.REFRESH, { refresh_token: refreshToken });
 
       if (response.success && response.data) {
         const newAccessToken = response.data.accessToken;
@@ -209,7 +214,11 @@ class AuthService {
         message: response.message,
       };
     } catch (error) {
-      // 重新整理失敗，清理認證狀態
+      // 重新整理失敗，清理認證狀態並顯示通知
+      if (error && typeof error === "object" && "code" in error && typeof (error as ApiError).code === "number") {
+        const apiError = error as ApiError;
+        this.showAuthErrorNotification(apiError, "refresh");
+      }
       this.clearAuth();
       throw this.handleAuthError(error);
     }
@@ -342,22 +351,112 @@ class AuthService {
     sessionStorage.removeItem(this.USER_KEY);
   }
 
-  // 處理認證錯誤
+  // 顯示認證錯誤通知
+  private showAuthErrorNotification(error: ApiError, context: "login" | "profile" | "refresh" | "password" | "general" = "general"): void {
+    const { code, message, details } = error;
+
+    // 開發環境：在 console 顯示 debug_detail（如果有）
+    if (IS_DEV && details?.debug_detail) {
+      console.error("[AuthService] Debug Detail:", details.debug_detail);
+      if (details.url) {
+        console.error("[AuthService] Request URL:", details.url);
+      }
+    }
+
+    let variant: "error" | "warning" = "error";
+    let title = "認證錯誤";
+    let description = message;
+    let hideDuration = 4000;
+
+    switch (code) {
+      case HTTP_STATUS.UNAUTHORIZED:
+        title = context === "login" ? "登入失敗" : "登入已過期";
+        description = context === "login" ? message : "登入已過期，請重新登入";
+        variant = "warning";
+        hideDuration = 5000;
+
+        // 401 錯誤時，如果不是登入場景，導向登入頁
+        if (context !== "login") {
+          // 延遲導向，讓通知先顯示
+          setTimeout(() => {
+            if (window.location.pathname !== "/signin") {
+              window.location.href = "/signin";
+            }
+          }, 1500);
+        }
+        break;
+
+      case HTTP_STATUS.FORBIDDEN:
+        title = "權限不足";
+        description = "您沒有權限執行此操作";
+        variant = "warning";
+        break;
+
+      case HTTP_STATUS.UNPROCESSABLE_ENTITY:
+        // 422 通常是驗證錯誤（如登入憑證錯誤）
+        title = context === "login" ? "登入失敗" : "驗證失敗";
+        description = message;
+        variant = "error";
+        break;
+
+      case HTTP_STATUS.BAD_REQUEST:
+        title = "請求錯誤";
+        description = message;
+        variant = "error";
+        break;
+
+      case HTTP_STATUS.NOT_FOUND:
+        title = "資源不存在";
+        description = message;
+        variant = "warning";
+        break;
+
+      case HTTP_STATUS.INTERNAL_SERVER_ERROR:
+      case HTTP_STATUS.BAD_GATEWAY:
+      case HTTP_STATUS.SERVICE_UNAVAILABLE:
+        title = "伺服器錯誤";
+        description = "伺服器暫時無法處理請求，請稍後再試";
+        variant = "error";
+        break;
+
+      default:
+        if (code === 0) {
+          // 網路錯誤（已在 httpClient 處理通知）
+          return;
+        }
+        title = "發生錯誤";
+        description = message || "認證過程中發生未知錯誤";
+        variant = "error";
+    }
+
+    notificationManager.show({
+      variant,
+      title,
+      description,
+      position: "top-center",
+      hideDuration,
+    });
+  }
+
+  // 處理認證錯誤（轉換 ApiError 為 AuthError，保持向後兼容）
   private handleAuthError(error: unknown): AuthError {
-    // 檢查是否為 HTTP 錯誤對象
-    if (error && typeof error === "object" && "code" in error) {
-      if ((error as { code?: number }).code === 401) {
+    // 檢查是否為 ApiError（從 httpClient 拋出）
+    if (error && typeof error === "object" && "code" in error && typeof (error as ApiError).code === "number") {
+      const apiError = error as ApiError;
+
+      if (apiError.code === HTTP_STATUS.UNAUTHORIZED) {
         this.clearAuth();
         return {
           code: "UNAUTHORIZED",
           message: "登入已過期，請重新登入",
+          details: apiError.details,
         };
       }
 
       return {
-        code: (error as { code?: string }).code || "UNKNOWN_ERROR",
-        message: (error as { message?: string }).message || "認證過程中發生未知錯誤",
-        details: (error as { details?: Record<string, unknown> }).details,
+        code: apiError.code.toString(),
+        message: apiError.message || "認證過程中發生未知錯誤",
+        details: apiError.details,
       };
     }
 
@@ -410,6 +509,11 @@ class AuthService {
       const response = await httpClient.post<{ message: string }>(API_ENDPOINTS.AUTH.REQUEST_PASSWORD_RESET, { email });
       return response;
     } catch (error) {
+      // 處理錯誤並顯示通知
+      if (error && typeof error === "object" && "code" in error && typeof (error as ApiError).code === "number") {
+        const apiError = error as ApiError;
+        this.showAuthErrorNotification(apiError, "password");
+      }
       throw this.handleAuthError(error);
     }
   }
@@ -424,6 +528,11 @@ class AuthService {
       });
       return response;
     } catch (error) {
+      // 處理錯誤並顯示通知
+      if (error && typeof error === "object" && "code" in error && typeof (error as ApiError).code === "number") {
+        const apiError = error as ApiError;
+        this.showAuthErrorNotification(apiError, "password");
+      }
       throw this.handleAuthError(error);
     }
   }
