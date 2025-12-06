@@ -29,7 +29,6 @@ function mapAdminToUser(admin: AdminInfoResponse, token?: string | null): User {
   // 從 token 解析權限和角色（如果提供 token）
   const scopes = token ? getScopesFromToken(token) : [];
   const roles = token ? getRolesFromToken(token) : (admin.roles || []);
-  const payload = token ? parseJWT(token) : null;
   
   return {
     id: admin.id,
