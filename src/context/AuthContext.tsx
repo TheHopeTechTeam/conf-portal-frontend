@@ -1,7 +1,8 @@
+import { IS_SKIP_AUTH } from "@/config/env";
+import { getRolesFromToken, getScopesFromToken, hasPermissionInScopes } from "@/utils/jwt";
 import { createContext, ReactNode, useContext, useEffect, useReducer } from "react";
 import { authService } from "../api/services/authService";
 import type { AuthState, LoginCredentials, User } from "../types/auth";
-import { IS_SKIP_AUTH } from "@/config/env";
 
 // 認證 Action 型別
 type AuthAction =
@@ -231,16 +232,20 @@ export function useAuth(): AuthContextType {
 }
 // 權限檢查 Hook
 export function usePermissions() {
-  const { user } = useAuth();
+  const { token } = useAuth();
 
   const hasPermission = (permission: string): boolean => {
-    if (!user) return false;
-    return user.permissions.includes(permission);
+    if (!token) return false;
+    // 直接從 token 解析，不信任 localStorage 中的權限
+    // 支援通配符匹配：如果 scope 中有 "resource:*"，則該資源的所有操作都視為有權限
+    const scopes = getScopesFromToken(token);
+    return hasPermissionInScopes(permission, scopes);
   };
 
   const hasRole = (role: string): boolean => {
-    if (!user) return false;
-    return user.roles.includes(role);
+    if (!token) return false;
+    const roles = getRolesFromToken(token);
+    return roles.includes(role);
   };
 
   const hasAnyPermission = (permissions: string[]): boolean => {

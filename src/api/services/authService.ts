@@ -4,6 +4,7 @@ import type { ApiError, ApiResponse, TokenResponse } from "@/api/types";
 import { IS_DEV, IS_SKIP_AUTH } from "@/config/env";
 import type { AuthError, LoginCredentials, LoginResponse, User } from "@/types/auth";
 import { notificationManager } from "@/utils/notificationManager";
+import { getScopesFromToken, getRolesFromToken, parseJWT, hasPermissionInScopes } from "@/utils/jwt";
 import { httpClient } from "./httpClient";
 
 // 後端回應型別（管理員認證 API）
@@ -12,7 +13,7 @@ interface AdminInfoResponse {
   email: string;
   display_name: string;
   roles: string[];
-  permissions: string[];
+  // 移除 permissions 欄位，權限資訊從 JWT token 的 scope 取得
   last_login_at?: string;
 }
 
@@ -22,8 +23,14 @@ interface AdminLoginResponse {
 }
 
 // 將 AdminInfo 映射到本地 User 型別
-function mapAdminToUser(admin: AdminInfoResponse): User {
+function mapAdminToUser(admin: AdminInfoResponse, token?: string | null): User {
   const nowIso = new Date().toISOString();
+  
+  // 從 token 解析權限和角色（如果提供 token）
+  const scopes = token ? getScopesFromToken(token) : [];
+  const roles = token ? getRolesFromToken(token) : (admin.roles || []);
+  const payload = token ? parseJWT(token) : null;
+  
   return {
     id: admin.id,
     username: admin.display_name || admin.email,
@@ -32,8 +39,8 @@ function mapAdminToUser(admin: AdminInfoResponse): User {
     lastName: undefined,
     avatar: "/images/user/default-avatar.jpg",
     status: "active",
-    roles: admin.roles || [],
-    permissions: admin.permissions || [],
+    roles: roles,
+    permissions: scopes, // 從 JWT token 解析
     lastLoginAt: admin.last_login_at,
     createdAt: nowIso,
     updatedAt: nowIso,
@@ -60,9 +67,9 @@ class AuthService {
       });
 
       if (response.success && response.data) {
-        // 映射回應至本地結構
-        const user = mapAdminToUser(response.data.admin);
+        // 映射回應至本地結構，傳入 token 以便解析權限
         const accessToken = response.data.token.accessToken;
+        const user = mapAdminToUser(response.data.admin, accessToken);
         const refreshToken = response.data.token.refreshToken;
         const expiresAt = new Date(Date.now() + response.data.token.expiresIn * 1000).toISOString();
 
@@ -158,8 +165,10 @@ class AuthService {
         const response = await httpClient.get<AdminInfoResponse>(API_ENDPOINTS.AUTH.PROFILE);
 
         if (response.success && response.data) {
+          // 取得當前 token 以便解析權限
+          const token = this.getToken();
           // 更新本地使用者資訊
-          const user = mapAdminToUser(response.data);
+          const user = mapAdminToUser(response.data, token);
           this.setUser(user);
           return { success: true, data: user, code: response.code };
         }
@@ -306,7 +315,29 @@ class AuthService {
       userData = sessionStorage.getItem(this.USER_KEY);
     }
 
-    return userData ? JSON.parse(userData) : null;
+    if (!userData) return null;
+
+    const user = JSON.parse(userData) as User;
+
+    // 從 token 解析權限（確保安全性，覆蓋 localStorage 中的權限）
+    const token = this.getToken();
+    if (token) {
+      const scopes = getScopesFromToken(token);
+      const roles = getRolesFromToken(token);
+      const payload = parseJWT(token);
+
+      // 覆蓋權限資訊，確保來自 JWT
+      user.permissions = scopes;
+      user.roles = roles;
+
+      // 可選：更新其他資訊（email, display_name 等）
+      if (payload) {
+        user.email = payload.email;
+        user.username = payload.display_name || payload.email;
+      }
+    }
+
+    return user;
   }
 
   // 設定使用者資訊
@@ -467,20 +498,23 @@ class AuthService {
     };
   }
 
-  // 檢查權限
+  // 檢查權限（直接從 token 解析，確保安全性）
+  // 支援通配符匹配：如果 scope 中有 "resource:*"，則該資源的所有操作都視為有權限
   hasPermission(permission: string): boolean {
-    const user = this.getUser();
-    if (!user) return false;
+    const token = this.getToken();
+    if (!token) return false;
 
-    return user.permissions.includes(permission);
+    const scopes = getScopesFromToken(token);
+    return hasPermissionInScopes(permission, scopes);
   }
 
-  // 檢查角色
+  // 檢查角色（直接從 token 解析，確保安全性）
   hasRole(role: string): boolean {
-    const user = this.getUser();
-    if (!user) return false;
+    const token = this.getToken();
+    if (!token) return false;
 
-    return user.roles.includes(role);
+    const roles = getRolesFromToken(token);
+    return roles.includes(role);
   }
 
   // 檢查多個權限（任一符合）
