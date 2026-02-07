@@ -65,17 +65,13 @@
     "vite": "^6.1.0",
     "vite-plugin-svgr": "^4.3.0"
   },
-  "overrides": {
-    "react-helmet-async": {
-      "react": "^16.8.0 || ^17 || ^18 || ^19"
-    },
-    "@react-jvectormap/core": {
-      "react": "^16.8.0 || ^17 || ^18 || ^19",
-      "react-dom": "^16.8.0 || ^17 || ^18 || ^19"
-    },
-    "@react-jvectormap/world": {
-      "react": "^16.8.0 || ^17 || ^18 || ^19",
-      "react-dom": "^16.8.0 || ^17 || ^18 || ^19"
+  "pnpm": {
+    "overrides": {
+      "react-helmet-async>react": "^16.8.0 || ^17 || ^18 || ^19",
+      "@react-jvectormap/core>react": "^16.8.0 || ^17 || ^18 || ^19",
+      "@react-jvectormap/core>react-dom": "^16.8.0 || ^17 || ^18 || ^19",
+      "@react-jvectormap/world>react": "^16.8.0 || ^17 || ^18 || ^19",
+      "@react-jvectormap/world>react-dom": "^16.8.0 || ^17 || ^18 || ^19"
     }
   }
 }

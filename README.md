@@ -27,14 +27,14 @@ TheHope Conference Portal 是一個基於 React 19 和 TypeScript 的現代化�
 ### 環境需求
 
 - Node.js 18.x 或更高版本（建議使用 Node.js 20.x）
-- npm 或 yarn
+- pnpm
 
 ### 安裝與啟動
 
 1. **安裝依賴**
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 2. **設定環境變數**
@@ -70,7 +70,7 @@ TheHope Conference Portal 是一個基於 React 19 和 TypeScript 的現代化�
 4. **啟動開發伺服器**
 
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 5. **訪問應用程式**
@@ -110,14 +110,14 @@ src/
 
 ```bash
 # 開發模式
-npm run dev
+pnpm run dev
 
 # 建構生產版本
-npm run build
+pnpm run build
 
 # 預覽生產版本
-npm run preview
+pnpm run preview
 
 # 程式碼檢查
-npm run lint
+pnpm run lint
 ```

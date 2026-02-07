@@ -3,9 +3,9 @@
 
 /**
  * 應用程式環境類型
- * - development: 開發環境（npm run dev）
- * - staging: 預發布環境（npm run build:stg）
- * - production: 生產環境（npm run build）
+ * - development: 開發環境（pnpm run dev）
+ * - staging: 預發布環境（pnpm run build:stg）
+ * - production: 生產環境（pnpm run build）
  */
 export type AppEnv = "development" | "staging" | "production" | "test";
 
@@ -15,7 +15,7 @@ export type AppEnv = "development" | "staging" | "production" | "test";
 export const ENV_CONFIG = {
   // 應用程式環境（使用 Vite 的 MODE，或從環境變數取得）
   // Vite 的 MODE 在構建時可以透過 --mode 參數指定
-  // - npm run dev → MODE = "development"
+  // - pnpm run dev → MODE = "development"
   // - vite build --mode staging → MODE = "staging"
   // - vite build → MODE = "production" (預設)
   APP_ENV: (import.meta.env.MODE as AppEnv) || "development",
