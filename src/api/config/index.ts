@@ -226,6 +226,20 @@ export const API_ENDPOINTS = {
     DETAIL: (id: string) => `${ADMIN_API_PREFIX}/feedback/${id}`,
     UPDATE: (id: string) => `${ADMIN_API_PREFIX}/feedback/${id}`,
   },
+
+  // 管理員通知（Comms）
+  ADMIN_NOTIFICATION: {
+    PAGES: `${ADMIN_API_PREFIX}/notification/pages`,
+    CREATE: `${ADMIN_API_PREFIX}/notification`,
+    GROUP_MEMBERS: (groupKey: string) => `${ADMIN_API_PREFIX}/notification-group/${groupKey}/members`,
+    GROUP_MEMBERS_BATCH: `${ADMIN_API_PREFIX}/notification-group/members`,
+    TICKET_TYPES: `${ADMIN_API_PREFIX}/notification-group/ticket-types`,
+  },
+
+  // 管理員通知歷史
+  ADMIN_NOTIFICATION_HISTORY: {
+    PAGES: `${ADMIN_API_PREFIX}/notification/history/pages`,
+  },
 } as const;
 
 // HTTP 狀態碼

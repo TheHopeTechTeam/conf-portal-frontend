@@ -1,3 +1,5 @@
+import NotificationHistoryManagement from "@/pages/Comms/NotificationHistory/NotificationHistoryManagement";
+import NotificationManagement from "@/pages/Comms/Notification/NotificationManagement";
 import Blank from "@/pages/Blank";
 import Dashboard from "@/pages/Dashboard";
 import ConferenceManagement from "@/pages/Menus/Conference/ConferenceManagement";
@@ -43,8 +45,8 @@ const componentRegistry: Record<string, React.ComponentType> = {
   SYSTEM_FCM_DEVICE: Blank,
   SYSTEM_LOG: Blank,
   // COMMS /comms
-  COMMS_NOTIFICATION: Blank,
-  COMMS_NOTIFICATION_HISTORY: Blank,
+  COMMS_NOTIFICATION: NotificationManagement,
+  COMMS_NOTIFICATION_HISTORY: NotificationHistoryManagement,
 };
 
 function normalizeKey(key: string): string {

@@ -1,10 +1,11 @@
-import Blank from "@/pages/Blank";
+import NotificationHistoryManagement from "@/pages/Comms/NotificationHistory/NotificationHistoryManagement";
+import NotificationManagement from "@/pages/Comms/Notification/NotificationManagement";
 import { AppRoute } from "@/types/route";
 
 export const commsRoutes: AppRoute[] = [
   {
     path: "/comms/notifications",
-    element: <Blank />,
+    element: <NotificationManagement />,
     meta: {
       title: "Notification Management",
       description: "Comms notification management",
@@ -14,7 +15,7 @@ export const commsRoutes: AppRoute[] = [
   },
   {
     path: "/comms/notification-history",
-    element: <Blank />,
+    element: <NotificationHistoryManagement />,
     meta: {
       title: "Notification History",
       description: "Comms notification history",

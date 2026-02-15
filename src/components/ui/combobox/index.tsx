@@ -1,6 +1,6 @@
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
-import { MdClose, MdKeyboardArrowDown } from "react-icons/md";
+import { MdCheck, MdClose, MdKeyboardArrowDown } from "react-icons/md";
 import { cn } from "../../../utils";
 import Label from "../label";
 
@@ -13,10 +13,8 @@ export interface ComboBoxOption<T = any> {
   [key: string]: any;
 }
 
-interface ComboBoxProps<T = any> {
+interface ComboBoxPropsBase<T = any> {
   options: ComboBoxOption<T>[];
-  value?: T | null;
-  onChange?: (value: T | null) => void;
   placeholder?: string;
   id: string;
   name?: string;
@@ -40,6 +38,20 @@ interface ComboBoxProps<T = any> {
   onFocus?: () => void;
   onBlur?: () => void;
 }
+
+interface ComboBoxPropsSingle<T = any> extends ComboBoxPropsBase<T> {
+  multiple?: false;
+  value?: T | null;
+  onChange?: (value: T | null) => void;
+}
+
+interface ComboBoxPropsMultiple<T = any> extends ComboBoxPropsBase<T> {
+  multiple: true;
+  value?: T[] | null;
+  onChange?: (value: T[] | null) => void;
+}
+
+export type ComboBoxProps<T = any> = ComboBoxPropsSingle<T> | ComboBoxPropsMultiple<T>;
 
 const defaultFilterFunction = <T,>(option: ComboBoxOption<T>, query: string): boolean => {
   return option.label.toLowerCase().includes(query.toLowerCase());
@@ -66,33 +78,54 @@ const defaultRenderOption = <T,>(option: ComboBoxOption<T>): React.ReactNode => 
   );
 };
 
-export const ComboBox = <T = any,>({
-  options,
-  value,
-  onChange,
-  placeholder = "請選擇或輸入...",
-  id,
-  name,
-  label,
-  disabled = false,
-  error,
-  success = false,
-  hint,
-  required = false,
-  className = "",
-  inputClassName = "",
-  displayValue = defaultDisplayValue,
-  filterFunction = defaultFilterFunction,
-  renderOption = defaultRenderOption,
-  allowCreate = false,
-  onCreateOption,
-  clearable = false,
-  size = "md",
-  onQueryChange,
-  inputRef: externalInputRef,
-  onFocus: externalOnFocus,
-  onBlur: externalOnBlur,
-}: ComboBoxProps<T>) => {
+function OptionCheckbox({ checked, disabled }: { checked: boolean; disabled?: boolean }) {
+  return (
+    <span
+      className={cn(
+        "flex size-5 shrink-0 items-center justify-center rounded border transition-colors",
+        checked
+          ? "border-transparent bg-brand-500 text-white dark:bg-brand-400"
+          : "border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800",
+        disabled && "opacity-50"
+      )}
+      role="checkbox"
+      aria-checked={checked}
+    >
+      {checked && <MdCheck className="size-3.5" aria-hidden />}
+    </span>
+  );
+}
+
+export const ComboBox = <T = any,>(props: ComboBoxProps<T>) => {
+  const {
+    options,
+    value,
+    onChange,
+    placeholder = "請選擇或輸入...",
+    id,
+    name,
+    label,
+    disabled = false,
+    error,
+    success = false,
+    hint,
+    required = false,
+    className = "",
+    inputClassName = "",
+    displayValue = defaultDisplayValue,
+    filterFunction = defaultFilterFunction,
+    renderOption = defaultRenderOption,
+    allowCreate = false,
+    onCreateOption,
+    clearable = false,
+    size = "md",
+    onQueryChange,
+    inputRef: externalInputRef,
+    onFocus: externalOnFocus,
+    onBlur: externalOnBlur,
+    multiple = false,
+  } = props;
+
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -100,45 +133,71 @@ export const ComboBox = <T = any,>({
   const internalInputRef = useRef<HTMLInputElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
 
-  // 使用外部 ref 或內部 ref
   const inputRef = externalInputRef || internalInputRef;
 
-  // 找到當前選中的選項
-  const selectedOption = options.find((option) => option.value === value) || null;
+  const valueArray = multiple ? (Array.isArray(value) ? value : []) : [];
+  const valueSingle = !multiple ? (value as T | null | undefined) : undefined;
 
-  // 過濾選項
+  const selectedOption = !multiple ? options.find((option) => option.value === valueSingle) || null : null;
+
   const filteredOptions = query === "" ? options : options.filter((option) => filterFunction(option, query));
 
-  // 顯示的輸入值
-  const displayText = query || (selectedOption ? displayValue(selectedOption) : "");
+  const displayText = (() => {
+    if (query) return query;
+    if (multiple) {
+      if (valueArray.length === 0) return "";
+      if (valueArray.length === 1) {
+        const opt = options.find((o) => o.value === valueArray[0]);
+        return opt ? displayValue(opt) : String(valueArray[0]);
+      }
+      return `已選 ${valueArray.length} 項`;
+    }
+    return selectedOption ? displayValue(selectedOption) : "";
+  })();
 
-  // 是否可以創建新選項
   const canCreate =
     allowCreate && query.length > 0 && !filteredOptions.some((option) => option.label.toLowerCase() === query.toLowerCase());
 
-  // 處理選項選擇
   const handleSelect = (option: ComboBoxOption<T>) => {
     if (option.disabled) return;
-    onChange?.(option.value);
-    setQuery("");
-    setIsOpen(false);
-    setFocusedIndex(-1);
+    if (multiple) {
+      const next = valueArray.includes(option.value)
+        ? valueArray.filter((v) => v !== option.value)
+        : [...valueArray, option.value];
+      (onChange as (v: T[] | null) => void)?.(next.length > 0 ? next : null);
+    } else {
+      (onChange as (v: T | null) => void)?.(option.value);
+      setQuery("");
+      setIsOpen(false);
+      setFocusedIndex(-1);
+    }
   };
 
-  // 處理創建新選項
   const handleCreate = () => {
     if (!onCreateOption || !canCreate) return;
     const newValue = onCreateOption(query);
-    onChange?.(newValue);
-    setQuery("");
-    setIsOpen(false);
-    setFocusedIndex(-1);
+    if (multiple) {
+      (onChange as (v: T[] | null) => void)?.(valueArray.includes(newValue) ? valueArray : [...valueArray, newValue]);
+    } else {
+      (onChange as (v: T | null) => void)?.(newValue);
+      setQuery("");
+      setIsOpen(false);
+      setFocusedIndex(-1);
+    }
+    if (!multiple) {
+      setQuery("");
+      setIsOpen(false);
+      setFocusedIndex(-1);
+    }
   };
 
-  // 處理清除選擇
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onChange?.(null);
+    if (multiple) {
+      (onChange as (v: T[] | null) => void)?.(null);
+    } else {
+      (onChange as (v: T | null) => void)?.(null);
+    }
     setQuery("");
     setIsOpen(false);
     setFocusedIndex(-1);
@@ -196,9 +255,10 @@ export const ComboBox = <T = any,>({
           if (focusedIndex === 0 && canCreate) {
             handleCreate();
           } else {
-            const selectedOption = canCreate ? filteredOptions[focusedIndex - 1] : filteredOptions[focusedIndex];
-            if (selectedOption) {
-              handleSelect(selectedOption);
+            const optionIndex = canCreate ? focusedIndex - 1 : focusedIndex;
+            const option = filteredOptions[optionIndex];
+            if (option) {
+              handleSelect(option);
             }
           }
         }
@@ -260,8 +320,9 @@ export const ComboBox = <T = any,>({
       "bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:text-white/90 dark:focus:border-brand-800";
   }
 
-  // 計算右側 padding，當有清除按鈕時需要更多空間
-  const hasClearButton = clearable && value !== null && value !== undefined;
+  const hasClearButton =
+    clearable &&
+    (multiple ? valueArray.length > 0 : value !== null && value !== undefined);
   const rightPadding = hasClearButton ? "pr-16" : "pr-10";
 
   const inputClasses = cn(
@@ -350,7 +411,7 @@ export const ComboBox = <T = any,>({
                   <div
                     data-option-index={0}
                     className={cn(
-                      "cursor-default px-3 py-2 select-none transition-colors",
+                      "cursor-default flex items-center gap-2 px-3 py-2 select-none transition-colors",
                       focusedIndex === 0 ? "bg-brand-600 text-white dark:bg-brand-500" : "text-gray-900 dark:text-white",
                       "hover:bg-brand-600 hover:text-white dark:hover:bg-brand-500"
                     )}
@@ -359,17 +420,21 @@ export const ComboBox = <T = any,>({
                     role="option"
                     aria-selected={focusedIndex === 0}
                   >
+                    <span className="size-5 shrink-0" aria-hidden />
                     {renderOption({ value: null, label: query } as ComboBoxOption<T>)}
                   </div>
                 )}
                 {filteredOptions.map((option, index) => {
                   const optionIndex = canCreate ? index + 1 : index;
+                  const isSelected = multiple
+                    ? valueArray.includes(option.value)
+                    : valueSingle === option.value;
                   return (
                     <div
                       key={String(option.value)}
                       data-option-index={optionIndex}
                       className={cn(
-                        "cursor-default px-3 py-2 select-none transition-colors",
+                        "cursor-default flex items-center gap-2 px-3 py-2 select-none transition-colors",
                         focusedIndex === optionIndex
                           ? "bg-brand-600 text-white dark:bg-brand-500"
                           : option.disabled
@@ -380,9 +445,10 @@ export const ComboBox = <T = any,>({
                       onClick={() => !option.disabled && handleSelect(option)}
                       onMouseEnter={() => !option.disabled && setFocusedIndex(optionIndex)}
                       role="option"
-                      aria-selected={value === option.value}
+                      aria-selected={isSelected}
                       aria-disabled={option.disabled}
                     >
+                      <OptionCheckbox checked={isSelected} disabled={option.disabled} />
                       {renderOption(option)}
                     </div>
                   );
@@ -397,7 +463,13 @@ export const ComboBox = <T = any,>({
         {hint && !error && <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{hint}</p>}
 
         {/* 隱藏的表單輸入 */}
-        <input type="hidden" name={name} value={value ? String(value) : ""} />
+        {multiple ? (
+          valueArray.map((v) => (
+            <input key={String(v)} type="hidden" name={name} value={String(v)} />
+          ))
+        ) : (
+          <input type="hidden" name={name} value={value != null ? String(value) : ""} />
+        )}
       </div>
     </>
   );
