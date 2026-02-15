@@ -28,6 +28,7 @@ const getStatusOptions = () => [
   { value: NotificationHistoryStatus.PENDING.toString(), label: "待處理" },
   { value: NotificationHistoryStatus.SUCCESS.toString(), label: "成功" },
   { value: NotificationHistoryStatus.FAILED.toString(), label: "失敗" },
+  { value: NotificationHistoryStatus.DRY_RUN.toString(), label: "試跑" },
 ];
 
 const getStatusLabel = (status?: NotificationHistoryStatus) => {
@@ -39,6 +40,8 @@ const getStatusLabel = (status?: NotificationHistoryStatus) => {
       return "成功";
     case NotificationHistoryStatus.FAILED:
       return "失敗";
+    case NotificationHistoryStatus.DRY_RUN:
+      return "試跑";
     default:
       return "不限";
   }

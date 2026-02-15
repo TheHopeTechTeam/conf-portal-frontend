@@ -132,6 +132,38 @@ export default function NotificationDataPage() {
   const columns: DataTableColumn<AdminNotificationItem>[] = useMemo(
     () => [
       {
+        key: "id",
+        label: "ID",
+        width: "w-36",
+        render: (value: unknown, row: AdminNotificationItem) => {
+          const id = (value ?? row.id) as string;
+          const short = id.length > 12 ? `${id.slice(0, 8)}…` : id;
+          const handleCopy = (e: React.MouseEvent) => {
+            e.stopPropagation();
+            navigator.clipboard?.writeText(id).then(() => {
+              showNotification({
+                variant: "success",
+                title: "已複製",
+                description: "ID 已複製到剪貼簿",
+                position: "top-right",
+              });
+            });
+          };
+          return (
+            <Tooltip content="點擊複製" wrapContent={false}>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="w-full text-left font-mono text-xs text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white/90 cursor-copy truncate block"
+                aria-label="複製 ID"
+              >
+                {short}
+              </button>
+            </Tooltip>
+          );
+        },
+      },
+      {
         key: "title",
         label: "標題",
         sortable: true,
@@ -215,7 +247,7 @@ export default function NotificationDataPage() {
         },
       },
     ],
-    []
+    [showNotification]
   );
 
   useEffect(() => {

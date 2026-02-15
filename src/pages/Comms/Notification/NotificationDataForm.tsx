@@ -31,14 +31,16 @@ const typeOptions = [
 const USER_SEARCH_DEBOUNCE_MS = 300;
 
 function userToOption(user: UserBase & { display_name?: string; phone_number?: string }): ComboBoxOption<string> {
-  const label =
-    user.displayName?.trim() ||
-    user.display_name?.trim() ||
-    user.email?.trim() ||
-    user.phoneNumber?.trim() ||
-    user.phone_number?.trim() ||
-    user.id;
-  return { value: user.id, label };
+  const name = (user.displayName ?? user.display_name)?.trim() || "";
+  const email = user.email?.trim() || "";
+  const phone = (user.phoneNumber ?? user.phone_number)?.trim() || "";
+
+  if (name) {
+    if (email) return { value: user.id, label: `${name} (${email})` };
+    if (phone) return { value: user.id, label: `${name} (${phone})` };
+    return { value: user.id, label: name };
+  }
+  return { value: user.id, label: phone || email || user.id };
 }
 
 const NotificationDataForm: React.FC<NotificationDataFormProps> = ({ onSubmit, onCancel, submitting }) => {
@@ -60,7 +62,7 @@ const NotificationDataForm: React.FC<NotificationDataFormProps> = ({ onSubmit, o
   const fetchUserOptions = useCallback(async (keyword: string) => {
     setUserOptionsLoading(true);
     try {
-      const res = await userService.getList({ keyword: keyword.trim() || undefined });
+      const res = await userService.getListWithDeviceToken({ keyword: keyword.trim() || undefined });
       const items = res.data?.items ?? [];
       setUserOptions(items.map(userToOption));
     } catch {
@@ -81,12 +83,6 @@ const NotificationDataForm: React.FC<NotificationDataFormProps> = ({ onSubmit, o
     },
     [fetchUserOptions],
   );
-
-  useEffect(() => {
-    if (values.type === NotificationType.INDIVIDUAL) {
-      fetchUserOptions("");
-    }
-  }, [values.type, fetchUserOptions]);
 
   useEffect(() => {
     return () => {
@@ -177,16 +173,18 @@ const NotificationDataForm: React.FC<NotificationDataFormProps> = ({ onSubmit, o
           <ComboBox
             id="user_id"
             label="選擇用戶"
-            placeholder={userOptionsLoading ? "載入中..." : "搜尋用戶（姓名、Email、電話）"}
+            placeholder="搜尋用戶（姓名、Email、電話）"
             options={userOptions}
             value={selectedUserId}
             onChange={(v) => setSelectedUserId(v)}
+            onOpen={() => fetchUserOptions("")}
             onQueryChange={handleUserQueryChange}
+            loading={userOptionsLoading}
             filterFunction={() => true}
             clearable
             required
             error={errors.user_ids}
-            hint="以關鍵字搜尋並選擇一位用戶"
+            hint="打開後載入有 device token 的用戶，可輸入關鍵字搜尋"
           />
         </div>
       )}

@@ -34,6 +34,10 @@ interface ComboBoxPropsBase<T = any> {
   clearable?: boolean;
   size?: "sm" | "md" | "lg";
   onQueryChange?: (query: string) => void;
+  /** Called when dropdown opens (focus or click toggle). Use to e.g. fetch options from API. */
+  onOpen?: () => void;
+  /** When true, dropdown shows loading state instead of options. */
+  loading?: boolean;
   inputRef?: React.RefObject<HTMLInputElement | null>;
   onFocus?: () => void;
   onBlur?: () => void;
@@ -120,6 +124,8 @@ export const ComboBox = <T = any,>(props: ComboBoxProps<T>) => {
     clearable = false,
     size = "md",
     onQueryChange,
+    onOpen,
+    loading = false,
     inputRef: externalInputRef,
     onFocus: externalOnFocus,
     onBlur: externalOnBlur,
@@ -132,8 +138,18 @@ export const ComboBox = <T = any,>(props: ComboBoxProps<T>) => {
   const comboboxRef = useRef<HTMLDivElement>(null);
   const internalInputRef = useRef<HTMLInputElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
+  const wasOpenRef = useRef(false);
 
   const inputRef = externalInputRef || internalInputRef;
+
+  // Notify parent when dropdown opens (so it can e.g. fetch options)
+  useEffect(() => {
+    if (isOpen && !wasOpenRef.current) {
+      wasOpenRef.current = true;
+      onOpen?.();
+    }
+    if (!isOpen) wasOpenRef.current = false;
+  }, [isOpen, onOpen]);
 
   const valueArray = multiple ? (Array.isArray(value) ? value : []) : [];
   const valueSingle = !multiple ? (value as T | null | undefined) : undefined;
@@ -405,7 +421,12 @@ export const ComboBox = <T = any,>(props: ComboBoxProps<T>) => {
           role="listbox"
         >
           <div ref={optionsRef} className="max-h-56 overflow-auto">
-            {allOptions.length > 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center gap-2 px-3 py-6 text-sm text-gray-500 dark:text-gray-400">
+                <span className="size-5 animate-spin rounded-full border-2 border-gray-300 border-t-brand-500 dark:border-gray-600 dark:border-t-brand-400" />
+                載入中...
+              </div>
+            ) : allOptions.length > 0 ? (
               <>
                 {canCreate && (
                   <div

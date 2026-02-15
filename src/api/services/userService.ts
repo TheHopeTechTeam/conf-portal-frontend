@@ -93,6 +93,11 @@ export const userService = {
     return httpClient.get<UserListResponse>(API_ENDPOINTS.USER.LIST, params);
   },
 
+  /** 僅回傳有 FCM device token 的用戶列表（參數與 getList 相同） */
+  async getListWithDeviceToken(params: { keyword?: string }) {
+    return httpClient.get<UserListResponse>(API_ENDPOINTS.USER.LIST_WITH_DEVICE_TOKEN, params);
+  },
+
   async getById(id: string) {
     return httpClient.get<UserDetail>(API_ENDPOINTS.USER.DETAIL(id));
   },

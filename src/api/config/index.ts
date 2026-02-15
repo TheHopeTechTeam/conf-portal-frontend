@@ -136,6 +136,7 @@ export const API_ENDPOINTS = {
   USER: {
     PAGES: `${ADMIN_API_PREFIX}/user/pages`,
     LIST: `${ADMIN_API_PREFIX}/user/list`,
+    LIST_WITH_DEVICE_TOKEN: `${ADMIN_API_PREFIX}/user/list-with-device-token`,
     CREATE: `${ADMIN_API_PREFIX}/user`,
     DETAIL: (id: string) => `${ADMIN_API_PREFIX}/user/${id}`,
     UPDATE: (id: string) => `${ADMIN_API_PREFIX}/user/${id}`,

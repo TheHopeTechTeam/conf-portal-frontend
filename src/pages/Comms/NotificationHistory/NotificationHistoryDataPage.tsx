@@ -33,6 +33,8 @@ const getStatusText = (status: number) => {
       return "成功";
     case NotificationHistoryStatus.FAILED:
       return "失敗";
+    case NotificationHistoryStatus.DRY_RUN:
+      return "試跑";
     default:
       return "未知";
   }
@@ -46,6 +48,8 @@ const getStatusColor = (status: number) => {
       return "text-green-600 dark:text-green-400";
     case NotificationHistoryStatus.FAILED:
       return "text-red-600 dark:text-red-400";
+    case NotificationHistoryStatus.DRY_RUN:
+      return "text-gray-600 dark:text-gray-400";
     default:
       return "text-gray-500 dark:text-gray-400";
   }
