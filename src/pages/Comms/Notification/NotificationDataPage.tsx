@@ -60,14 +60,14 @@ export default function NotificationDataPage() {
   const [pageSize, setPageSize] = useState(10);
   const [searchFilters, setSearchFilters] = useState<NotificationSearchFilters>({});
   const [appliedFilters, setAppliedFilters] = useState<NotificationSearchFilters>({});
-  const [showDeleted, setShowDeleted] = useState(false);
+  const [showDeleted, _setShowDeleted] = useState(false);
   const [orderBy, setOrderBy] = useState<string>();
   const [descending, setDescending] = useState<boolean>();
 
   const [items, setItems] = useState<AdminNotificationItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [_selectedKeys, setSelectedKeys] = useState<string[]>([]);
 
   const { showNotification } = useNotification();
   const { isOpen, openModal, closeModal } = useModal(false);
@@ -313,7 +313,7 @@ export default function NotificationDataPage() {
 
   const rowActions: MenuButtonType<AdminNotificationItem>[] = useMemo(
     () => [
-      CommonRowAction.VIEW((row: AdminNotificationItem) => {
+      CommonRowAction.VIEW<AdminNotificationItem>((row: AdminNotificationItem, _index: number) => {
         setViewing(row);
         openViewModal();
       }),

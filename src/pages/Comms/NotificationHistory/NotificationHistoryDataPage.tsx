@@ -213,7 +213,7 @@ export default function NotificationHistoryDataPage() {
     setPageSize(newPageSize);
     setCurrentPage(1);
   };
-  const handleRowSelect = (_selectedRows: AdminNotificationHistoryItem[], keys: string[]) => {
+  const handleRowSelect = (_selectedRows: AdminNotificationHistoryItem[], _keys: string[]) => {
     // no bulk actions for history
   };
 
@@ -268,7 +268,7 @@ export default function NotificationHistoryDataPage() {
 
   const rowActions: MenuButtonType<AdminNotificationHistoryItem>[] = useMemo(
     () => [
-      CommonRowAction.VIEW((row: AdminNotificationHistoryItem) => {
+      CommonRowAction.VIEW<AdminNotificationHistoryItem>((row: AdminNotificationHistoryItem, _index: number) => {
         setViewing(row);
         openViewModal();
       }),

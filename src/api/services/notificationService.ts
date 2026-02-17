@@ -25,7 +25,7 @@ export enum NotificationHistoryStatus {
   DRY_RUN = 3,
 }
 
-export interface AdminNotificationItem {
+export interface AdminNotificationItem extends Record<string, unknown> {
   id: string;
   title: string;
   message: string;
@@ -56,7 +56,7 @@ export interface AdminNotificationCreate {
   user_ids?: string[];
 }
 
-export interface AdminNotificationHistoryItem {
+export interface AdminNotificationHistoryItem extends Record<string, unknown> {
   id: string;
   notification_id: string;
   device_id: string;
