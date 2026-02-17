@@ -11,6 +11,8 @@ export interface DataTableColumn<T> {
   label: string;
   /** 是否可排序 */
   sortable?: boolean;
+  /** 排序時傳給 API 的欄位名稱，未設定時使用 key */
+  orderBy?: string;
   /** 自定義渲染函數 */
   render?: (value: unknown, row: T, index: number) => ReactNode;
   /** 欄位樣式類名 */

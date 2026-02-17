@@ -1,7 +1,7 @@
 import type { AdminNotificationHistoryItem } from "@/api/services/notificationService";
 import { NotificationHistoryStatus } from "@/api/services/notificationService";
-import { DateUtil } from "@/utils/dateUtil";
 import { cn } from "@/utils";
+import { DateUtil } from "@/utils/dateUtil";
 
 interface NotificationHistoryDetailViewProps {
   item: AdminNotificationHistoryItem;
@@ -86,15 +86,11 @@ const NotificationHistoryDetailView: React.FC<NotificationHistoryDetailViewProps
       <div className="grid grid-cols-2 gap-4">
         <div>
           <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">建立時間</dt>
-          <dd className="mt-1 text-sm text-gray-900 dark:text-white">
-            {item.created_at ? DateUtil.format(item.created_at) : "—"}
-          </dd>
+          <dd className="mt-1 text-sm text-gray-900 dark:text-white">{item.created_at ? DateUtil.format(item.created_at) : "—"}</dd>
         </div>
         <div>
           <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">更新時間</dt>
-          <dd className="mt-1 text-sm text-gray-900 dark:text-white">
-            {item.updated_at ? DateUtil.format(item.updated_at) : "—"}
-          </dd>
+          <dd className="mt-1 text-sm text-gray-900 dark:text-white">{item.updated_at ? DateUtil.format(item.updated_at) : "—"}</dd>
         </div>
       </div>
     </div>

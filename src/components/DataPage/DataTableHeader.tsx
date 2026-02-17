@@ -100,7 +100,8 @@ export default function DataTableHeader<T>({
 
           const firstColumn = columnIndex === 0 && singleSelect ? "pl-8" : "";
           const isSortable = column.sortable && onSort;
-          const isActive = orderBy === column.key;
+          const sortKey = column.orderBy ?? column.key;
+          const isActive = orderBy === sortKey;
           const isLastColumn = columnIndex === columns.filter((c) => c.visible !== false).length - 1;
           const shouldShowExpandHeader = hasExpandColumn && isLastColumn;
 
@@ -117,7 +118,7 @@ export default function DataTableHeader<T>({
             >
               <div
                 className={`flex items-center justify-between ${isSortable ? "cursor-pointer" : ""}`}
-                onClick={() => isSortable && handleSort(column.key)}
+                onClick={() => isSortable && handleSort(sortKey)}
               >
                 <span
                   className={`font-medium text-gray-700 text-theme-xs dark:text-gray-400 ${alignClass} ${isActive ? "text-brand-500" : ""}`}
@@ -125,7 +126,7 @@ export default function DataTableHeader<T>({
                   {column.label}
                 </span>
                 <div className="flex items-center gap-2">
-                  {isSortable && renderSortIcon(column.key)}
+                  {isSortable && renderSortIcon(sortKey)}
                   {shouldShowExpandHeader && (
                     <span className="w-4 h-4 flex-shrink-0" aria-hidden="true">
                       {/* 展開圖標的佔位空間 */}

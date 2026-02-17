@@ -35,10 +35,7 @@ const WorkshopRegistrationDataForm: React.FC<WorkshopRegistrationDataFormProps> 
   const [userOptions, setUserOptions] = useState<ComboBoxOption<string>[]>([]);
   const [loadingWorkshops, setLoadingWorkshops] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
-  const userSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSearchKeywordRef = useRef<string>("");
-  const userComboBoxInputRef = useRef<HTMLInputElement>(null);
-  const wasInputFocusedRef = useRef<boolean>(false);
+  const userSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 載入工作坊列表
   useEffect(() => {
@@ -68,55 +65,66 @@ const WorkshopRegistrationDataForm: React.FC<WorkshopRegistrationDataFormProps> 
     fetchWorkshops();
   }, []);
 
+  // 將 API 回傳的用戶轉為 ComboBox 選項（支援 camelCase 與 snake_case）
+  const userToOption = useCallback(
+    (
+      item: {
+        id: string;
+        displayName?: string;
+        display_name?: string;
+        email?: string;
+        phoneNumber?: string;
+        phone_number?: string;
+      }
+    ) => {
+      const name = item.displayName ?? item.display_name;
+      const email = item.email;
+      const phone = item.phoneNumber ?? item.phone_number;
+      const label = name || email || phone || item.id;
+      if (name) {
+        return { value: item.id, label: `${name} (${email || phone || ""})` };
+      }
+      return { value: item.id, label };
+    },
+    []
+  );
+
+  const USER_SEARCH_DEBOUNCE_MS = 300;
+
   // 根據關鍵字搜尋用戶列表
   const searchUsers = useCallback(async (keyword: string) => {
-    const trimmedKeyword = keyword.trim();
-
-    // 立即更新 lastSearchKeywordRef，避免在 API 調用期間重複觸發
-    // 注意：重複檢查已經在 handleUserQueryChange 中做過了
-    lastSearchKeywordRef.current = trimmedKeyword;
-
     try {
       setLoadingUsers(true);
       const response = await userService.getList({
-        keyword: trimmedKeyword || undefined,
+        keyword: keyword.trim() || undefined,
       });
       const userItems = response.data.items || [];
-      const options: ComboBoxOption<string>[] = userItems.map((item) => {
-        let label = item.displayName || item.email || item.phoneNumber || item.id;
-        if (item.displayName) {
-          label = `${item.displayName} (${item.email || item.phoneNumber})`;
-        }
-        return {
-          value: item.id,
-          label: label,
-        };
-      });
-      setUserOptions(options);
+      setUserOptions(userItems.map(userToOption));
     } catch (e) {
       console.error("Error fetching users:", e);
       setUserOptions([]);
     } finally {
       setLoadingUsers(false);
     }
+  }, [userToOption]);
+
+  // 初次打開或關鍵字變化時拉取用戶列表（debounce）
+  const handleUserQueryChange = useCallback(
+    (query: string) => {
+      if (userSearchDebounceRef.current) clearTimeout(userSearchDebounceRef.current);
+      userSearchDebounceRef.current = setTimeout(() => {
+        searchUsers(query);
+        userSearchDebounceRef.current = null;
+      }, USER_SEARCH_DEBOUNCE_MS);
+    },
+    [searchUsers]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (userSearchDebounceRef.current) clearTimeout(userSearchDebounceRef.current);
+    };
   }, []);
-
-  // 初始載入用戶列表（無關鍵字）
-  useEffect(() => {
-    searchUsers("");
-  }, [searchUsers]);
-
-  // 當 userOptions 更新後，如果之前 input 有焦點，則恢復焦點
-  useEffect(() => {
-    if (wasInputFocusedRef.current && userComboBoxInputRef.current) {
-      // 使用 requestAnimationFrame 確保在 DOM 更新後執行
-      requestAnimationFrame(() => {
-        if (userComboBoxInputRef.current && document.activeElement !== userComboBoxInputRef.current) {
-          userComboBoxInputRef.current.focus();
-        }
-      });
-    }
-  }, [userOptions]);
 
   useEffect(() => {
     if (defaultValues) {
@@ -129,6 +137,27 @@ const WorkshopRegistrationDataForm: React.FC<WorkshopRegistrationDataFormProps> 
     }
     setErrors({});
   }, [defaultValues]);
+
+  // 當已選用戶不在 userOptions 時（例如 edit 模式載入 defaultValues），取得該用戶並加入選項以正確顯示
+  useEffect(() => {
+    const userId = values.userId;
+    if (!userId) return;
+    const exists = userOptions.some((opt) => opt.value === userId);
+    if (exists) return;
+
+    const fetchAndAddSelectedUser = async () => {
+      try {
+        const res = await userService.getById(userId);
+        const data = res.data as { id: string; displayName?: string; display_name?: string; email?: string; phoneNumber?: string; phone_number?: string };
+        const option = userToOption(data);
+        setUserOptions((prev) => [option, ...prev.filter((o) => o.value !== userId)]);
+      } catch {
+        setUserOptions((prev) => [{ value: userId, label: userId }, ...prev.filter((o) => o.value !== userId)]);
+      }
+    };
+
+    fetchAndAddSelectedUser();
+  }, [values.userId, userOptions, userToOption]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,56 +185,7 @@ const WorkshopRegistrationDataForm: React.FC<WorkshopRegistrationDataFormProps> 
     label: workshop.title,
   }));
 
-  // 處理 input 獲得焦點
-  const handleUserInputFocus = useCallback(() => {
-    wasInputFocusedRef.current = true;
-  }, []);
-
-  // 處理 input 失去焦點
-  const handleUserInputBlur = useCallback(() => {
-    wasInputFocusedRef.current = false;
-    // 清除之前的 timeout
-    if (userSearchTimeoutRef.current) {
-      clearTimeout(userSearchTimeoutRef.current);
-      userSearchTimeoutRef.current = null;
-    }
-    // 重置 lastSearchKeywordRef，以便下次可以重新搜尋
-    lastSearchKeywordRef.current = "";
-    // 重新獲取沒有 keyword 的 API
-    searchUsers("").catch((error) => {
-      console.error("Error in searchUsers:", error);
-    });
-  }, [searchUsers]);
-
-  // 處理 ComboBox 的 query 變化，觸發 API 搜尋（使用防抖）
-  const handleUserQueryChange = useCallback(
-    (query: string) => {
-      // 清除之前的 timeout
-      if (userSearchTimeoutRef.current) {
-        clearTimeout(userSearchTimeoutRef.current);
-        userSearchTimeoutRef.current = null;
-      }
-
-      const trimmedQuery = query.trim();
-      // 如果關鍵字與上次相同，不重複搜尋
-      if (trimmedQuery === lastSearchKeywordRef.current) {
-        return;
-      }
-
-      // 設置新的 timeout，300ms 後執行搜尋
-      userSearchTimeoutRef.current = setTimeout(() => {
-        // 在執行 API 前再次檢查焦點狀態
-        wasInputFocusedRef.current = document.activeElement === userComboBoxInputRef.current;
-        // 注意：不要在 timeout 中更新 lastSearchKeywordRef，讓 searchUsers 來更新
-        searchUsers(trimmedQuery).catch((error) => {
-          console.error("Error in searchUsers:", error);
-        });
-      }, 300);
-    },
-    [searchUsers]
-  );
-
-  // 自定義過濾函數，禁用本地過濾（因為已經通過 API 過濾）
+  // 禁用本地過濾（因為已經通過 API 過濾）
   const userFilterFunction = useCallback((_option: ComboBoxOption<string>, _query: string) => {
     void _option;
     void _query;
@@ -237,20 +217,15 @@ const WorkshopRegistrationDataForm: React.FC<WorkshopRegistrationDataFormProps> 
           options={userOptions}
           value={values.userId || null}
           onChange={(value) => setValues((v) => ({ ...v, userId: value ? String(value) : undefined }))}
-          placeholder="請輸入關鍵字搜尋用戶..."
+          placeholder="搜尋用戶（姓名、Email、電話）"
           error={errors.userId || undefined}
           clearable
-          disabled={loadingUsers || submitting}
+          disabled={submitting}
           required
           filterFunction={userFilterFunction}
+          onOpen={() => searchUsers("")}
           onQueryChange={handleUserQueryChange}
-          onFocus={handleUserInputFocus}
-          onBlur={handleUserInputBlur}
-          inputRef={userComboBoxInputRef}
-          displayValue={(option) => {
-            if (!option) return "";
-            return option.label;
-          }}
+          loading={loadingUsers}
         />
       </div>
 

@@ -125,6 +125,7 @@ export default function WorkshopDataPage() {
         key: "startTime",
         label: "開始時間",
         sortable: true,
+        orderBy: "start_datetime",
         width: "w-40",
         render: (value: unknown, row: WorkshopPageItem) => {
           if (!value) return null;
@@ -163,6 +164,7 @@ export default function WorkshopDataPage() {
         key: "endTime",
         label: "結束時間",
         sortable: true,
+        orderBy: "end_datetime",
         width: "w-40",
         render: (value: unknown, row: WorkshopPageItem) => {
           if (!value) return null;

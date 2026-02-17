@@ -1,12 +1,12 @@
-import { notificationService, type AdminNotificationItem } from "@/api/services/notificationService";
 import {
   NotificationMethod,
+  notificationService,
   NotificationStatus,
   NotificationType,
+  type AdminNotificationItem,
 } from "@/api/services/notificationService";
 import type { DataTableColumn, MenuButtonType, PageButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
-import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import { Modal } from "@/components/ui/modal";
 import Tooltip from "@/components/ui/tooltip";
 import { PopoverPosition, Resource } from "@/const/enums";
@@ -198,12 +198,9 @@ export default function NotificationDataPage() {
         valueEnum: {
           item: (value: unknown) => {
             const v = value as number;
-            if (v === NotificationType.INDIVIDUAL)
-              return { text: "單一", color: "text-gray-600 dark:text-gray-400" };
-            if (v === NotificationType.MULTIPLE)
-              return { text: "群組", color: "text-gray-700 dark:text-gray-300" };
-            if (v === NotificationType.SYSTEM)
-              return { text: "系統群發", color: "text-blue-600 dark:text-blue-400" };
+            if (v === NotificationType.INDIVIDUAL) return { text: "單一", color: "text-gray-600 dark:text-gray-400" };
+            if (v === NotificationType.MULTIPLE) return { text: "群組", color: "text-gray-700 dark:text-gray-300" };
+            if (v === NotificationType.SYSTEM) return { text: "系統群發", color: "text-blue-600 dark:text-blue-400" };
             return { text: "—", color: "text-gray-500 dark:text-gray-400" };
           },
         },
@@ -247,7 +244,7 @@ export default function NotificationDataPage() {
         },
       },
     ],
-    [showNotification]
+    [showNotification],
   );
 
   useEffect(() => {
@@ -308,10 +305,7 @@ export default function NotificationDataPage() {
       CommonPageButton.SEARCH(searchPopoverCallback, {
         popover: { title: "搜尋通知", position: PopoverPosition.BottomLeft, width: "400px" },
       }),
-      CommonPageButton.ADD(
-        () => openModal(),
-        { visible: !showDeleted }
-      ),
+      CommonPageButton.ADD(() => openModal(), { visible: !showDeleted }),
       CommonPageButton.REFRESH(() => fetchPages()),
     ];
     return buttons;
@@ -324,7 +318,7 @@ export default function NotificationDataPage() {
         openViewModal();
       }),
     ],
-    [openViewModal]
+    [openViewModal],
   );
 
   const handleSubmit = async (values: NotificationFormValues) => {
@@ -351,10 +345,7 @@ export default function NotificationDataPage() {
     }
   };
 
-  const pagedData = useMemo(
-    () => ({ page: currentPage, pageSize, total, items }),
-    [currentPage, pageSize, total, items]
-  );
+  const pagedData = useMemo(() => ({ page: currentPage, pageSize, total, items }), [currentPage, pageSize, total, items]);
 
   return (
     <>
@@ -377,21 +368,11 @@ export default function NotificationDataPage() {
         }}
       />
 
-      <Modal
-        title="發送通知"
-        isOpen={isOpen}
-        onClose={closeModal}
-        className="max-w-[600px] w-full mx-4 p-6"
-      >
+      <Modal title="發送通知" isOpen={isOpen} onClose={closeModal} className="max-w-[600px] w-full mx-4 p-6">
         <NotificationDataForm onSubmit={handleSubmit} onCancel={closeModal} submitting={submitting} />
       </Modal>
 
-      <Modal
-        title="通知詳情"
-        isOpen={isViewOpen}
-        onClose={closeViewModal}
-        className="max-w-[640px] w-full mx-4 p-6"
-      >
+      <Modal title="通知詳情" isOpen={isViewOpen} onClose={closeViewModal} className="max-w-[640px] w-full mx-4 p-6">
         {viewing && <NotificationDetailView item={viewing} />}
       </Modal>
     </>

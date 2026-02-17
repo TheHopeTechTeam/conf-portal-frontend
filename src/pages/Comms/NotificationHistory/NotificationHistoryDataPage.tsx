@@ -1,8 +1,4 @@
-import {
-  notificationService,
-  type AdminNotificationHistoryItem,
-} from "@/api/services/notificationService";
-import { NotificationHistoryStatus } from "@/api/services/notificationService";
+import { NotificationHistoryStatus, notificationService, type AdminNotificationHistoryItem } from "@/api/services/notificationService";
 import type { DataTableColumn, MenuButtonType, PageButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
@@ -14,9 +10,7 @@ import { useModal } from "@/hooks/useModal";
 import { DateUtil } from "@/utils/dateUtil";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import NotificationHistoryDetailView from "./NotificationHistoryDetailView";
-import NotificationHistorySearchPopover, {
-  type NotificationHistorySearchFilters,
-} from "./NotificationHistorySearchPopover";
+import NotificationHistorySearchPopover, { type NotificationHistorySearchFilters } from "./NotificationHistorySearchPopover";
 
 interface NotificationHistoryPagesResponse {
   page: number;
@@ -166,13 +160,7 @@ export default function NotificationHistoryDataPage() {
         label: "已讀",
         width: "w-18",
         render: (value: unknown) => (
-          <span
-            className={
-              value ? "text-green-600 dark:text-green-400" : "text-gray-400 dark:text-gray-500"
-            }
-          >
-            {value ? "是" : "否"}
-          </span>
+          <span className={value ? "text-green-600 dark:text-green-400" : "text-gray-400 dark:text-gray-500"}>{value ? "是" : "否"}</span>
         ),
       },
       {
@@ -203,7 +191,7 @@ export default function NotificationHistoryDataPage() {
         },
       },
     ],
-    []
+    [],
   );
 
   useEffect(() => {
@@ -272,7 +260,7 @@ export default function NotificationHistoryDataPage() {
           setShowDeleted(!showDeleted);
           setCurrentPage(1);
         },
-        { className: getRecycleButtonClassName(showDeleted) }
+        { className: getRecycleButtonClassName(showDeleted) },
       ),
     ];
     return buttons;
@@ -285,13 +273,10 @@ export default function NotificationHistoryDataPage() {
         openViewModal();
       }),
     ],
-    [openViewModal]
+    [openViewModal],
   );
 
-  const pagedData = useMemo(
-    () => ({ page: currentPage, pageSize, total, items }),
-    [currentPage, pageSize, total, items]
-  );
+  const pagedData = useMemo(() => ({ page: currentPage, pageSize, total, items }), [currentPage, pageSize, total, items]);
 
   return (
     <>
@@ -314,12 +299,7 @@ export default function NotificationHistoryDataPage() {
         }}
       />
 
-      <Modal
-        title="通知歷史詳情"
-        isOpen={isViewOpen}
-        onClose={closeViewModal}
-        className="max-w-[560px] w-full mx-4 p-6"
-      >
+      <Modal title="通知歷史詳情" isOpen={isViewOpen} onClose={closeViewModal} className="max-w-[560px] w-full mx-4 p-6">
         {viewing && <NotificationHistoryDetailView item={viewing} />}
       </Modal>
     </>
