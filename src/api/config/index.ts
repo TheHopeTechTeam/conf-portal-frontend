@@ -6,7 +6,7 @@ const API_BASE_URL = ENV_CONFIG.API_BASE_URL;
 const API_TIMEOUT = ENV_CONFIG.API_TIMEOUT; // 90 seconds
 
 // API 前綴
-const ADMIN_API_PREFIX = "/api/v1/admin";
+const ADMIN_API_PREFIX = "/admin/api/v1";
 
 // API 端點配置
 export const API_ENDPOINTS = {
