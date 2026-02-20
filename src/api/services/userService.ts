@@ -17,7 +17,7 @@ export interface UserDetail {
   is_admin: boolean;
   last_login_at?: string;
   display_name?: string;
-  gender?: number; // 0: 未知, 1: 男性, 2: 女性, 3: 其他
+  gender?: number; // 0: 未知, 1: 男性, 2: 女性
   is_ministry: boolean;
   created_at?: string;
   updated_at?: string;

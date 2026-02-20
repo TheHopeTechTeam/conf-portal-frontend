@@ -127,8 +127,6 @@ const UserProfileDetailView: React.FC<UserProfileDetailViewProps> = ({ isEditing
         return "男性";
       case Gender.Female:
         return "女性";
-      case Gender.Other:
-        return "其他";
       default:
         return "未知";
     }
@@ -200,7 +198,6 @@ const UserProfileDetailView: React.FC<UserProfileDetailViewProps> = ({ isEditing
                 { value: Gender.Unknown, label: "未知" },
                 { value: Gender.Male, label: "男性" },
                 { value: Gender.Female, label: "女性" },
-                { value: Gender.Other, label: "其他" },
               ]}
               value={formData.gender ?? Gender.Unknown}
               onChange={(value) => {

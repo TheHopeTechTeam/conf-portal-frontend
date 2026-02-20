@@ -58,8 +58,6 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({ userId }) => {
         return "男性";
       case Gender.Female:
         return "女性";
-      case Gender.Other:
-        return "其他";
       default:
         return "未知";
     }

@@ -172,7 +172,6 @@ export default function UserDataPage() {
             const v = value as Gender | undefined;
             if (v === Gender.Male) return { text: "男性", color: "text-blue-600" };
             if (v === Gender.Female) return { text: "女性", color: "text-pink-600" };
-            if (v === Gender.Other) return { text: "其他", color: "text-purple-600" };
             return { text: "未知", color: "text-gray-500" };
           },
         },

@@ -20,7 +20,7 @@ export interface UserFormValues {
   is_superuser: boolean;
   is_admin: boolean;
   display_name?: string;
-  gender?: number; // 0: 未知, 1: 男性, 2: 女性, 3: 其他
+  gender?: number; // 0: 未知, 1: 男性, 2: 女性
   is_ministry: boolean;
   remark?: string;
 }
@@ -249,7 +249,6 @@ const UserDataForm: React.FC<UserDataFormProps> = ({ mode, defaultValues, onSubm
               { value: 0, label: "未知" },
               { value: 1, label: "男性" },
               { value: 2, label: "女性" },
-              { value: 3, label: "其他" },
             ]}
             value={values.gender ?? 0}
             onChange={(value) => setValues((v) => ({ ...v, gender: Number(value) }))}

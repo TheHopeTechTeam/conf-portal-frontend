@@ -67,8 +67,6 @@ const UserSearchPopover: React.FC<UserSearchPopoverProps> = ({
         return "男性";
       case Gender.Female:
         return "女性";
-      case Gender.Other:
-        return "其他";
       default:
         return "不限";
     }
@@ -202,7 +200,6 @@ const UserSearchPopover: React.FC<UserSearchPopoverProps> = ({
               { value: "", label: "不限" },
               { value: Gender.Male.toString(), label: "男性" },
               { value: Gender.Female.toString(), label: "女性" },
-              { value: Gender.Other.toString(), label: "其他" },
             ]}
             value={filters.gender?.toString() || ""}
             onChange={(value) => handleFilterChange("gender", value ? Number(value) : undefined)}
