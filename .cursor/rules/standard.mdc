@@ -84,6 +84,7 @@ alwaysApply: true
 - 實作請求/回應攔截器。
 - 統一錯誤處理。
 - 支援請求快取。
+- 所有 API 都只能在 `src/api` 中實現，不準在 api folder 以外的地方硬編碼 API paths；請在 `api/config` 定義端點、在 `api/services` 封裝請求方法，頁面或元件透過 api 資源呼叫。
 - 除了 DataPage 元件外，其他元件不要直接使用 httpClient 進行 API 請求，請在 api/ 中建立對應的 api 資源。
 
 ## 程式碼品質

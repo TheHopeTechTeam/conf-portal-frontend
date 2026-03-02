@@ -1,5 +1,8 @@
-import { httpClient } from "@/api";
-import { demoService } from "@/api/services/demoService";
+import {
+  demoService,
+  type DemoDetail as ApiDemoDetail,
+  type DemoPagesResponse,
+} from "@/api/services/demoService";
 import type { DataTableColumn, MenuButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage, SearchPopoverContent } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
@@ -14,24 +17,12 @@ import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "re
 import DemoDataForm, { type DemoFormValues } from "./DemoDataForm";
 import DemoDeleteForm from "./DemoDeleteForm";
 
-type DemoDetail = {
-  id: string;
-  name: string;
-  remark?: string;
-  age?: number;
-  gender?: Gender;
+type DemoDetail = ApiDemoDetail & {
   created_at: string;
   updated_at: string;
   created_by: string;
   updated_by: string;
-};
-
-interface DemoPagesResponse {
-  page: number; // 0-based from backend
-  page_size: number;
-  total: number;
-  items?: DemoDetail[];
-}
+} & Record<string, unknown>;
 
 export default function DemoDataPage() {
   const [currentPage, setCurrentPage] = useState(1); // 1-based for UI
@@ -93,9 +84,9 @@ export default function DemoDataPage() {
         deleted: showDeleted || undefined,
       } as Record<string, unknown>;
 
-      const res = await httpClient.get<DemoPagesResponse>("/api/v1/admin/demo/pages", params);
+      const res = await demoService.getPages(params);
       const data = res.data as DemoPagesResponse;
-      setItems(data.items || []);
+      setItems((data.items || []) as DemoDetail[]);
       setTotal(data.total);
       // Backend page is 0-based; map back to 1-based UI if changed externally
       setCurrentPage(data.page + 1);

@@ -61,6 +61,21 @@ export interface UserBulkDelete {
   ids: string[];
 }
 
+export interface UserPagesParams {
+  page?: number;
+  page_size?: number;
+  keyword?: string;
+  order_by?: string;
+  descending?: boolean;
+  verified?: boolean;
+  is_active?: boolean;
+  is_superuser?: boolean;
+  is_admin?: boolean;
+  is_ministry?: boolean;
+  gender?: number;
+  deleted?: boolean;
+}
+
 export interface UserPagesResponse {
   page: number; // 0-based from backend
   pageSize?: number; // API 可能返回 pageSize 或 page_size
@@ -74,19 +89,8 @@ export interface UserListResponse {
 }
 
 export const userService = {
-  async getPages(params: {
-    page?: number;
-    pageSize?: number;
-    keyword?: string;
-    orderBy?: string;
-    descending?: boolean;
-    deleted?: boolean;
-    is_active?: boolean;
-    is_superuser?: boolean;
-    is_admin?: boolean;
-    is_ministry?: boolean;
-  }) {
-    return httpClient.get<UserPagesResponse>(API_ENDPOINTS.USER.PAGES, params);
+  async getPages(params: UserPagesParams) {
+    return httpClient.get<UserPagesResponse>(API_ENDPOINTS.USER.PAGES, params as Record<string, unknown>);
   },
 
   async getList(params: { keyword?: string }) {

@@ -1,5 +1,4 @@
-import { httpClient } from "@/api";
-import { userService } from "@/api/services/userService";
+import { userService, type UserDetail as ApiUserDetail, type UserPagesResponse } from "@/api/services/userService";
 import type { DataTableColumn, MenuButtonType, PageButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
@@ -19,29 +18,7 @@ import UserDeleteForm from "./UserDeleteForm";
 import UserDetailView from "./UserDetailView";
 import UserSearchPopover, { type UserSearchFilters } from "./UserSearchPopover";
 
-type UserDetail = {
-  id: string;
-  phone_number: string;
-  email: string;
-  verified: boolean;
-  is_active: boolean;
-  is_superuser: boolean;
-  is_admin: boolean;
-  last_login_at?: string;
-  display_name?: string;
-  gender?: Gender;
-  is_ministry: boolean;
-  created_at?: string;
-  updated_at?: string;
-  remark?: string;
-};
-
-interface UserPagesResponse {
-  page: number; // 0-based from backend
-  pageSize?: number; // API 可能返回 pageSize
-  total: number;
-  items?: UserDetail[];
-}
+type UserDetail = ApiUserDetail & Record<string, unknown>;
 
 export default function UserDataPage() {
   const [currentPage, setCurrentPage] = useState(1); // 1-based for UI
@@ -119,9 +96,9 @@ export default function UserDataPage() {
         deleted: showDeleted || undefined,
       } as Record<string, unknown>;
 
-      const res = await httpClient.get<UserPagesResponse>("/api/v1/admin/user/pages", params);
+      const res = await userService.getPages(params);
       const data = res.data as UserPagesResponse;
-      setItems(data.items || []);
+      setItems((data.items || []) as UserDetail[]);
       setTotal(data.total);
       // Backend page is 0-based; map back to 1-based UI if changed externally
       setCurrentPage(data.page + 1);

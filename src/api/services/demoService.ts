@@ -22,7 +22,27 @@ export interface DemoDelete {
   permanent?: boolean;
 }
 
+export interface DemoPagesParams {
+  page?: number;
+  page_size?: number;
+  keyword?: string;
+  order_by?: string;
+  descending?: boolean;
+  deleted?: boolean;
+}
+
+export interface DemoPagesResponse {
+  page: number;
+  page_size: number;
+  total: number;
+  items?: DemoDetail[];
+}
+
 export const demoService = {
+  async getPages(params: DemoPagesParams) {
+    return httpClient.get<DemoPagesResponse>(API_ENDPOINTS.DEMOS.PAGES, params as Record<string, unknown>);
+  },
+
   async create(payload: DemoCreate) {
     return httpClient.post<{ id: string }>(API_ENDPOINTS.DEMOS.CREATE, payload);
   },

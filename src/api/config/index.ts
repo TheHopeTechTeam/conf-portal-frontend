@@ -215,6 +215,7 @@ export const API_ENDPOINTS = {
 
   // 示範管理
   DEMOS: {
+    PAGES: `${ADMIN_API_PREFIX}/demo/pages`,
     CREATE: `${ADMIN_API_PREFIX}/demo`,
     UPDATE: (id: string) => `${ADMIN_API_PREFIX}/demo/${id}`,
     DELETE: (id: string) => `${ADMIN_API_PREFIX}/demo/${id}`,
