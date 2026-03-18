@@ -20,6 +20,8 @@ export interface WorkshopDetail extends Record<string, unknown> {
   participantsLimit?: number;
   remark?: string;
   sequence: number;
+  isCreative: boolean;
+  isLeadership: boolean;
   location: LocationBase;
   conference: ConferenceBase;
   description?: string;
@@ -34,6 +36,8 @@ export interface WorkshopItem extends Record<string, unknown> {
   participantsLimit?: number;
   remark?: string;
   sequence: number;
+  isCreative: boolean;
+  isLeadership: boolean;
 }
 
 export interface WorkshopPageItem extends WorkshopItem {
@@ -58,9 +62,11 @@ export interface WorkshopCreate {
   end_datetime: string; // ISO 8601 datetime (snake_case for API)
   location_id: string; // snake_case for API
   conference_id: string; // snake_case for API
-  participant_limit?: number; // snake_case for API
+  participants_limit?: number; // snake_case for API
   remark?: string;
   description?: string;
+  is_creative?: boolean;
+  is_leadership?: boolean;
 }
 
 export type WorkshopUpdate = WorkshopCreate;

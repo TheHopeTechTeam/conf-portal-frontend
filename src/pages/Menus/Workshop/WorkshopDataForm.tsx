@@ -1,6 +1,7 @@
 import { conferenceService } from "@/api/services/conferenceService";
 import { locationService, type LocationBase } from "@/api/services/locationService";
 import Button from "@/components/ui/button";
+import Checkbox from "@/components/ui/checkbox";
 import DatePicker from "@/components/ui/date-picker";
 import Input from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -23,6 +24,8 @@ export interface WorkshopFormValues {
   participantsLimit?: number;
   remark?: string;
   description?: string;
+  isCreative?: boolean;
+  isLeadership?: boolean;
 }
 
 interface WorkshopDataFormProps {
@@ -46,6 +49,8 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
     participantsLimit: undefined,
     remark: "",
     description: "",
+    isCreative: false,
+    isLeadership: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [locations, setLocations] = useState<LocationBase[]>([]);
@@ -116,6 +121,8 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
         participantsLimit: defaultValues.participantsLimit,
         remark: defaultValues.remark || "",
         description: defaultValues.description || "",
+        isCreative: defaultValues.isCreative ?? false,
+        isLeadership: defaultValues.isLeadership ?? false,
       });
     } else {
       setValues({
@@ -130,6 +137,8 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
         participantsLimit: undefined,
         remark: "",
         description: "",
+        isCreative: false,
+        isLeadership: false,
       });
     }
   }, [defaultValues]);
@@ -279,7 +288,6 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
           />
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Select
@@ -292,7 +300,6 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
             required
           />
         </div>
-
         <div>
           <Input
             id="participantLimit"
@@ -312,7 +319,6 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
           />
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <DatePicker
@@ -327,7 +333,6 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
             placeholder="請選擇開始日期"
           />
         </div>
-
         <div>
           <TimePicker
             id="startTime"
@@ -340,7 +345,6 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
           />
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <DatePicker
@@ -356,7 +360,6 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
             placeholder="請選擇結束日期"
           />
         </div>
-
         <div>
           <TimePicker
             id="endTime"
@@ -369,7 +372,24 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
           />
         </div>
       </div>
-
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="pt-2">
+          <Checkbox
+            id="isCreative"
+            label="Creative Session"
+            checked={!!values.isCreative}
+            onChange={(checked) => setValues((v) => ({ ...v, isCreative: checked }))}
+          />
+        </div>
+        <div className="pt-2">
+          <Checkbox
+            id="isLeadership"
+            label="Leadership Session"
+            checked={!!values.isLeadership}
+            onChange={(checked) => setValues((v) => ({ ...v, isLeadership: checked }))}
+          />
+        </div>
+      </div>
       <div>
         <TextArea
           id="description"

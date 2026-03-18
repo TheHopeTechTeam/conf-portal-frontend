@@ -11,7 +11,7 @@ import { useModal } from "@/hooks/useModal";
 import { formatDateTimeLocal } from "@/utils/timezone";
 import moment from "moment-timezone";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MdCoPresent } from "react-icons/md";
+import { MdCheck, MdClose, MdCoPresent } from "react-icons/md";
 import WorkshopDataForm, { type WorkshopFormValues } from "./WorkshopDataForm";
 import WorkshopDeleteForm from "./WorkshopDeleteForm";
 import WorkshopDetailView from "./WorkshopDetailView";
@@ -120,6 +120,46 @@ export default function WorkshopDataPage() {
         width: "w-40 max-w-60",
         tooltip: true,
         tooltipWrapContent: false,
+      },
+      {
+        key: "isCreative",
+        label: "Creative",
+        sortable: false,
+        width: "w-18",
+        render: (value: unknown) => {
+          const flag = Boolean(value);
+          return (
+            <span
+              className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
+                flag
+                  ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400"
+                  : "bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400"
+              }`}
+            >
+              {flag ? <MdCheck size={16} /> : <MdClose size={16} />}
+            </span>
+          );
+        },
+      },
+      {
+        key: "isLeadership",
+        label: "Leadership",
+        sortable: false,
+        width: "w-18",
+        render: (value: unknown) => {
+          const flag = Boolean(value);
+          return (
+            <span
+              className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
+                flag
+                  ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400"
+                  : "bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400"
+              }`}
+            >
+              {flag ? <MdCheck size={16} /> : <MdClose size={16} />}
+            </span>
+          );
+        },
       },
       {
         key: "startTime",
@@ -574,6 +614,8 @@ export default function WorkshopDataPage() {
         participants_limit: values.participantsLimit,
         remark: values.remark || undefined,
         description: values.description || undefined,
+        is_creative: !!values.isCreative,
+        is_leadership: !!values.isLeadership,
       };
 
       if (formMode === "create") {
@@ -667,6 +709,8 @@ export default function WorkshopDataPage() {
       participantsLimit: editing.participantsLimit as number | undefined,
       remark: editing.remark,
       description: editing.description,
+      isCreative: editing.isCreative,
+      isLeadership: editing.isLeadership,
     };
   }, [editing]);
 
