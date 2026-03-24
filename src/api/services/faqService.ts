@@ -38,6 +38,13 @@ export interface BulkAction {
   ids: string[];
 }
 
+export interface FaqChangeSequence {
+  id: string;
+  sequence: number;
+  another_id: string;
+  another_sequence: number;
+}
+
 // FAQ Types
 export interface FaqDetail extends Record<string, unknown> {
   id: string;
@@ -56,7 +63,9 @@ export interface FaqItem extends Record<string, unknown> {
   question: string;
   relatedLink?: string;
   remark?: string;
+  categoryId: string;
   categoryName?: string;
+  sequence: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -66,6 +75,8 @@ export interface FaqPagesResponse {
   pageSize?: number;
   total: number;
   items?: FaqItem[];
+  prevItem?: { id: string; sequence: number; categoryId: string };
+  nextItem?: { id: string; sequence: number; categoryId: string };
 }
 
 export interface FaqCreate {
@@ -109,6 +120,10 @@ export const faqCategoryService = {
   async restore(ids: string[]) {
     return httpClient.put<void>(API_ENDPOINTS.FAQ_CATEGORIES.RESTORE, { ids });
   },
+
+  async changeSequence(payload: FaqChangeSequence) {
+    return httpClient.put<void>(API_ENDPOINTS.FAQ_CATEGORIES.CHANGE_SEQUENCE, payload);
+  },
 };
 
 // FAQ Service
@@ -143,6 +158,10 @@ export const faqService = {
 
   async restore(ids: string[]) {
     return httpClient.put<void>(API_ENDPOINTS.FAQS.RESTORE, { ids });
+  },
+
+  async changeSequence(payload: FaqChangeSequence) {
+    return httpClient.put<void>(API_ENDPOINTS.FAQS.CHANGE_SEQUENCE, payload);
   },
 };
 

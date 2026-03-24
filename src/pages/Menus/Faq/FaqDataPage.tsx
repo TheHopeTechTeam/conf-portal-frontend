@@ -22,6 +22,8 @@ interface FaqPagesResponse {
   pageSize?: number;
   total: number;
   items?: FaqItem[];
+  prevItem?: { id: string; sequence: number; categoryId: string };
+  nextItem?: { id: string; sequence: number; categoryId: string };
 }
 
 export default function FaqDataPage() {
@@ -37,6 +39,8 @@ export default function FaqDataPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [prevItem, setPrevItem] = useState<{ id: string; sequence: number; categoryId: string } | undefined>(undefined);
+  const [nextItem, setNextItem] = useState<{ id: string; sequence: number; categoryId: string } | undefined>(undefined);
 
   // Notification
   const { showNotification } = useNotification();
@@ -97,6 +101,8 @@ export default function FaqDataPage() {
       const data = res.data as FaqPagesResponse;
       setItems(data.items || []);
       setTotal(data.total);
+      setPrevItem(data.prevItem);
+      setNextItem(data.nextItem);
       // Backend page is 0-based; map back to 1-based UI if changed externally
       setCurrentPage(data.page + 1);
     } catch (e) {
@@ -111,6 +117,11 @@ export default function FaqDataPage() {
       setLoading(false);
     }
   }, [showNotification]);
+
+  const handleCategoryModalClose = useCallback(() => {
+    closeCategoryModal();
+    void fetchPages();
+  }, [closeCategoryModal, fetchPages]);
 
   // Columns definition
   const columns: DataTableColumn<FaqItem>[] = useMemo(
@@ -202,7 +213,7 @@ export default function FaqDataPage() {
         },
       },
     ],
-    []
+    [],
   );
 
   // Trigger fetch on dependencies change
@@ -234,6 +245,114 @@ export default function FaqDataPage() {
   const handleRowSelect = (_selectedRows: FaqItem[], selectedKeys: string[]) => {
     setSelectedKeys(selectedKeys);
   };
+
+  const allowReorder = useMemo(
+    () => !showDeleted && (!orderBy || orderBy.trim() === ""),
+    [showDeleted, orderBy],
+  );
+
+  const getReorderInfo = useCallback(
+    (row: FaqItem, index: number) => {
+      if (!items || items.length === 0 || index < 0 || index >= items.length) {
+        return {
+          canMoveUp: false,
+          canMoveDown: false,
+          prevItem: undefined,
+          nextItem: undefined,
+        };
+      }
+
+      const isFirstItem = index === 0;
+      const isLastItem = index === items.length - 1;
+
+      let canMoveUp = false;
+      let canMoveDown = false;
+      let prevItemInfo: { id: string; sequence: number } | undefined = undefined;
+      let nextItemInfo: { id: string; sequence: number } | undefined = undefined;
+
+      const sameCategory = (a: FaqItem, b: FaqItem) => a.categoryId === b.categoryId;
+
+      if (isFirstItem) {
+        if (prevItem && prevItem.categoryId === row.categoryId) {
+          canMoveUp = true;
+          prevItemInfo = { id: prevItem.id, sequence: prevItem.sequence };
+        }
+        if (items.length > 1 && items[1] && items[1].sequence !== undefined && sameCategory(row, items[1])) {
+          canMoveDown = true;
+          nextItemInfo = {
+            id: items[1].id,
+            sequence: items[1].sequence,
+          };
+        }
+      } else if (isLastItem) {
+        if (items.length > 1 && items[index - 1] && items[index - 1].sequence !== undefined && sameCategory(row, items[index - 1])) {
+          canMoveUp = true;
+          prevItemInfo = {
+            id: items[index - 1].id,
+            sequence: items[index - 1].sequence,
+          };
+        }
+        if (nextItem && nextItem.categoryId === row.categoryId) {
+          canMoveDown = true;
+          nextItemInfo = { id: nextItem.id, sequence: nextItem.sequence };
+        }
+      } else {
+        if (items[index - 1] && items[index - 1].sequence !== undefined && sameCategory(row, items[index - 1])) {
+          canMoveUp = true;
+          prevItemInfo = {
+            id: items[index - 1].id,
+            sequence: items[index - 1].sequence,
+          };
+        }
+        if (items[index + 1] && items[index + 1].sequence !== undefined && sameCategory(row, items[index + 1])) {
+          canMoveDown = true;
+          nextItemInfo = {
+            id: items[index + 1].id,
+            sequence: items[index + 1].sequence,
+          };
+        }
+      }
+
+      return {
+        canMoveUp,
+        canMoveDown,
+        prevItem: prevItemInfo,
+        nextItem: nextItemInfo,
+      };
+    },
+    [items, prevItem, nextItem],
+  );
+
+  const handleReorder = useCallback(
+    async (currentId: string, currentSequence: number, targetId: string, targetSequence: number) => {
+      try {
+        setSubmitting(true);
+        await faqService.changeSequence({
+          id: currentId,
+          sequence: currentSequence,
+          another_id: targetId,
+          another_sequence: targetSequence,
+        });
+        showNotification({
+          variant: "success",
+          title: "已更新排序",
+          description: "常見問題顯示順序已調整",
+        });
+        await fetchPages();
+      } catch (e) {
+        console.error(e);
+        showNotification({
+          variant: "error",
+          title: "排序失敗",
+          description: "無法調整常見問題順序，請稍後再試",
+          position: "top-right",
+        });
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [fetchPages, showNotification],
+  );
 
   const handleBulkRestore = useCallback(async () => {
     setRestoreIds(selectedKeys);
@@ -317,7 +436,7 @@ export default function FaqDataPage() {
         },
         {
           visible: !showDeleted,
-        }
+        },
       ),
       {
         key: "category",
@@ -342,7 +461,7 @@ export default function FaqDataPage() {
           setShowDeleted(!showDeleted);
           setCurrentPage(1);
         },
-        { className: getRecycleButtonClassName(showDeleted) }
+        { className: getRecycleButtonClassName(showDeleted) },
       ),
     ];
 
@@ -375,7 +494,7 @@ export default function FaqDataPage() {
         },
         {
           visible: !showDeleted, // 僅在正常模式下顯示
-        }
+        },
       ),
       CommonRowAction.RESTORE(
         async (row: FaqItem) => {
@@ -383,7 +502,7 @@ export default function FaqDataPage() {
         },
         {
           visible: showDeleted, // 僅在回收桶模式下顯示
-        }
+        },
       ),
       CommonRowAction.DELETE(
         async (row: FaqItem) => {
@@ -403,10 +522,10 @@ export default function FaqDataPage() {
         },
         {
           text: showDeleted ? "永久刪除" : "刪除",
-        }
+        },
       ),
     ],
-    [openModal, openDeleteModal, openViewModal, showDeleted, fetchPages, handleSingleRestore]
+    [openModal, openDeleteModal, openViewModal, showDeleted, fetchPages, handleSingleRestore],
   );
 
   // Submit handlers
@@ -514,6 +633,8 @@ export default function FaqDataPage() {
         onClearSelectionRef={(clearFn) => {
           clearSelectionRef.current = clearFn;
         }}
+        getReorderInfo={allowReorder ? getReorderInfo : undefined}
+        onReorder={allowReorder ? handleReorder : undefined}
       />
 
       <Modal
@@ -554,7 +675,7 @@ export default function FaqDataPage() {
         {viewing && <FaqDetailView faqId={viewing.id} />}
       </Modal>
 
-      <FaqCategoryManagementModal isOpen={isCategoryModalOpen} onClose={closeCategoryModal} />
+      <FaqCategoryManagementModal isOpen={isCategoryModalOpen} onClose={handleCategoryModalClose} />
     </>
   );
 }

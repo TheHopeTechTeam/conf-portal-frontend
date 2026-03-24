@@ -195,6 +195,7 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `${ADMIN_API_PREFIX}/faq/category/${id}`,
     DELETE: (id: string) => `${ADMIN_API_PREFIX}/faq/category/${id}`,
     RESTORE: `${ADMIN_API_PREFIX}/faq/category/restore`,
+    CHANGE_SEQUENCE: `${ADMIN_API_PREFIX}/faq/category/sequence`,
   },
 
   // FAQ 管理
@@ -205,6 +206,7 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `${ADMIN_API_PREFIX}/faq/${id}`,
     DELETE: (id: string) => `${ADMIN_API_PREFIX}/faq/${id}`,
     RESTORE: `${ADMIN_API_PREFIX}/faq/restore`,
+    CHANGE_SEQUENCE: `${ADMIN_API_PREFIX}/faq/item/sequence`,
   },
 
   // 見證管理

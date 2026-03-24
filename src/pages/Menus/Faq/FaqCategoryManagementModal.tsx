@@ -12,8 +12,9 @@ import { Modal } from "@/components/ui/modal";
 import TextArea from "@/components/ui/textarea";
 import Tooltip from "@/components/ui/tooltip";
 import { Resource } from "@/const/enums";
+import { useNotification } from "@/context/NotificationContext";
 import { DateUtil } from "@/utils/dateUtil";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 interface FaqCategoryManagementModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ interface FaqCategoryManagementModalProps {
 }
 
 const FaqCategoryManagementModal: React.FC<FaqCategoryManagementModalProps> = ({ isOpen, onClose }) => {
+  const { showNotification } = useNotification();
   const [categories, setCategories] = useState<FaqCategoryBase[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
@@ -44,7 +46,7 @@ const FaqCategoryManagementModal: React.FC<FaqCategoryManagementModalProps> = ({
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       setLoading(true);
       const response = await faqCategoryService.getList({ deleted: showDeleted });
@@ -55,13 +57,106 @@ const FaqCategoryManagementModal: React.FC<FaqCategoryManagementModalProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [showDeleted]);
 
   useEffect(() => {
     if (isOpen) {
       fetchCategories();
     }
-  }, [isOpen, showDeleted]);
+  }, [isOpen, fetchCategories]);
+
+  const getReorderInfo = useCallback(
+    (_row: FaqCategoryBase, index: number) => {
+      if (!categories || categories.length === 0 || index < 0 || index >= categories.length) {
+        return {
+          canMoveUp: false,
+          canMoveDown: false,
+          prevItem: undefined,
+          nextItem: undefined,
+        };
+      }
+
+      const isFirstItem = index === 0;
+      const isLastItem = index === categories.length - 1;
+
+      let canMoveUp = false;
+      let canMoveDown = false;
+      let prevItemInfo: { id: string; sequence: number } | undefined = undefined;
+      let nextItemInfo: { id: string; sequence: number } | undefined = undefined;
+
+      if (isFirstItem) {
+        if (categories.length > 1 && categories[1] && categories[1].sequence !== undefined) {
+          canMoveDown = true;
+          nextItemInfo = {
+            id: categories[1].id,
+            sequence: categories[1].sequence as number,
+          };
+        }
+      } else if (isLastItem) {
+        if (categories.length > 1 && categories[index - 1] && categories[index - 1].sequence !== undefined) {
+          canMoveUp = true;
+          prevItemInfo = {
+            id: categories[index - 1].id,
+            sequence: categories[index - 1].sequence as number,
+          };
+        }
+      } else {
+        if (categories[index - 1] && categories[index - 1].sequence !== undefined) {
+          canMoveUp = true;
+          prevItemInfo = {
+            id: categories[index - 1].id,
+            sequence: categories[index - 1].sequence as number,
+          };
+        }
+        if (categories[index + 1] && categories[index + 1].sequence !== undefined) {
+          canMoveDown = true;
+          nextItemInfo = {
+            id: categories[index + 1].id,
+            sequence: categories[index + 1].sequence as number,
+          };
+        }
+      }
+
+      return {
+        canMoveUp,
+        canMoveDown,
+        prevItem: prevItemInfo,
+        nextItem: nextItemInfo,
+      };
+    },
+    [categories],
+  );
+
+  const handleReorder = useCallback(
+    async (currentId: string, currentSequence: number, targetId: string, targetSequence: number) => {
+      try {
+        setSubmitting(true);
+        await faqCategoryService.changeSequence({
+          id: currentId,
+          sequence: currentSequence,
+          another_id: targetId,
+          another_sequence: targetSequence,
+        });
+        showNotification({
+          variant: "success",
+          title: "已更新排序",
+          description: "分類顯示順序已調整",
+        });
+        await fetchCategories();
+      } catch (e) {
+        console.error(e);
+        showNotification({
+          variant: "error",
+          title: "排序失敗",
+          description: "無法調整分類順序，請稍後再試",
+          position: "top-right",
+        });
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [fetchCategories, showNotification],
+  );
 
   const handleAdd = () => {
     setFormMode("create");
@@ -213,16 +308,6 @@ const FaqCategoryManagementModal: React.FC<FaqCategoryManagementModalProps> = ({
         },
       },
       {
-        key: "sequence",
-        label: "排序",
-        sortable: false,
-        width: "w-24",
-        render: (value: unknown) => {
-          const sequence = value as number | undefined;
-          return sequence !== undefined ? sequence.toFixed(1) : <span className="text-gray-400">-</span>;
-        },
-      },
-      {
         key: "createdAt",
         label: "建立時間",
         sortable: false,
@@ -331,6 +416,8 @@ const FaqCategoryManagementModal: React.FC<FaqCategoryManagementModalProps> = ({
               rowActions={rowActions}
               onRowSelect={handleRowSelect}
               emptyMessage="暫無分類資料"
+              getReorderInfo={showDeleted ? undefined : getReorderInfo}
+              onReorder={showDeleted ? undefined : handleReorder}
             />
           </div>
         </div>
