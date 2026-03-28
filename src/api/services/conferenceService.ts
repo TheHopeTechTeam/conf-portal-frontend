@@ -9,7 +9,8 @@ export interface LocationBase {
 export interface ConferenceDetail extends Record<string, unknown> {
   id: string;
   title: string;
-  timezone: string;
+  /** IANA timezone from GET conference by id. */
+  timezone?: string;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
   isActive?: boolean;
@@ -20,10 +21,12 @@ export interface ConferenceDetail extends Record<string, unknown> {
   updatedAt?: string;
 }
 
+/** List row, paginated items, and GET .../conference/active (camelCase from API). */
 export interface ConferenceItem extends Record<string, unknown> {
   id: string;
   title: string;
-  timezone: string;
+  /** IANA timezone from API (e.g. Asia/Taipei). Present on active + paginated list after API update. */
+  timezone?: string;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
   isActive?: boolean;
@@ -115,6 +118,7 @@ export const conferenceService = {
     return httpClient.get<ConferenceDetail>(API_ENDPOINTS.CONFERENCES.DETAIL(id));
   },
 
+  /** Active conference; includes timezone, startDate, endDate, etc. */
   async getActive() {
     return httpClient.get<ConferenceItem>(API_ENDPOINTS.CONFERENCES.ACTIVE);
   },

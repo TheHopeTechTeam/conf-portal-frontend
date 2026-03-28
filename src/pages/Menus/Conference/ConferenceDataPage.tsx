@@ -158,6 +158,22 @@ export default function ConferenceDataPage() {
         },
       },
       {
+        key: "timezone",
+        label: "時區",
+        sortable: false,
+        width: "w-36 max-w-48",
+        tooltip: true,
+        tooltipWrapContent: false,
+        render: (value: unknown) => {
+          const tz = value as string | undefined;
+          return tz ? (
+            <span className="text-sm text-gray-600 dark:text-gray-400 font-mono">{tz}</span>
+          ) : (
+            <span className="text-gray-400">—</span>
+          );
+        },
+      },
+      {
         key: "locationName",
         label: "地點",
         sortable: false,

@@ -8,6 +8,7 @@ import { MenuButtonType } from "@/components/DataPage/types";
 import { useContextMenu } from "@/components/DataPage/useContextMenu";
 import Button from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { parseApiDateTimeToDate } from "@/utils/timezone";
 import moment from "moment-timezone";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MdDelete, MdEdit, MdVisibility } from "react-icons/md";
@@ -17,93 +18,6 @@ import EventDetailView from "./EventDetailView";
 interface EventScheduleCalendarProps {
   conference: ConferenceItem;
 }
-
-/**
- * Parse a datetime string without timezone info and convert it to a Date object
- * based on the specified timezone.
- *
- * The datetime string is in the format "YYYY-MM-DDTHH:mm:ss" (no timezone),
- * and it represents a time in the specified timezone (e.g., "Asia/Taipei").
- *
- * Uses moment-timezone to parse the datetime string as a local time in the specified timezone
- * and convert it to a JavaScript Date object (which represents UTC time internally).
- *
- * @param dateTimeString Datetime string (e.g., "2024-01-01T09:00:00" or "2024-01-01T09:00:00Z")
- * @param timezone Timezone name (e.g., "Asia/Taipei")
- * @returns Date object that represents the correct UTC time
- */
-const parseDateTimeWithTimezone = (dateTimeString: string, timezone: string): Date => {
-  try {
-    // Remove any timezone information (Z, +HH:MM, -HH:MM) from the string
-    // The time should be interpreted according to the timezone parameter
-    let cleanDateTimeString = dateTimeString.trim();
-
-    // Remove 'Z' suffix (UTC indicator)
-    if (cleanDateTimeString.endsWith("Z")) {
-      cleanDateTimeString = cleanDateTimeString.slice(0, -1);
-    }
-
-    // Remove timezone offset (e.g., +08:00, -05:00)
-    const timezoneOffsetPattern = /([+-]\d{2}):(\d{2})$/;
-    if (timezoneOffsetPattern.test(cleanDateTimeString)) {
-      cleanDateTimeString = cleanDateTimeString.replace(timezoneOffsetPattern, "");
-    }
-
-    // Remove milliseconds if present (e.g., .123)
-    const millisecondsPattern = /\.\d{1,3}$/;
-    if (millisecondsPattern.test(cleanDateTimeString)) {
-      cleanDateTimeString = cleanDateTimeString.replace(millisecondsPattern, "");
-    }
-
-    // Validate timezone name
-    if (!timezone || typeof timezone !== "string") {
-      throw new Error(`Invalid timezone: ${timezone}`);
-    }
-
-    // Use moment-timezone to parse the datetime string as a local time in the specified timezone
-    // moment.tz() interprets the input string as a time in the specified timezone
-    // and returns a moment object representing the correct UTC time
-    const momentDate = moment.tz(cleanDateTimeString, "YYYY-MM-DDTHH:mm:ss", timezone);
-
-    // Validate the parsed moment object
-    if (!momentDate.isValid()) {
-      throw new Error(`Invalid datetime: ${dateTimeString} in timezone: ${timezone}`);
-    }
-
-    // Convert moment object to JavaScript Date object
-    return momentDate.toDate();
-  } catch (error) {
-    console.error(`Error parsing datetime with timezone: ${dateTimeString}, ${timezone}`, error);
-
-    // Fallback: try to parse using moment without timezone (as UTC)
-    try {
-      let cleanString = dateTimeString.trim();
-      if (cleanString.endsWith("Z")) {
-        cleanString = cleanString.slice(0, -1);
-      }
-      const timezoneOffsetPattern = /([+-]\d{2}):(\d{2})$/;
-      if (timezoneOffsetPattern.test(cleanString)) {
-        cleanString = cleanString.replace(timezoneOffsetPattern, "");
-      }
-      const millisecondsPattern = /\.\d{1,3}$/;
-      if (millisecondsPattern.test(cleanString)) {
-        cleanString = cleanString.replace(millisecondsPattern, "");
-      }
-
-      const fallbackMoment = moment.utc(cleanString, "YYYY-MM-DDTHH:mm:ss", true);
-      if (fallbackMoment.isValid()) {
-        console.warn(`Using UTC fallback for ${dateTimeString}`);
-        return fallbackMoment.toDate();
-      }
-    } catch (fallbackError) {
-      console.error("Fallback parsing also failed:", fallbackError);
-    }
-
-    // Last resort: return current date
-    console.warn(`Could not parse date: ${dateTimeString}, returning current date`);
-    return new Date();
-  }
-};
 
 export default function EventScheduleCalendar({ conference }: EventScheduleCalendarProps) {
   const [events, setEvents] = useState<EventInfoItem[]>([]);
@@ -155,26 +69,28 @@ export default function EventScheduleCalendar({ conference }: EventScheduleCalen
     return events.map((event) => ({
       id: event.id,
       title: event.title,
-      start: parseDateTimeWithTimezone(event.startTime, event.timezone),
-      end: parseDateTimeWithTimezone(event.endTime, event.timezone),
+      start: parseApiDateTimeToDate(event.startTime, event.timezone),
+      end: parseApiDateTimeToDate(event.endTime, event.timezone),
+      timezone: event.timezone,
       textColor: event.textColor,
       backgroundColor: event.backgroundColor,
       item: event,
     }));
   }, [events]);
 
-  // Create validRange from conference dates
+  // Valid range: first moment of startDate through last moment of endDate in the conference IANA timezone
   const validRange = useMemo(() => {
+    const tz = conference.timezone?.trim() || "UTC";
     return {
-      start: new Date(conference.startDate),
-      end: new Date(conference.endDate),
+      start: moment.tz(`${conference.startDate}T00:00:00`, tz).toDate(),
+      end: moment.tz(`${conference.endDate}T23:59:59.999`, tz).toDate(),
     };
-  }, [conference.startDate, conference.endDate]);
+  }, [conference.startDate, conference.endDate, conference.timezone]);
 
-  // Set currentDate to conference start date
   const currentDate = useMemo(() => {
-    return new Date(conference.startDate);
-  }, [conference.startDate]);
+    const tz = conference.timezone?.trim() || "UTC";
+    return moment.tz(conference.startDate, "YYYY-MM-DD", tz).startOf("day").toDate();
+  }, [conference.startDate, conference.timezone]);
 
   // Handle add event
   const handleAddEvent = (date?: Date, startTime?: string, endTime?: string) => {
@@ -186,7 +102,8 @@ export default function EventScheduleCalendar({ conference }: EventScheduleCalen
     // For now, we'll set endTime to 23:59 for same day events, or handle it in the form
     // The form will handle date adjustment if endTime < startTime
 
-    setFormDefaultDate(moment(targetDate).format("YYYY-MM-DD"));
+    const confTz = conference.timezone?.trim() || "UTC";
+    setFormDefaultDate(moment.tz(targetDate, confTz).format("YYYY-MM-DD"));
     setFormDefaultTime(targetStartTime);
     setFormDefaultEndTime(targetEndTime);
     setFormMode("create");
@@ -251,6 +168,19 @@ export default function EventScheduleCalendar({ conference }: EventScheduleCalen
   // Handle event click
   const handleEventClick = (event: CalendarEvent) => {
     if (event.item && typeof event.item === "object" && "id" in event.item) {
+      const listItem = event.item as EventInfoItem;
+      console.log("[EventSchedule] EventBlock open (calendar list data)", {
+        calendarEvent: {
+          id: event.id,
+          title: event.title,
+          start: event.start,
+          end: event.end,
+          timezone: event.timezone,
+          textColor: event.textColor,
+          backgroundColor: event.backgroundColor,
+        },
+        listItem,
+      });
       handleViewEvent(event.item.id as string);
     }
   };
@@ -291,6 +221,14 @@ export default function EventScheduleCalendar({ conference }: EventScheduleCalen
 
   // Handle form submit
   const handleFormSubmit = async (values: EventInfoCreate) => {
+    if (formMode === "create") {
+      console.log("[EventSchedule] Form submit before API (create)", { payload: values });
+    } else if (selectedEvent) {
+      console.log("[EventSchedule] Form submit before API (update)", {
+        payload: values,
+        previousDetail: selectedEvent,
+      });
+    }
     try {
       setSubmitting(true);
       if (formMode === "create") {
@@ -345,6 +283,7 @@ export default function EventScheduleCalendar({ conference }: EventScheduleCalen
       <div className="flex h-full flex-col">
         <Calendar
           currentDate={currentDate}
+          timeZone={conference.timezone?.trim() || undefined}
           defaultView="week"
           availableViews={["week", "day"]}
           events={calendarEvents}

@@ -1,12 +1,15 @@
-import { useEffect, useState } from "react";
+import moment from "moment-timezone";
+import { useEffect, useMemo, useState } from "react";
 import CalendarToolBar from "./CalendarToolbar";
 import DayView from "./DayView";
 import MonthView from "./MonthView";
 import { CalendarProps, CalendarView } from "./types";
+import { resolveCalendarDisplayTimeZone } from "./utils";
 import WeekView from "./WeekView";
 
 const Calendar = ({
   currentDate = new Date(),
+  timeZone: timeZoneProp,
   defaultView = "month",
   availableViews = ["day", "week", "month"],
   events = [],
@@ -18,6 +21,8 @@ const Calendar = ({
   onAddEvent,
   showNavigationButtons = true,
 }: CalendarProps) => {
+  const displayTimeZone = useMemo(() => resolveCalendarDisplayTimeZone(timeZoneProp), [timeZoneProp]);
+  const timeZoneExplicit = Boolean(timeZoneProp?.trim());
   const [selectedDate, setSelectedDate] = useState<Date>(currentDate);
 
   // Validate and set initial view
@@ -77,44 +82,45 @@ const Calendar = ({
   };
 
   const handlePrevious = () => {
-    const newDate = new Date(selectedDate);
+    const m = moment.tz(selectedDate, displayTimeZone);
     switch (currentView) {
       case "day":
-        newDate.setDate(newDate.getDate() - 1);
+        m.subtract(1, "day");
         break;
       case "week":
-        newDate.setDate(newDate.getDate() - 7);
+        m.subtract(7, "day");
         break;
       case "month":
-        newDate.setMonth(newDate.getMonth() - 1);
+        m.subtract(1, "month");
         break;
     }
-    handleDateChange(newDate);
+    handleDateChange(m.startOf("day").toDate());
   };
 
   const handleNext = () => {
-    const newDate = new Date(selectedDate);
+    const m = moment.tz(selectedDate, displayTimeZone);
     switch (currentView) {
       case "day":
-        newDate.setDate(newDate.getDate() + 1);
+        m.add(1, "day");
         break;
       case "week":
-        newDate.setDate(newDate.getDate() + 7);
+        m.add(7, "day");
         break;
       case "month":
-        newDate.setMonth(newDate.getMonth() + 1);
+        m.add(1, "month");
         break;
     }
-    handleDateChange(newDate);
+    handleDateChange(m.startOf("day").toDate());
   };
 
   const handleToday = () => {
-    handleDateChange(new Date());
+    handleDateChange(moment.tz(displayTimeZone).startOf("day").toDate());
   };
 
   const renderView = () => {
     const viewProps = {
       currentDate: selectedDate,
+      displayTimeZone,
       events,
       validRange,
       onDateChange: handleDateChange,
@@ -137,6 +143,8 @@ const Calendar = ({
     <div className="flex h-full flex-col">
       <CalendarToolBar
         currentDate={selectedDate}
+        displayTimeZone={displayTimeZone}
+        showTimeZoneLabel={timeZoneExplicit}
         currentView={currentView}
         availableViews={availableViews}
         validRange={validRange}

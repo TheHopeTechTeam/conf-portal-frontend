@@ -5,9 +5,17 @@ export interface CalendarEvent {
   title: string;
   start: string | Date;
   end: string | Date;
+  /** IANA timezone used to format times (e.g. Asia/Taipei). */
+  timezone?: string;
   textColor?: string;
   backgroundColor?: string;
   item?: unknown;
+}
+
+/** Horizontal placement for overlapping events in week/day time grid (percent of day column). */
+export interface EventHorizontalLayout {
+  leftPercent: number;
+  widthPercent: number;
 }
 
 export interface CalendarDay {
@@ -30,6 +38,8 @@ export interface DateRange {
 
 export interface CalendarProps {
   currentDate?: Date;
+  /** IANA timezone (e.g. Asia/Taipei) for day columns, month grid, and time axis. When omitted, the browser local timezone is used. */
+  timeZone?: string;
   defaultView?: CalendarView;
   availableViews?: CalendarView[];
   events?: CalendarEvent[];
@@ -50,6 +60,8 @@ export interface CalendarProps {
 
 export interface CalendarViewProps {
   currentDate: Date;
+  /** Resolved IANA zone for the calendar grid (never empty; defaults applied at Calendar level). */
+  displayTimeZone: string;
   events?: CalendarEvent[];
   validRange?: DateRange;
   onDateChange: (date: Date) => void;

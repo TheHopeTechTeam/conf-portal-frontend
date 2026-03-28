@@ -28,7 +28,7 @@ export default function EventScheduleManagement() {
   }, []);
 
   // 动态生成 title
-  const title = conference ? `活動時程管理 - ${conference.title}(${conference.startDate}-${conference.endDate})` : "活動時程管理";
+  const title = conference ? `活動時程管理 - ${conference.title}(${conference.startDate} - ${conference.endDate})` : "活動時程管理";
 
   // 动态生成 description
   const description = conference ? `管理「${conference.title}」的活動時程` : "管理活動時程";

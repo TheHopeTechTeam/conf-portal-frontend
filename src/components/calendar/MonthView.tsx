@@ -1,22 +1,28 @@
 import { CalendarViewProps } from "./types";
-import { filterEventsByDate, getMonthDays, isDateInRange } from "./utils";
+import {
+  filterEventsByYmdInTimeZone,
+  formatTimeInTimeZone,
+  formatUtcOffsetLabelAtInstant,
+  getMonthDaysInTimeZone,
+  isDateInRange,
+  isSameCalendarDayInTimeZone,
+  wallYmdToZonedStartOfDay,
+} from "./utils";
 
-const MonthView = ({ currentDate, events = [], validRange, onEventClick, onDateChange }: CalendarViewProps) => {
-  const days = getMonthDays(currentDate);
+const MonthView = ({ currentDate, displayTimeZone, events = [], validRange, onEventClick, onDateChange }: CalendarViewProps) => {
+  const tz = displayTimeZone;
+  const days = getMonthDaysInTimeZone(currentDate, tz);
 
   // Weekday labels - always start with Sunday
   const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  const getEventsForDay = (date: string) => {
-    return filterEventsByDate(events, new Date(date));
+  const getEventsForDay = (ymd: string) => {
+    return filterEventsByYmdInTimeZone(events, ymd, tz);
   };
 
   const handleDayClick = (date: string) => {
-    // Parse date string (YYYY-MM-DD) as local time, not UTC
-    const [year, month, day] = date.split("-").map(Number);
-    const newDate = new Date(year, month - 1, day);
-    // Check if date is within valid range
-    if (isDateInRange(newDate, validRange)) {
+    const newDate = wallYmdToZonedStartOfDay(date, tz);
+    if (isDateInRange(newDate, validRange, tz)) {
       onDateChange(newDate);
     }
   };
@@ -34,17 +40,11 @@ const MonthView = ({ currentDate, events = [], validRange, onEventClick, onDateC
         <div className="w-full grid grid-cols-7 grid-rows-6 gap-px">
           {days.map((day) => {
             const dayEvents = getEventsForDay(day.date);
-            // Check if this day is selected (parse as local time)
-            const [year, month, dayNum] = day.date.split("-").map(Number);
-            const date = new Date(year, month - 1, dayNum);
-            date.setHours(0, 0, 0, 0);
-            const normalizedCurrentDate = new Date(currentDate);
-            normalizedCurrentDate.setHours(0, 0, 0, 0);
-            const isSelected = date.getTime() === normalizedCurrentDate.getTime();
+            const dayDate = wallYmdToZonedStartOfDay(day.date, tz);
+            const isSelected = isSameCalendarDayInTimeZone(currentDate, dayDate, tz);
             const isToday = day.isToday;
 
-            const dayDate = new Date(year, month - 1, dayNum);
-            const isInRange = isDateInRange(dayDate, validRange);
+            const isInRange = isDateInRange(dayDate, validRange, tz);
             const isDisabled = !isInRange;
 
             return (
@@ -79,11 +79,8 @@ const MonthView = ({ currentDate, events = [], validRange, onEventClick, onDateC
                   <ol className="mt-2">
                     {dayEvents.slice(0, 2).map((event) => {
                       const eventStart = new Date(event.start);
-                      const timeString = eventStart.toLocaleTimeString("en-US", {
-                        hour: "numeric",
-                        minute: "2-digit",
-                        hour12: true,
-                      });
+                      const offsetLabel = formatUtcOffsetLabelAtInstant(eventStart, tz);
+                      const timeString = `${formatTimeInTimeZone(eventStart, tz)}${offsetLabel ? ` (${offsetLabel})` : ""}`;
                       return (
                         <li key={event.id}>
                           <button

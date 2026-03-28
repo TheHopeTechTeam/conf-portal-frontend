@@ -6,6 +6,7 @@ import { canNavigateNext, canNavigatePrevious } from "./utils";
 interface NavigationButtonsProps {
   currentDate: Date;
   currentView: CalendarView;
+  displayTimeZone: string;
   validRange?: DateRange;
   onPrevious: () => void;
   onNext: () => void;
@@ -39,6 +40,7 @@ const getNextLabel = (currentView: CalendarView): string => {
 const NavigationButtons = ({
   currentDate,
   currentView,
+  displayTimeZone,
   validRange,
   onPrevious,
   onNext,
@@ -93,7 +95,7 @@ const NavigationButtons = ({
         <button
           type="button"
           onClick={onPrevious}
-          disabled={!canNavigatePrevious(currentDate, currentView, validRange)}
+          disabled={!canNavigatePrevious(currentDate, currentView, validRange, displayTimeZone)}
           className={getPreviousClasses()}
         >
           <span className="sr-only">{getNavigationLabel(currentView)}</span>
@@ -109,7 +111,7 @@ const NavigationButtons = ({
         <button
           type="button"
           onClick={onNext}
-          disabled={!canNavigateNext(currentDate, currentView, validRange)}
+          disabled={!canNavigateNext(currentDate, currentView, validRange, displayTimeZone)}
           className={getNextClasses()}
         >
           <span className="sr-only">{getNextLabel(currentView)}</span>

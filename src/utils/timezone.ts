@@ -67,21 +67,99 @@ export const getTimezoneOffset = (timezone: string): string => {
 };
 
 /**
- * Format datetime string to local display format
+ * Strip UTC Z / numeric offset / ms so the remaining string is treated as naive wall-clock,
+ * then interpreted in the given IANA timezone (legacy API without Z/offset).
+ */
+export const stripIsoDateTimeToNaiveWallClock = (dateTimeString: string): string => {
+  let s = dateTimeString.trim();
+  if (s.endsWith("Z")) {
+    s = s.slice(0, -1);
+  }
+  let changed = true;
+  while (changed) {
+    changed = false;
+    if (/\.\d{1,3}$/.test(s)) {
+      s = s.replace(/\.\d{1,3}$/, "");
+      changed = true;
+      continue;
+    }
+    if (/([+-]\d{2}):(\d{2})$/.test(s)) {
+      s = s.replace(/([+-]\d{2}):(\d{2})$/, "");
+      changed = true;
+      continue;
+    }
+    if (/([+-]\d{4})$/.test(s)) {
+      s = s.replace(/([+-]\d{4})$/, "");
+      changed = true;
+    }
+  }
+  return s;
+};
+
+const hasIsoUtcOrOffsetSuffix = (trimmed: string): boolean => {
+  return (
+    /Z$/i.test(trimmed) ||
+    /([+-]\d{2}):(\d{2})$/.test(trimmed) ||
+    /([+-]\d{4})$/.test(trimmed)
+  );
+};
+
+/**
+ * Parse API datetime to a JS Date (UTC instant). If the string has no Z/offset, treat digits as wall time in `eventTimezone` (legacy).
+ */
+export const parseApiDateTimeToDate = (dateTimeString: string, eventTimezone: string): Date => {
+  const trimmed = dateTimeString.trim();
+
+  if (hasIsoUtcOrOffsetSuffix(trimmed)) {
+    const parsed = moment.parseZone(trimmed);
+    if (parsed.isValid()) {
+      return parsed.toDate();
+    }
+  }
+
+  const clean = stripIsoDateTimeToNaiveWallClock(trimmed);
+  let legacy = moment.tz(clean, ["YYYY-MM-DDTHH:mm:ss", "YYYY-MM-DDTHH:mm"], true, eventTimezone);
+  if (legacy.isValid()) {
+    return legacy.toDate();
+  }
+
+  const utcNaive = moment.utc(clean, ["YYYY-MM-DDTHH:mm:ss", "YYYY-MM-DDTHH:mm"], true);
+  if (utcNaive.isValid()) {
+    return utcNaive.toDate();
+  }
+
+  console.warn("parseApiDateTimeToDate: could not parse", dateTimeString);
+  return new Date();
+};
+
+/**
+ * Format API datetime for datetime-local fields: show wall clock in `timezone` (event zone).
+ * If the API string includes Z or an offset, it is parsed as an instant then converted to that IANA zone.
+ * Naive strings (no Z/offset) are treated as wall time already in `timezone` (legacy).
  */
 export const formatDateTimeLocal = (dateTimeString: string, timezone: string): string => {
   try {
-    // 先解析 ISO 字符串（可能是 UTC 或帶時區的格式）
-    let momentDate = moment(dateTimeString);
-    if (!momentDate.isValid()) {
+    if (!timezone || typeof timezone !== "string") {
+      console.error("formatDateTimeLocal: invalid timezone");
       return dateTimeString;
     }
+    const trimmed = dateTimeString.trim();
 
-    // 轉換到指定時區
-    momentDate = momentDate.tz(timezone);
+    if (hasIsoUtcOrOffsetSuffix(trimmed)) {
+      const parsed = moment.parseZone(trimmed);
+      if (parsed.isValid()) {
+        return parsed.clone().tz(timezone).format("YYYY-MM-DDTHH:mm");
+      }
+    }
 
-    // Format as datetime-local input format: YYYY-MM-DDTHH:mm
-    return momentDate.format("YYYY-MM-DDTHH:mm");
+    const clean = stripIsoDateTimeToNaiveWallClock(trimmed);
+    const legacy = moment.tz(clean, ["YYYY-MM-DDTHH:mm:ss", "YYYY-MM-DDTHH:mm"], true, timezone);
+    if (legacy.isValid()) {
+      return legacy.format("YYYY-MM-DDTHH:mm");
+    }
+
+    console.warn("formatDateTimeLocal: could not parse", dateTimeString);
+    return dateTimeString;
   } catch (error) {
     console.error("Error formatting datetime:", error);
     return dateTimeString;
@@ -89,19 +167,35 @@ export const formatDateTimeLocal = (dateTimeString: string, timezone: string): s
 };
 
 /**
- * Convert datetime-local string to ISO format without timezone
+ * Parse form values as wall time in `timezone` and return a real UTC instant (e.g. for APIs that store true UTC).
  */
 export const convertDateTimeLocalToISO = (dateTimeLocalString: string, timezone: string = "UTC"): string => {
   try {
-    // Parse as local time in the specified timezone
-    const momentDate = moment.tz(dateTimeLocalString, "YYYY-MM-DDTHH:mm", timezone);
+    const momentDate = moment.tz(dateTimeLocalString, ["YYYY-MM-DDTHH:mm:ss", "YYYY-MM-DDTHH:mm"], true, timezone);
     if (!momentDate.isValid()) {
       throw new Error("Invalid datetime string");
     }
-    // Format as ISO without timezone
     return momentDate.toISOString();
   } catch (error) {
     console.error("Error converting datetime:", error);
     throw error;
   }
 };
+
+/**
+ * Event schedule API: form date/time are naive wall clock in `timezone` (e.g. 2026-05-01 08:00 Asia/Taipei).
+ * Serializes to ISO-8601 with that zone's offset (e.g. 2026-05-01T08:00:00+0800) so the instant is unambiguous for the backend.
+ */
+export const formatWallDateTimeInZoneAsOffsetIso = (
+  dateTimeLocalString: string,
+  timezone: string,
+): string => {
+  const momentDate = moment.tz(dateTimeLocalString, ["YYYY-MM-DDTHH:mm:ss", "YYYY-MM-DDTHH:mm"], true, timezone);
+  if (!momentDate.isValid()) {
+    throw new Error("Invalid datetime string");
+  }
+  return momentDate.format("YYYY-MM-DDTHH:mm:ssZZ");
+};
+
+/** @deprecated Use formatWallDateTimeInZoneAsOffsetIso */
+export const formatZonedWallDateTimeForEventScheduleApi = formatWallDateTimeInZoneAsOffsetIso;

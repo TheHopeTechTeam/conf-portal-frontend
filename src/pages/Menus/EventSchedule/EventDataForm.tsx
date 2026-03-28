@@ -5,7 +5,12 @@ import Input from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import TextArea from "@/components/ui/textarea";
 import TimePicker from "@/components/ui/time-picker";
-import { COMMON_TIMEZONES, convertDateTimeLocalToISO, formatDateTimeLocal, getLocalTimezone } from "@/utils/timezone";
+import {
+  COMMON_TIMEZONES,
+  formatDateTimeLocal,
+  formatWallDateTimeInZoneAsOffsetIso,
+  getLocalTimezone,
+} from "@/utils/timezone";
 import moment from "moment-timezone";
 import { useEffect, useState } from "react";
 
@@ -143,13 +148,11 @@ const EventDataForm: React.FC<EventDataFormProps> = ({
 
     if (values.startDate && values.endDate && values.startTime && values.endTime) {
       try {
-        const startDateTime = convertDateTimeLocalToISO(`${values.startDate}T${values.startTime}`);
-        const endDateTime = convertDateTimeLocalToISO(`${values.endDate}T${values.endTime}`);
-        const startMoment = moment.tz(startDateTime, "YYYY-MM-DDTHH:mm:ss", values.timezone);
-        const endMoment = moment.tz(endDateTime, "YYYY-MM-DDTHH:mm:ss", values.timezone);
-
-        // Check if end datetime is before or equal to start datetime
-        if (endMoment.isBefore(startMoment) || endMoment.isSame(startMoment)) {
+        const startMoment = moment.tz(`${values.startDate}T${values.startTime}`, "YYYY-MM-DDTHH:mm", true, values.timezone);
+        const endMoment = moment.tz(`${values.endDate}T${values.endTime}`, "YYYY-MM-DDTHH:mm", true, values.timezone);
+        if (!startMoment.isValid() || !endMoment.isValid()) {
+          next.endTime = "時間格式錯誤";
+        } else if (endMoment.isBefore(startMoment) || endMoment.isSame(startMoment)) {
           next.endTime = "結束時間必須晚於開始時間";
         }
       } catch (error) {
@@ -180,8 +183,8 @@ const EventDataForm: React.FC<EventDataFormProps> = ({
     if (!validate()) return;
 
     try {
-      const startTime = convertDateTimeLocalToISO(`${values.startDate}T${values.startTime}`);
-      const endTime = convertDateTimeLocalToISO(`${values.endDate}T${values.endTime}`);
+      const startTime = formatWallDateTimeInZoneAsOffsetIso(`${values.startDate}T${values.startTime}`, values.timezone);
+      const endTime = formatWallDateTimeInZoneAsOffsetIso(`${values.endDate}T${values.endTime}`, values.timezone);
 
       const payload: EventInfoCreate = {
         title: values.title.trim(),

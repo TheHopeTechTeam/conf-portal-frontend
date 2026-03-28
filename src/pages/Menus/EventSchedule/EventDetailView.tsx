@@ -20,6 +20,7 @@ const EventDetailView: React.FC<EventDetailViewProps> = ({ eventId }) => {
         setError(null);
         const response = await eventInfoService.getById(eventId);
         if (response.success && response.data) {
+          console.log("[EventSchedule] Event detail loaded (API response before render)", response.data);
           setEventData(response.data);
         } else {
           setError("載入活動詳情失敗");

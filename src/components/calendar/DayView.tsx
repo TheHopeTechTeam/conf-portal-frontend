@@ -1,54 +1,64 @@
+import moment from "moment-timezone";
 import { useEffect, useState } from "react";
 import { MdAdd } from "react-icons/md";
 import EventBlock from "./EventBlock";
 import { CalendarViewProps } from "./types";
-import { getMonthDays, isDateInRange } from "./utils";
+import {
+  computeOverlappingEventLayouts,
+  formatCalendarDateInTimeZone,
+  getMinutesFromZonedMidnight,
+  getMonthDaysInTimeZone,
+  getZonedDayBounds,
+  isDateInRange,
+  isSameCalendarDayInTimeZone,
+  wallYmdToZonedStartOfDay,
+} from "./utils";
 
-const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateChange, onEventContextMenu, onAddEvent }: CalendarViewProps) => {
-  // Filter events that overlap with the current day (including multi-day events)
-  const getEventsForDay = (date: Date) => {
-    const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
-    const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+const DayView = ({
+  currentDate,
+  displayTimeZone,
+  events = [],
+  validRange,
+  onEventClick,
+  onDateChange,
+  onEventContextMenu,
+  onAddEvent,
+}: CalendarViewProps) => {
+  const tz = displayTimeZone;
 
+  const getEventsForDay = (dayAnchor: Date) => {
+    const { dayStart, dayEnd } = getZonedDayBounds(dayAnchor, tz);
     return events.filter((event) => {
       const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
       const eventEnd = event.end instanceof Date ? event.end : new Date(event.end);
-      // Event overlaps with the day if it starts before the day ends and ends after the day starts
       return eventStart <= dayEnd && eventEnd >= dayStart;
     });
   };
 
   const dayEvents = getEventsForDay(currentDate);
-  const [miniCalendarMonth, setMiniCalendarMonth] = useState(currentDate);
+  const overlapLayouts = computeOverlappingEventLayouts(dayEvents);
+  const [miniCalendarMonth, setMiniCalendarMonth] = useState(() => moment.tz(currentDate, tz).startOf("month").toDate());
 
-  // Sync mini calendar month when currentDate changes
   useEffect(() => {
-    setMiniCalendarMonth(currentDate);
-  }, [currentDate]);
+    setMiniCalendarMonth(moment.tz(currentDate, tz).startOf("month").toDate());
+  }, [currentDate, tz]);
 
   const handleDayClick = (date: string) => {
-    // Parse date string (YYYY-MM-DD) as local time, not UTC
-    const [year, month, day] = date.split("-").map(Number);
-    const newDate = new Date(year, month - 1, day);
-    // Check if date is within valid range
-    if (isDateInRange(newDate, validRange)) {
+    const newDate = wallYmdToZonedStartOfDay(date, tz);
+    if (isDateInRange(newDate, validRange, tz)) {
       onDateChange(newDate);
     }
   };
 
   const handleMiniCalendarPrevious = () => {
-    const newDate = new Date(miniCalendarMonth);
-    newDate.setMonth(newDate.getMonth() - 1);
-    setMiniCalendarMonth(newDate);
+    setMiniCalendarMonth((prev) => moment.tz(prev, tz).subtract(1, "month").startOf("month").toDate());
   };
 
   const handleMiniCalendarNext = () => {
-    const newDate = new Date(miniCalendarMonth);
-    newDate.setMonth(newDate.getMonth() + 1);
-    setMiniCalendarMonth(newDate);
+    setMiniCalendarMonth((prev) => moment.tz(prev, tz).add(1, "month").startOf("month").toDate());
   };
 
-  const miniCalendarDays = getMonthDays(miniCalendarMonth);
+  const miniCalendarDays = getMonthDaysInTimeZone(miniCalendarMonth, tz);
 
   // Generate 24 hours for time axis
   const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -65,66 +75,42 @@ const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateCha
   // Calculate event position in pixels, handling events that continue from previous day
   // Each 30-minute slot is 48px tall, so each minute is 48/30 = 1.6px
   // Uses local time (getHours, getMinutes return local time)
-  const getEventTop = (date: string | Date, dayDate: Date): number => {
-    const dateObj = date instanceof Date ? date : new Date(date);
-    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0);
-
-    // If event starts before this day, start from 0
+  const getEventTop = (eventTime: string | Date, dayDate: Date): number => {
+    const dateObj = eventTime instanceof Date ? eventTime : new Date(eventTime);
+    const { dayStart } = getZonedDayBounds(dayDate, tz);
     if (dateObj < dayStart) {
       return 0;
     }
-
-    // getHours() and getMinutes() return local time
-    const hours = dateObj.getHours();
-    const minutes = dateObj.getMinutes();
-    // Total minutes from midnight (local time)
-    const totalMinutes = hours * 60 + minutes;
-    // Convert to pixels (each minute is 1.6px: 48px / 30 minutes)
+    const totalMinutes = getMinutesFromZonedMidnight(dateObj, tz);
     return (totalMinutes / 30) * 48;
   };
 
-  // Calculate event height in pixels, clamping to end of day if event spans to next day
-  // Uses local time for calculations
   const getEventHeight = (start: string | Date, end: string | Date, dayDate: Date): number => {
     const startDate = start instanceof Date ? start : new Date(start);
     const endDate = end instanceof Date ? end : new Date(end);
-
-    // Get day boundaries in local timezone
-    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0);
-    const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999);
-
-    // Clamp event start and end to day boundaries
+    const { dayStart, dayEnd } = getZonedDayBounds(dayDate, tz);
     const clampedStart = startDate < dayStart ? dayStart : startDate;
     const clampedEnd = endDate > dayEnd ? dayEnd : endDate;
-
-    // Calculate difference in minutes
     const diffMinutes = (clampedEnd.getTime() - clampedStart.getTime()) / (1000 * 60);
-
-    // Convert minutes to pixels (each minute is 1.6px: 48px / 30 minutes)
-    // Minimum height of 48px (30 minutes)
     return Math.max((diffMinutes / 30) * 48, 48);
   };
 
-  // Check if event spans to next day
   const isEventSpanningToNextDay = (_start: string | Date, end: string | Date, dayDate: Date): boolean => {
     const endDate = end instanceof Date ? end : new Date(end);
-    const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999);
+    const { dayEnd } = getZonedDayBounds(dayDate, tz);
     return endDate > dayEnd;
   };
 
-  // Check if event continues from previous day
   const isEventContinuingFromPreviousDay = (start: string | Date, dayDate: Date): boolean => {
     const startDate = start instanceof Date ? start : new Date(start);
-    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0);
+    const { dayStart } = getZonedDayBounds(dayDate, tz);
     return startDate < dayStart;
   };
 
-  // Check if event is fully within this day
   const isEventFullyWithinDay = (start: string | Date, end: string | Date, dayDate: Date): boolean => {
     const startDate = start instanceof Date ? start : new Date(start);
     const endDate = end instanceof Date ? end : new Date(end);
-    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0);
-    const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999);
+    const { dayStart, dayEnd } = getZonedDayBounds(dayDate, tz);
     return startDate >= dayStart && endDate <= dayEnd;
   };
 
@@ -150,17 +136,17 @@ const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateCha
               {timeSlots.map((slot) => {
                 const isLastSlot = slot.index === 47;
                 const top = slot.index * 48; // Each slot is 48px
-                
+
                 // Calculate start time for this slot (HH:mm format)
                 const startHour = slot.hour;
                 const startMinute = slot.isHalfHour ? 30 : 0;
                 const startTime = `${startHour.toString().padStart(2, "0")}:${startMinute.toString().padStart(2, "0")}`;
-                
+
                 // Calculate end time for this slot (30 minutes later, HH:mm format)
                 const endHour = slot.isHalfHour ? (slot.hour + 1) % 24 : slot.hour;
                 const endMinute = slot.isHalfHour ? 0 : 30;
                 const endTime = `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
-                
+
                 return (
                   <div
                     key={slot.index}
@@ -201,6 +187,7 @@ const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateCha
                 const isSpanning = isEventSpanningToNextDay(event.start, event.end, currentDate);
                 const isContinuing = isEventContinuingFromPreviousDay(event.start, currentDate);
                 const isFullDay = isEventFullyWithinDay(event.start, event.end, currentDate);
+                const horizontalLayout = overlapLayouts.get(String(event.id));
 
                 return (
                   <EventBlock
@@ -212,6 +199,7 @@ const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateCha
                     isContinuing={isContinuing}
                     isFullDay={isFullDay}
                     dayDate={currentDate}
+                    horizontalLayout={horizontalLayout}
                     onEventClick={onEventClick}
                     onContextMenu={onEventContextMenu}
                   />
@@ -238,7 +226,7 @@ const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateCha
             </svg>
           </button>
           <div className="flex-auto text-sm font-semibold">
-            {miniCalendarMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+            {formatCalendarDateInTimeZone(miniCalendarMonth, "month-year", tz)}
           </div>
           <button
             type="button"
@@ -266,17 +254,11 @@ const DayView = ({ currentDate, events = [], validRange, onEventClick, onDateCha
         </div>
         <div className="isolate mt-2 grid grid-cols-7 gap-px rounded-lg bg-gray-200 text-sm shadow-sm ring-1 ring-gray-200 dark:bg-white/10 dark:shadow-none dark:ring-white/10">
           {miniCalendarDays.map((day) => {
-            // Parse date string (YYYY-MM-DD) as local time
-            const [year, month, dayNum] = day.date.split("-").map(Number);
-            const dayDate = new Date(year, month - 1, dayNum);
-            
-            // Normalize currentDate to local timezone for comparison
-            const normalizedCurrentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-            const normalizedDayDate = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
-            const isSelected = normalizedDayDate.getTime() === normalizedCurrentDate.getTime();
+            const dayDate = wallYmdToZonedStartOfDay(day.date, tz);
+            const isSelected = isSameCalendarDayInTimeZone(currentDate, dayDate, tz);
             const isToday = day.isToday;
 
-            const isInRange = isDateInRange(dayDate, validRange);
+            const isInRange = isDateInRange(dayDate, validRange, tz);
             const isDisabled = !isInRange;
 
             return (

@@ -1,4 +1,74 @@
-import { CalendarDay, CalendarEvent, CalendarMonth, DateRange } from "./types";
+import { CalendarDay, CalendarEvent, CalendarMonth, DateRange, EventHorizontalLayout } from "./types";
+import moment from "moment-timezone";
+
+/**
+ * IANA zone for calendar event labels; falls back to the runtime local zone when missing.
+ */
+export const resolveEventDisplayTimeZone = (timeZone?: string): string => {
+  const trimmed = timeZone?.trim();
+  if (trimmed) {
+    return trimmed;
+  }
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+};
+
+/** Same as resolveEventDisplayTimeZone; use for calendar grid display. */
+export const resolveCalendarDisplayTimeZone = (timeZone?: string): string => resolveEventDisplayTimeZone(timeZone);
+
+export const formatTimeInTimeZone = (date: Date, timeZone: string): string => {
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone,
+  });
+};
+
+export const formatShortDateInTimeZone = (date: Date, timeZone: string): string => {
+  return date.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone,
+  });
+};
+
+export const formatShortDateRangeInTimeZone = (start: Date, end: Date, timeZone: string): string => {
+  return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone })} – ${end.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone,
+  })}`;
+};
+
+export const isSameCalendarDayInTimeZone = (a: Date, b: Date, timeZone: string): boolean => {
+  const key = (d: Date) => d.toLocaleDateString("en-CA", { timeZone });
+  return key(a) === key(b);
+};
+
+/**
+ * UTC offset at this instant for the IANA zone, e.g. UTC+08:00 (replaces GMT with UTC).
+ */
+export const formatUtcOffsetLabelAtInstant = (date: Date, timeZone: string): string => {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      timeZoneName: "longOffset",
+    }).formatToParts(date);
+    const raw = parts.find((p) => p.type === "timeZoneName")?.value ?? "";
+    if (!raw) {
+      return "";
+    }
+    return raw
+      .replace(/^GMT/i, "UTC")
+      .replace(/\u2212/g, "-")
+      .replace(/\s+/g, "");
+  } catch {
+    return "";
+  }
+};
 
 /**
  * Create a Date object in local timezone from a date string (YYYY-MM-DD) or Date object
@@ -107,6 +177,104 @@ export const getWeekDates = (date: Date): Date[] => {
   return dates;
 };
 
+/** Sunday-start week; each entry is start-of-day in `tz` for that wall date. */
+export const getWeekDatesInTimeZone = (anchor: Date, tz: string): Date[] => {
+  const m = moment.tz(anchor, tz).startOf("day");
+  const dow = m.day();
+  const sunday = m.clone().subtract(dow, "days");
+  return Array.from({ length: 7 }, (_, i) => sunday.clone().add(i, "days").toDate());
+};
+
+export const getStartOfWeekInTimeZone = (anchor: Date, tz: string): Date => getWeekDatesInTimeZone(anchor, tz)[0];
+
+export const getEndOfWeekInTimeZone = (anchor: Date, tz: string): Date => getWeekDatesInTimeZone(anchor, tz)[6];
+
+export const getZonedDayBounds = (dayAnchor: Date, tz: string): { dayStart: Date; dayEnd: Date } => {
+  const m = moment.tz(dayAnchor, tz);
+  return {
+    dayStart: m.clone().startOf("day").toDate(),
+    dayEnd: m.clone().endOf("day").toDate(),
+  };
+};
+
+export const getMonthDaysInTimeZone = (anchor: Date, tz: string): CalendarDay[] => {
+  const m = moment.tz(anchor, tz);
+  const year = m.year();
+  const month = m.month();
+  const firstOfMonth = moment.tz({ year, month, day: 1 }, tz);
+  const firstDayOfWeek = firstOfMonth.day();
+  const gridStart = firstOfMonth.clone().subtract(firstDayOfWeek, "days").startOf("day");
+  const now = moment().tz(tz);
+  const days: CalendarDay[] = [];
+  for (let i = 0; i < 42; i++) {
+    const d = gridStart.clone().add(i, "days");
+    const dateStr = d.format("YYYY-MM-DD");
+    days.push({
+      date: dateStr,
+      isCurrentMonth: d.month() === month,
+      isToday: d.isSame(now, "day"),
+    });
+  }
+  return days;
+};
+
+export const formatCalendarDateInTimeZone = (date: Date, format: "full" | "short" | "month-year", tz: string): string => {
+  const opts: Intl.DateTimeFormatOptions = { timeZone: tz };
+  if (format === "short") {
+    opts.month = "short";
+    opts.day = "numeric";
+    opts.year = "numeric";
+    return date.toLocaleDateString("en-US", opts);
+  }
+  if (format === "month-year") {
+    opts.month = "long";
+    opts.year = "numeric";
+    return date.toLocaleDateString("en-US", opts);
+  }
+  opts.year = "numeric";
+  opts.month = "long";
+  opts.day = "numeric";
+  return date.toLocaleDateString("en-US", opts);
+};
+
+export const formatWeekdayInTimeZone = (date: Date, format: "full" | "short", tz: string): string => {
+  return date.toLocaleDateString("en-US", {
+    timeZone: tz,
+    weekday: format === "full" ? "long" : "short",
+  });
+};
+
+export const getWeekNumberInTimeZone = (date: Date, tz: string): number => {
+  const m = moment.tz(date, tz);
+  const day = m.date();
+  const firstDow = m.clone().startOf("month").day();
+  return Math.ceil((day + firstDow) / 7);
+};
+
+export const formatYmdInTimeZone = (instant: Date, tz: string): string => {
+  return moment.tz(instant, tz).format("YYYY-MM-DD");
+};
+
+export const wallYmdToZonedStartOfDay = (ymd: string, tz: string): Date => {
+  return moment.tz(ymd, "YYYY-MM-DD", tz).startOf("day").toDate();
+};
+
+export const filterEventsByYmdInTimeZone = (events: CalendarEvent[], ymd: string, tz: string): CalendarEvent[] => {
+  const dayStart = moment.tz(ymd, "YYYY-MM-DD", tz).startOf("day").toDate();
+  const dayEnd = moment.tz(ymd, "YYYY-MM-DD", tz).endOf("day").toDate();
+  return events.filter((event) => {
+    const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
+    const eventEnd = event.end instanceof Date ? event.end : new Date(event.end);
+    return eventStart <= dayEnd && eventEnd >= dayStart;
+  });
+};
+
+/** Minutes from midnight in `tz` for this instant (fractional for sub-minute). */
+export const getMinutesFromZonedMidnight = (instant: Date, tz: string): number => {
+  const m = moment.tz(instant, tz);
+  return m.hour() * 60 + m.minute() + m.second() / 60 + m.millisecond() / 60000;
+};
+
 // Helper function to format date as YYYY-MM-DD in local timezone
 export const formatDateString = (date: Date): string => {
   const year = date.getFullYear();
@@ -211,6 +379,61 @@ export const filterEventsByDate = (events: CalendarEvent[], date: Date): Calenda
   });
 };
 
+/**
+ * Assign side-by-side columns for events that overlap in time on the same day.
+ * Uses greedy column packing so concurrent events get distinct lanes (same idea as many calendar UIs).
+ */
+export const computeOverlappingEventLayouts = (events: CalendarEvent[]): Map<string, EventHorizontalLayout> => {
+  const result = new Map<string, EventHorizontalLayout>();
+  if (events.length === 0) {
+    return result;
+  }
+
+  const sorted = [...events].sort((a, b) => {
+    const aStart = a.start instanceof Date ? a.start : new Date(a.start);
+    const bStart = b.start instanceof Date ? b.start : new Date(b.start);
+    const byStart = aStart.getTime() - bStart.getTime();
+    if (byStart !== 0) {
+      return byStart;
+    }
+    const aEnd = a.end instanceof Date ? a.end : new Date(a.end);
+    const bEnd = b.end instanceof Date ? b.end : new Date(b.end);
+    return bEnd.getTime() - aEnd.getTime();
+  });
+
+  const columnEnds: number[] = [];
+  const columnByEventId = new Map<string, number>();
+
+  sorted.forEach((event) => {
+    const start = event.start instanceof Date ? event.start : new Date(event.start);
+    const end = event.end instanceof Date ? event.end : new Date(event.end);
+    const startMs = start.getTime();
+    const endMs = end.getTime();
+
+    let col = columnEnds.findIndex((lastEndMs) => lastEndMs <= startMs);
+    if (col === -1) {
+      col = columnEnds.length;
+      columnEnds.push(endMs);
+    } else {
+      columnEnds[col] = Math.max(columnEnds[col], endMs);
+    }
+
+    columnByEventId.set(String(event.id), col);
+  });
+
+  const columnCount = Math.max(1, columnEnds.length);
+
+  sorted.forEach((event) => {
+    const col = columnByEventId.get(String(event.id)) ?? 0;
+    result.set(String(event.id), {
+      leftPercent: (col / columnCount) * 100,
+      widthPercent: (1 / columnCount) * 100,
+    });
+  });
+
+  return result;
+};
+
 export const filterEventsByDateRange = (events: CalendarEvent[], startDate: Date, endDate: Date): CalendarEvent[] => {
   // Normalize dates to local timezone by extracting date parts
   const rangeStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0);
@@ -241,85 +464,131 @@ export const getTimeSlotDuration = (start: string | Date, end: string | Date): n
   return Math.ceil(diffMinutes / 30);
 };
 
-// Check if a date is within the valid range
-// Compare dates by their date parts (year, month, day) to avoid timezone issues
-export const isDateInRange = (date: Date, validRange?: DateRange): boolean => {
-  if (!validRange) return true;
-
-  // Normalize dates to local timezone by extracting date parts
-  const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-  const rangeStart = new Date(validRange.start.getFullYear(), validRange.start.getMonth(), validRange.start.getDate());
-
-  const rangeEnd = new Date(validRange.end.getFullYear(), validRange.end.getMonth(), validRange.end.getDate());
-
-  return normalizedDate >= rangeStart && normalizedDate <= rangeEnd;
+const localCalendarDayBounds = (date: Date): { dayStart: Date; dayEnd: Date } => {
+  const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+  const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+  return { dayStart, dayEnd };
 };
 
-// Check if a date can navigate to previous period
-// Compare dates by their date parts (year, month, day) to avoid timezone issues
-export const canNavigatePrevious = (currentDate: Date, view: "day" | "week" | "month", validRange?: DateRange): boolean => {
+const intervalsOverlap = (aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): boolean => {
+  return aStart.getTime() <= bEnd.getTime() && bStart.getTime() <= aEnd.getTime();
+};
+
+// True if the calendar cell's calendar day (local or `displayTimeZone`) overlaps validRange [start, end] as instants
+export const isDateInRange = (date: Date, validRange?: DateRange, displayTimeZone?: string): boolean => {
+  if (!validRange) return true;
+  const { dayStart, dayEnd } = displayTimeZone ? getZonedDayBounds(date, displayTimeZone) : localCalendarDayBounds(date);
+  return intervalsOverlap(dayStart, dayEnd, validRange.start, validRange.end);
+};
+
+export const canNavigatePrevious = (
+  currentDate: Date,
+  view: "day" | "week" | "month",
+  validRange?: DateRange,
+  displayTimeZone?: string,
+): boolean => {
   if (!validRange) return true;
 
-  // Normalize range start to local timezone by extracting date parts
-  const rangeStart = new Date(validRange.start.getFullYear(), validRange.start.getMonth(), validRange.start.getDate());
+  if (displayTimeZone) {
+    const tz = displayTimeZone;
+    switch (view) {
+      case "day": {
+        const prev = moment.tz(currentDate, tz).subtract(1, "day");
+        const dayStart = prev.clone().startOf("day").toDate();
+        const dayEnd = prev.clone().endOf("day").toDate();
+        return intervalsOverlap(dayStart, dayEnd, validRange.start, validRange.end);
+      }
+      case "week": {
+        const startCurrent = moment.tz(getWeekDatesInTimeZone(currentDate, tz)[0], tz);
+        const startPrev = startCurrent.clone().subtract(7, "days").startOf("day");
+        const endPrev = startPrev.clone().add(6, "days").endOf("day");
+        return intervalsOverlap(startPrev.toDate(), endPrev.toDate(), validRange.start, validRange.end);
+      }
+      case "month": {
+        const prev = moment.tz(currentDate, tz).subtract(1, "month").startOf("month");
+        const endPrev = prev.clone().endOf("month");
+        return intervalsOverlap(prev.toDate(), endPrev.toDate(), validRange.start, validRange.end);
+      }
+    }
+    return false;
+  }
 
   switch (view) {
     case "day": {
-      const previousViewStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 1);
-      // For day view, check if the previous day is in range
-      return previousViewStart >= rangeStart;
+      const prev = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 1);
+      const { dayStart, dayEnd } = localCalendarDayBounds(prev);
+      return intervalsOverlap(dayStart, dayEnd, validRange.start, validRange.end);
     }
     case "week": {
       const startOfCurrentWeek = getStartOfWeek(currentDate);
-      const endOfPreviousWeek = new Date(startOfCurrentWeek.getFullYear(), startOfCurrentWeek.getMonth(), startOfCurrentWeek.getDate() - 1);
-      // For week view, allow navigation if the previous week overlaps with validRange
-      // (i.e., if the previous week's end date is >= rangeStart)
-      return endOfPreviousWeek >= rangeStart;
+      const startOfPreviousWeek = new Date(startOfCurrentWeek);
+      startOfPreviousWeek.setDate(startOfPreviousWeek.getDate() - 7);
+      startOfPreviousWeek.setHours(0, 0, 0, 0);
+      const endOfPreviousWeek = new Date(startOfCurrentWeek);
+      endOfPreviousWeek.setDate(endOfPreviousWeek.getDate() - 1);
+      endOfPreviousWeek.setHours(23, 59, 59, 999);
+      return intervalsOverlap(startOfPreviousWeek, endOfPreviousWeek, validRange.start, validRange.end);
     }
     case "month": {
-      const previousViewStart = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-      // For month view, check if the previous month overlaps with validRange
-      const lastDayOfPreviousMonth = new Date(previousViewStart.getFullYear(), previousViewStart.getMonth() + 1, 0);
-      return lastDayOfPreviousMonth >= rangeStart;
+      const firstDayPrevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1, 0, 0, 0, 0);
+      const lastDayPrevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0, 23, 59, 59, 999);
+      return intervalsOverlap(firstDayPrevMonth, lastDayPrevMonth, validRange.start, validRange.end);
     }
   }
 
   return false;
 };
 
-// Check if a date can navigate to next period
-// Compare dates by their date parts (year, month, day) to avoid timezone issues
-export const canNavigateNext = (currentDate: Date, view: "day" | "week" | "month", validRange?: DateRange): boolean => {
+export const canNavigateNext = (
+  currentDate: Date,
+  view: "day" | "week" | "month",
+  validRange?: DateRange,
+  displayTimeZone?: string,
+): boolean => {
   if (!validRange) return true;
 
-  // Normalize range end to local timezone by extracting date parts
-  const rangeEnd = new Date(validRange.end.getFullYear(), validRange.end.getMonth(), validRange.end.getDate());
+  if (displayTimeZone) {
+    const tz = displayTimeZone;
+    switch (view) {
+      case "day": {
+        const next = moment.tz(currentDate, tz).add(1, "day");
+        const dayStart = next.clone().startOf("day").toDate();
+        const dayEnd = next.clone().endOf("day").toDate();
+        return intervalsOverlap(dayStart, dayEnd, validRange.start, validRange.end);
+      }
+      case "week": {
+        const startCurrent = moment.tz(getWeekDatesInTimeZone(currentDate, tz)[0], tz);
+        const startNext = startCurrent.clone().add(7, "days").startOf("day");
+        const endNext = startNext.clone().add(6, "days").endOf("day");
+        return intervalsOverlap(startNext.toDate(), endNext.toDate(), validRange.start, validRange.end);
+      }
+      case "month": {
+        const next = moment.tz(currentDate, tz).add(1, "month").startOf("month");
+        const endNext = next.clone().endOf("month");
+        return intervalsOverlap(next.toDate(), endNext.toDate(), validRange.start, validRange.end);
+      }
+    }
+    return false;
+  }
 
-  let nextViewStart: Date;
   switch (view) {
     case "day": {
-      nextViewStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 1);
-      // For day view, check if the next day is in range
-      return nextViewStart <= rangeEnd;
+      const next = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 1);
+      const { dayStart, dayEnd } = localCalendarDayBounds(next);
+      return intervalsOverlap(dayStart, dayEnd, validRange.start, validRange.end);
     }
     case "week": {
       const endOfCurrentWeek = getEndOfWeek(currentDate);
-
-      // Calculate next week start (the day after current week ends)
-      nextViewStart = new Date(endOfCurrentWeek.getFullYear(), endOfCurrentWeek.getMonth(), endOfCurrentWeek.getDate() + 1);
-
-      // For week view, allow navigation if the next week overlaps with validRange
-      // Next week overlaps if its start date is <= rangeEnd
-      // This means the next week contains at least one day within the valid range
-      // This allows navigation to the last week even if it extends beyond rangeEnd
-      return nextViewStart <= rangeEnd;
+      const startOfNextWeek = new Date(endOfCurrentWeek.getFullYear(), endOfCurrentWeek.getMonth(), endOfCurrentWeek.getDate() + 1, 0, 0, 0, 0);
+      const endOfNextWeek = new Date(startOfNextWeek);
+      endOfNextWeek.setDate(endOfNextWeek.getDate() + 6);
+      endOfNextWeek.setHours(23, 59, 59, 999);
+      return intervalsOverlap(startOfNextWeek, endOfNextWeek, validRange.start, validRange.end);
     }
     case "month": {
-      nextViewStart = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
-      // For month view, check if the next month overlaps with validRange
-      // (i.e., if the next month's start date is <= rangeEnd)
-      return nextViewStart <= rangeEnd;
+      const firstDayNextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1, 0, 0, 0, 0);
+      const lastDayNextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 2, 0, 23, 59, 59, 999);
+      return intervalsOverlap(firstDayNextMonth, lastDayNextMonth, validRange.start, validRange.end);
     }
   }
 

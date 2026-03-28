@@ -4,8 +4,8 @@ import { API_ENDPOINTS, httpClient } from "@/api";
 export interface EventInfoItem {
   id: string;
   title: string;
-  startTime: string; // ISO 8601 format without timezone (e.g., "2024-01-01T09:00:00")
-  endTime: string; // ISO 8601 format without timezone (e.g., "2024-01-01T10:00:00")
+  startTime: string; // ISO-8601 instant from API (typically UTC `Z`); display uses `timezone`
+  endTime: string;
   timezone: string; // Timezone name (e.g., "Asia/Taipei")
   textColor: string;
   backgroundColor: string;
@@ -26,8 +26,8 @@ export interface EventInfoDetail extends EventInfoItem {
 
 export interface EventInfoCreate {
   title: string;
-  start_datetime: string; // ISO 8601 format without timezone (e.g., "2024-01-01T09:00:00")
-  end_datetime: string; // ISO 8601 format without timezone (e.g., "2024-01-01T10:00:00")
+  start_datetime: string; // Wall time in event zone with offset, e.g. 2026-05-01T08:00:00+0800
+  end_datetime: string;
   timezone: string; // Timezone name (e.g., "Asia/Taipei")
   text_color: string;
   background_color: string;

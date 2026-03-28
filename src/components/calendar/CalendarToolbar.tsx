@@ -1,12 +1,25 @@
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button";
 import ButtonGroup from "@/components/ui/buttons-group";
+import moment from "moment-timezone";
 import NavigationButtons from "./NavigationButtons";
 import { CalendarView, DateRange } from "./types";
-import { formatDate, formatWeekday, getEndOfWeek, getStartOfWeek } from "./utils";
+import {
+  formatCalendarDateInTimeZone,
+  formatUtcOffsetLabelAtInstant,
+  formatWeekdayInTimeZone,
+  formatYmdInTimeZone,
+  getEndOfWeekInTimeZone,
+  getStartOfWeekInTimeZone,
+  getWeekDatesInTimeZone,
+  getWeekNumberInTimeZone,
+} from "./utils";
 
 interface CalendarToolBarProps {
   currentDate: Date;
+  displayTimeZone: string;
+  /** When true, show IANA zone and offset under the title (e.g. when parent passed `timeZone`). */
+  showTimeZoneLabel?: boolean;
   currentView: CalendarView;
   availableViews?: CalendarView[];
   validRange?: DateRange;
@@ -20,6 +33,8 @@ interface CalendarToolBarProps {
 
 const CalendarToolBar = ({
   currentDate,
+  displayTimeZone,
+  showTimeZoneLabel = false,
   currentView,
   availableViews = ["day", "week", "month"],
   validRange,
@@ -30,24 +45,7 @@ const CalendarToolBar = ({
   onAddEvent,
   showNavigationButtons = { nav: true, today: true },
 }: CalendarToolBarProps) => {
-  // Calculate week number of the month (1-based)
-  // Week starts on Sunday (0)
-  const getWeekNumber = (date: Date): number => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const day = date.getDate();
-
-    // Get the first day of the month
-    const firstDayOfMonth = new Date(year, month, 1);
-    // Get the day of the week for the first day (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
-    const firstDayOfMonthWeekday = firstDayOfMonth.getDay();
-
-    // Calculate which week of the month this date falls into
-    // Week 1: days 1 to (7 - firstDayOfMonthWeekday)
-    const weekNumber = Math.ceil((day + firstDayOfMonthWeekday) / 7);
-
-    return weekNumber;
-  };
+  const tz = displayTimeZone;
 
   // Create view buttons for ButtonGroup
   const getViewButtons = () => {
@@ -86,36 +84,31 @@ const CalendarToolBar = ({
   const getTitle = (): string => {
     switch (currentView) {
       case "day":
-        return formatDate(currentDate, "full");
+        return formatCalendarDateInTimeZone(currentDate, "full", tz);
       case "week":
-        return formatDate(currentDate, "month-year");
+        return formatCalendarDateInTimeZone(currentDate, "month-year", tz);
       case "month":
-        return formatDate(currentDate, "month-year");
+        return formatCalendarDateInTimeZone(currentDate, "month-year", tz);
     }
-  };
-
-  const formatDateForSubtitle = (date: Date): string => {
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
 
   const getSubtitle = (): string | null => {
     switch (currentView) {
       case "day":
-        return formatWeekday(currentDate, "full");
+        return formatWeekdayInTimeZone(currentDate, "full", tz);
       case "week": {
-        const startOfWeek = getStartOfWeek(currentDate);
-        const endOfWeek = getEndOfWeek(currentDate);
-        const startFormatted = formatDateForSubtitle(startOfWeek);
-        const endFormatted = formatDateForSubtitle(endOfWeek);
+        const startOfWeek = getStartOfWeekInTimeZone(currentDate, tz);
+        const endOfWeek = getEndOfWeekInTimeZone(currentDate, tz);
+        const startFormatted = formatCalendarDateInTimeZone(startOfWeek, "short", tz);
+        const endFormatted = formatCalendarDateInTimeZone(endOfWeek, "short", tz);
         return `${startFormatted} – ${endFormatted}`;
       }
       case "month": {
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const startFormatted = formatDateForSubtitle(firstDay);
-        const endFormatted = formatDateForSubtitle(lastDay);
+        const m = moment.tz(currentDate, tz);
+        const firstDay = m.clone().startOf("month").toDate();
+        const lastDay = m.clone().endOf("month").toDate();
+        const startFormatted = formatCalendarDateInTimeZone(firstDay, "short", tz);
+        const endFormatted = formatCalendarDateInTimeZone(lastDay, "short", tz);
         return `${startFormatted} – ${endFormatted}`;
       }
       default:
@@ -123,68 +116,45 @@ const CalendarToolBar = ({
     }
   };
 
-  // Get the date to display in the calendar icon
   const getCalendarIconDate = (): Date => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Normalize currentDate to midnight for accurate comparison
-    const normalizedCurrentDate = new Date(currentDate);
-    normalizedCurrentDate.setHours(0, 0, 0, 0);
+    const todayStart = moment.tz(tz).startOf("day");
+    const normalizedCurrent = moment.tz(currentDate, tz).startOf("day");
 
     switch (currentView) {
       case "day":
-        // Day view: always show the selected date
-        return normalizedCurrentDate;
+        return normalizedCurrent.toDate();
       case "week": {
-        const startOfWeek = getStartOfWeek(normalizedCurrentDate);
-        const endOfWeek = getEndOfWeek(normalizedCurrentDate);
-
-        // Check if currentDate (selected date) is within the current week view
-        // If the selected date is in the current week, show the selected date
-        if (normalizedCurrentDate >= startOfWeek && normalizedCurrentDate <= endOfWeek) {
-          return normalizedCurrentDate;
+        const weekDates = getWeekDatesInTimeZone(currentDate, tz);
+        const startOfWeek = weekDates[0];
+        const endOfWeekEnd = moment.tz(weekDates[6], tz).endOf("day");
+        const norm = normalizedCurrent.toDate();
+        if (norm.getTime() >= startOfWeek.getTime() && norm.getTime() <= endOfWeekEnd.toDate().getTime()) {
+          return norm;
         }
-
-        // Otherwise, check if current week is the same as today's week
-        const startOfTodayWeek = getStartOfWeek(today);
+        const startOfTodayWeek = getWeekDatesInTimeZone(new Date(), tz)[0];
         if (startOfWeek.getTime() === startOfTodayWeek.getTime()) {
-          return today;
+          return todayStart.toDate();
         }
-        // Otherwise show the first day of the week
         return startOfWeek;
       }
       case "month": {
-        const year = normalizedCurrentDate.getFullYear();
-        const month = normalizedCurrentDate.getMonth();
-
-        // Check if currentDate (selected date) is within the current month view
-        const selectedYear = normalizedCurrentDate.getFullYear();
-        const selectedMonth = normalizedCurrentDate.getMonth();
-        if (selectedYear === year && selectedMonth === month) {
-          // If the selected date is in the current month, show the selected date
-          return normalizedCurrentDate;
+        const viewStart = normalizedCurrent.clone().startOf("month");
+        const todayM = moment.tz(tz).startOf("day");
+        if (viewStart.year() === todayM.year() && viewStart.month() === todayM.month()) {
+          return todayM.toDate();
         }
-
-        // Otherwise, check if current month is today's month
-        const todayYear = today.getFullYear();
-        const todayMonth = today.getMonth();
-        if (year === todayYear && month === todayMonth) {
-          return today;
-        }
-        // Otherwise show the first day of the month
-        const firstDay = new Date(year, month, 1);
-        firstDay.setHours(0, 0, 0, 0);
-        return firstDay;
+        return viewStart.toDate();
       }
       default:
-        return normalizedCurrentDate;
+        return normalizedCurrent.toDate();
     }
   };
 
   const calendarIconDate = getCalendarIconDate();
-  const monthAbbr = calendarIconDate.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
-  const day = calendarIconDate.getDate();
+  const iconMoment = moment.tz(calendarIconDate, tz);
+  const monthAbbr = iconMoment.format("MMM").toUpperCase();
+  const day = iconMoment.date();
+  const zoneOffsetLabel = formatUtcOffsetLabelAtInstant(new Date(), tz);
 
   return (
     <div className="flex flex-none items-center justify-between px-6 py-4 rounded-t-2xl border border-gray-300 dark:border-white/10 bg-gray-200 dark:bg-gray-800/50">
@@ -198,12 +168,17 @@ const CalendarToolBar = ({
         </div>
         <div>
           <h1 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <time dateTime={currentDate.toISOString().split("T")[0]}>{getTitle()}</time>
+            <time dateTime={formatYmdInTimeZone(currentDate, tz)}>{getTitle()}</time>
             <Badge variant="solid" color="primary" size="sm">
-              Week {getWeekNumber(currentDate)}
+              Week {getWeekNumberInTimeZone(currentDate, tz)}
             </Badge>
           </h1>
           {getSubtitle() && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{getSubtitle()}</p>}
+          {showTimeZoneLabel ? (
+            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400" title={tz}>
+              {zoneOffsetLabel ? `${tz} (${zoneOffsetLabel})` : tz}
+            </p>
+          ) : null}
         </div>
       </div>
       <div className="flex items-center">
@@ -211,6 +186,7 @@ const CalendarToolBar = ({
           <NavigationButtons
             currentDate={currentDate}
             currentView={currentView}
+            displayTimeZone={displayTimeZone}
             validRange={validRange}
             onPrevious={onPrevious}
             onNext={onNext}

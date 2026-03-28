@@ -87,6 +87,16 @@ const ConferenceDetailView: React.FC<ConferenceDetailViewProps> = ({ conferenceI
             disabled
           />
         </div>
+
+        <div>
+          <Input
+            id="timezone"
+            label="時區 (IANA)"
+            type="text"
+            value={conferenceData.timezone?.trim() || "—"}
+            disabled
+          />
+        </div>
       </div>
 
       {/* 啟用狀態 */}

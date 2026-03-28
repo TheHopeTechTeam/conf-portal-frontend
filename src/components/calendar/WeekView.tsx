@@ -1,10 +1,20 @@
+import moment from "moment-timezone";
 import { MdAdd } from "react-icons/md";
 import EventBlock from "./EventBlock";
 import { CalendarViewProps } from "./types";
-import { filterEventsByDateRange, formatWeekday, getWeekDates, isDateInRange } from "./utils";
+import {
+  computeOverlappingEventLayouts,
+  formatWeekdayInTimeZone,
+  getMinutesFromZonedMidnight,
+  getWeekDatesInTimeZone,
+  getZonedDayBounds,
+  isDateInRange,
+  isSameCalendarDayInTimeZone,
+} from "./utils";
 
 const WeekView = ({
   currentDate,
+  displayTimeZone,
   events = [],
   validRange,
   onEventClick,
@@ -12,10 +22,15 @@ const WeekView = ({
   onAddEvent,
   onEventContextMenu,
 }: CalendarViewProps) => {
-  const weekDates = getWeekDates(currentDate);
-  const startOfWeek = weekDates[0];
-  const endOfWeek = weekDates[6];
-  const weekEvents = filterEventsByDateRange(events, startOfWeek, endOfWeek);
+  const tz = displayTimeZone;
+  const weekDates = getWeekDatesInTimeZone(currentDate, tz);
+  const rangeStart = moment.tz(weekDates[0], tz).startOf("day").toDate();
+  const rangeEnd = moment.tz(weekDates[6], tz).endOf("day").toDate();
+  const weekEvents = events.filter((event) => {
+    const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
+    const eventEnd = event.end instanceof Date ? event.end : new Date(event.end);
+    return eventStart <= rangeEnd && eventEnd >= rangeStart;
+  });
 
   // Generate 24 hours for time axis
   const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -29,82 +44,51 @@ const WeekView = ({
     return { hour, isHalfHour, index: i };
   });
 
-  const getEventsForDay = (date: Date) => {
-    // Create day boundaries in local timezone using date parts
-    const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
-    const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
-
+  const getEventsForDay = (dayAnchor: Date) => {
+    const { dayStart, dayEnd } = getZonedDayBounds(dayAnchor, tz);
     return weekEvents.filter((event) => {
-      // Event dates are already Date objects or strings, convert to Date if needed
       const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
       const eventEnd = event.end instanceof Date ? event.end : new Date(event.end);
-      // Event overlaps with the day if it starts before the day ends and ends after the day starts
       return eventStart <= dayEnd && eventEnd >= dayStart;
     });
   };
 
-  // Calculate event position in pixels, handling events that continue from previous day
-  // Each 30-minute slot is 48px tall, so each minute is 48/30 = 1.6px
-  // Uses local time (getHours, getMinutes return local time)
-  const getEventTop = (date: string | Date, dayDate: Date): number => {
-    const dateObj = date instanceof Date ? date : new Date(date);
-    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0);
-
-    // If event starts before this day, start from 0
+  const getEventTop = (eventTime: string | Date, dayDate: Date): number => {
+    const dateObj = eventTime instanceof Date ? eventTime : new Date(eventTime);
+    const { dayStart } = getZonedDayBounds(dayDate, tz);
     if (dateObj < dayStart) {
       return 0;
     }
-
-    // getHours() and getMinutes() return local time
-    const hours = dateObj.getHours();
-    const minutes = dateObj.getMinutes();
-    // Total minutes from midnight (local time)
-    const totalMinutes = hours * 60 + minutes;
-    // Convert to pixels (each minute is 1.6px: 48px / 30 minutes)
+    const totalMinutes = getMinutesFromZonedMidnight(dateObj, tz);
     return (totalMinutes / 30) * 48;
   };
 
-  // Calculate event height in pixels, clamping to day boundaries
-  // Uses local time for calculations
   const getEventHeight = (start: string | Date, end: string | Date, dayDate: Date): number => {
     const startDate = start instanceof Date ? start : new Date(start);
     const endDate = end instanceof Date ? end : new Date(end);
-
-    // Get day boundaries in local timezone
-    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0);
-    const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999);
-
-    // Clamp event start and end to day boundaries
+    const { dayStart, dayEnd } = getZonedDayBounds(dayDate, tz);
     const clampedStart = startDate < dayStart ? dayStart : startDate;
     const clampedEnd = endDate > dayEnd ? dayEnd : endDate;
-
-    // Calculate difference in minutes
     const diffMinutes = (clampedEnd.getTime() - clampedStart.getTime()) / (1000 * 60);
-
-    // Convert minutes to pixels
     return Math.max((diffMinutes / 30) * 48, 48);
   };
 
-  // Check if event spans to next day
   const isEventSpanningToNextDay = (_start: string | Date, end: string | Date, dayDate: Date): boolean => {
     const endDate = end instanceof Date ? end : new Date(end);
-    const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999);
+    const { dayEnd } = getZonedDayBounds(dayDate, tz);
     return endDate > dayEnd;
   };
 
-  // Check if event continues from previous day
   const isEventContinuingFromPreviousDay = (start: string | Date, dayDate: Date): boolean => {
     const startDate = start instanceof Date ? start : new Date(start);
-    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0);
+    const { dayStart } = getZonedDayBounds(dayDate, tz);
     return startDate < dayStart;
   };
 
-  // Check if event is fully within this day
   const isEventFullyWithinDay = (start: string | Date, end: string | Date, dayDate: Date): boolean => {
     const startDate = start instanceof Date ? start : new Date(start);
     const endDate = end instanceof Date ? end : new Date(end);
-    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0);
-    const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999);
+    const { dayStart, dayEnd } = getZonedDayBounds(dayDate, tz);
     return startDate >= dayStart && endDate <= dayEnd;
   };
 
@@ -113,16 +97,10 @@ const WeekView = ({
       {/* Header with weekday labels */}
       <div className="sticky top-0 grid grid-cols-7 bg-white dark:bg-gray-900 pl-18 shadow-sm border-b border-gray-300 dark:border-white/10">
         {weekDates.map((date, index) => {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          const dateNormalized = new Date(date);
-          dateNormalized.setHours(0, 0, 0, 0);
-          const isToday = dateNormalized.getTime() === today.getTime();
-          const normalizedCurrentDate = new Date(currentDate);
-          normalizedCurrentDate.setHours(0, 0, 0, 0);
-          const isSelected = dateNormalized.getTime() === normalizedCurrentDate.getTime();
+          const isToday = isSameCalendarDayInTimeZone(new Date(), date, tz);
+          const isSelected = isSameCalendarDayInTimeZone(currentDate, date, tz);
 
-          const isInRange = isDateInRange(date, validRange);
+          const isInRange = isDateInRange(date, validRange, tz);
           const isDisabled = !isInRange;
 
           return (
@@ -137,17 +115,17 @@ const WeekView = ({
                 isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
               }`}
             >
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{formatWeekday(date, "short")}</span>
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{formatWeekdayInTimeZone(date, "short", tz)}</span>
               <span
                 className={`flex h-6 items-center justify-center text-xs font-semibold ${
                   isToday
                     ? "w-6 rounded-full bg-indigo-600 text-white dark:bg-indigo-500"
                     : isSelected
-                    ? "w-6 rounded-full bg-gray-900 text-white dark:bg-white dark:text-gray-900"
-                    : "text-gray-900 dark:text-white"
+                      ? "w-6 rounded-full bg-gray-900 text-white dark:bg-white dark:text-gray-900"
+                      : "text-gray-900 dark:text-white"
                 }`}
               >
-                {date.getDate()}
+                {moment.tz(date, tz).date()}
               </span>
             </div>
           );
@@ -170,6 +148,7 @@ const WeekView = ({
         <div className="grid flex-1 grid-cols-7">
           {weekDates.map((date, dayIndex) => {
             const dayEvents = getEventsForDay(date);
+            const overlapLayouts = computeOverlappingEventLayouts(dayEvents);
             const isLastColumn = dayIndex === 6;
             return (
               <div key={dayIndex} className="flex flex-col border-gray-300 dark:border-white/10">
@@ -230,6 +209,7 @@ const WeekView = ({
                     const isSpanning = isEventSpanningToNextDay(event.start, event.end, date);
                     const isContinuing = isEventContinuingFromPreviousDay(event.start, date);
                     const isFullDay = isEventFullyWithinDay(event.start, event.end, date);
+                    const horizontalLayout = overlapLayouts.get(String(event.id));
 
                     return (
                       <EventBlock
@@ -241,6 +221,7 @@ const WeekView = ({
                         isContinuing={isContinuing}
                         isFullDay={isFullDay}
                         dayDate={date}
+                        horizontalLayout={horizontalLayout}
                         onEventClick={onEventClick}
                         onContextMenu={onEventContextMenu}
                       />
