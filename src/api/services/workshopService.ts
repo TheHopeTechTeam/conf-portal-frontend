@@ -1,4 +1,5 @@
 import { API_ENDPOINTS, httpClient } from "@/api";
+import type { FileGridItem } from "@/pages/Menus/File/types";
 
 // Workshop Types
 export interface LocationBase {
@@ -25,6 +26,7 @@ export interface WorkshopDetail extends Record<string, unknown> {
   location: LocationBase;
   conference: ConferenceBase;
   description?: string;
+  files?: FileGridItem[];
 }
 
 export interface WorkshopItem extends Record<string, unknown> {
@@ -67,6 +69,7 @@ export interface WorkshopCreate {
   description?: string;
   is_creative?: boolean;
   is_leadership?: boolean;
+  file_ids?: string[];
 }
 
 export type WorkshopUpdate = WorkshopCreate;

@@ -1,5 +1,6 @@
 import { conferenceService } from "@/api/services/conferenceService";
 import { locationService, type LocationBase } from "@/api/services/locationService";
+import FileSelectionModal from "@/components/common/FileSelectionModal";
 import Button from "@/components/ui/button";
 import Checkbox from "@/components/ui/checkbox";
 import DatePicker from "@/components/ui/date-picker";
@@ -7,9 +8,22 @@ import Input from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import TextArea from "@/components/ui/textarea";
 import TimePicker from "@/components/ui/time-picker";
+import { useModal } from "@/hooks/useModal";
+import ImagePreviewCard from "@/pages/Menus/File/ImagePreviewCard";
+import type { FileGridItem, FileItem } from "@/pages/Menus/File/types";
 import { COMMON_TIMEZONES, convertDateTimeLocalToISO } from "@/utils/timezone";
 import moment from "moment-timezone";
 import { useEffect, useState } from "react";
+import { MdAdd } from "react-icons/md";
+
+// Format bytes for image preview footer
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+};
 
 export interface WorkshopFormValues {
   id?: string;
@@ -26,6 +40,8 @@ export interface WorkshopFormValues {
   description?: string;
   isCreative?: boolean;
   isLeadership?: boolean;
+  file_ids?: string[];
+  files?: FileGridItem[];
 }
 
 interface WorkshopDataFormProps {
@@ -57,6 +73,8 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
   const [conferences, setConferences] = useState<Array<{ id: string; title: string }>>([]);
   const [loadingLocations, setLoadingLocations] = useState(false);
   const [loadingConferences, setLoadingConferences] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<FileItem[]>([]);
+  const { isOpen: isFileSelectionOpen, openModal: openFileSelectionModal, closeModal: closeFileSelectionModal } = useModal(false);
 
   // 載入地點列表
   useEffect(() => {
@@ -124,6 +142,27 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
         isCreative: defaultValues.isCreative ?? false,
         isLeadership: defaultValues.isLeadership ?? false,
       });
+      if (defaultValues.files && defaultValues.files.length > 0) {
+        setSelectedFiles(
+          defaultValues.files.slice(0, 1).map((file) => ({
+            id: file.id,
+            url: file.url || "",
+            name: file.originalName,
+            size: file.sizeBytes,
+          }))
+        );
+      } else if (defaultValues.file_ids && defaultValues.file_ids.length > 0) {
+        const id = defaultValues.file_ids[0];
+        setSelectedFiles([
+          {
+            id,
+            url: "",
+            name: `已選文件 ${id.substring(0, 8)}...`,
+          },
+        ]);
+      } else {
+        setSelectedFiles([]);
+      }
     } else {
       setValues({
         title: "",
@@ -140,6 +179,7 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
         isCreative: false,
         isLeadership: false,
       });
+      setSelectedFiles([]);
     }
   }, [defaultValues]);
 
@@ -214,10 +254,13 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
       const startTime = convertDateTimeLocalToISO(`${values.startDate}T${values.startTime}`, values.timezone);
       const endTime = convertDateTimeLocalToISO(`${values.endDate}T${values.endTime}`, values.timezone);
 
+      const fileIds = selectedFiles.slice(0, 1).map((file) => file.id);
       const submitValues: WorkshopFormValues = {
         ...values,
         startTime,
         endTime,
+        file_ids:
+          fileIds.length > 0 ? fileIds : mode === "edit" ? [] : undefined,
       };
 
       await onSubmit(submitValues);
@@ -242,7 +285,17 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
     label: tz.label,
   }));
 
+  const handleFileSelectionConfirm = (files: FileItem[]) => {
+    setSelectedFiles(files.slice(0, 1));
+    closeFileSelectionModal();
+  };
+
+  const handleRemoveFile = (fileId: string) => {
+    setSelectedFiles((prev) => prev.filter((file) => file.id !== fileId));
+  };
+
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Input
@@ -414,6 +467,37 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
         />
       </div>
 
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">主圖</label>
+        <div className="space-y-3">
+          <Button btnType="button" variant="outline" size="sm" onClick={openFileSelectionModal}>
+            <MdAdd className="mr-2" size={16} />
+            選擇圖片
+          </Button>
+          {selectedFiles.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-sm text-gray-600 dark:text-gray-400">已選擇 1 張圖片</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[400px] overflow-y-auto custom-scrollbar">
+                {selectedFiles.map((file) => (
+                  <ImagePreviewCard
+                    key={file.id}
+                    imageUrl={file.url || ""}
+                    alt={file.name}
+                    showDeleteButton={true}
+                    onDelete={() => handleRemoveFile(file.id)}
+                    fileInfo={{
+                      name: file.name,
+                      size: file.size,
+                    }}
+                    formatFileSize={formatFileSize}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {errors.submit && <p className="text-sm text-red-500 dark:text-red-400">{errors.submit}</p>}
 
       <div className="flex justify-end gap-3 pt-2">
@@ -425,6 +509,15 @@ const WorkshopDataForm: React.FC<WorkshopDataFormProps> = ({ mode, defaultValues
         </Button>
       </div>
     </form>
+
+    <FileSelectionModal
+      isOpen={isFileSelectionOpen}
+      onClose={closeFileSelectionModal}
+      onConfirm={handleFileSelectionConfirm}
+      multiple={false}
+      initialSelectedIds={selectedFiles.map((file) => file.id)}
+    />
+  </>
   );
 };
 

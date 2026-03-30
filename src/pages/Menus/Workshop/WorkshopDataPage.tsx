@@ -616,6 +616,7 @@ export default function WorkshopDataPage() {
         description: values.description || undefined,
         is_creative: !!values.isCreative,
         is_leadership: !!values.isLeadership,
+        ...(values.file_ids !== undefined ? { file_ids: values.file_ids } : {}),
       };
 
       if (formMode === "create") {
@@ -711,6 +712,7 @@ export default function WorkshopDataPage() {
       description: editing.description,
       isCreative: editing.isCreative,
       isLeadership: editing.isLeadership,
+      files: editing.files,
     };
   }, [editing]);
 
