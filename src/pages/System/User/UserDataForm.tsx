@@ -92,12 +92,14 @@ const UserDataForm: React.FC<UserDataFormProps> = ({ mode, defaultValues, onSubm
   const validate = (): boolean => {
     const next: Record<string, string> = {};
 
-    if (!values.phone_number || values.phone_number.trim().length === 0) {
-      next.phone_number = "請輸入手機號碼";
-    }
-
-    if ((values.phone_number.length > 1 && !/^[1-9]\d*$/.test(values.phone_number.slice(1))) || !values.phone_number.startsWith("+")) {
-      next.phone_number = "請輸入有效的手機號碼";
+    const phone_trimmed = values.phone_number?.trim() ?? "";
+    if (phone_trimmed.length > 0) {
+      if (
+        (phone_trimmed.length > 1 && !/^[1-9]\d*$/.test(phone_trimmed.slice(1))) ||
+        !phone_trimmed.startsWith("+")
+      ) {
+        next.phone_number = "請輸入有效的手機號碼";
+      }
     }
 
     if (!values.email || values.email.trim().length === 0) {
@@ -157,7 +159,6 @@ const UserDataForm: React.FC<UserDataFormProps> = ({ mode, defaultValues, onSubm
             error={errors.phone_number || undefined}
             hint="例如: +886912345678"
             selectPosition="start"
-            required
           />
         </div>
 
