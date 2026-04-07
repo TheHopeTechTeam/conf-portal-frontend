@@ -6,6 +6,7 @@ import { Select } from "@/components/ui/select";
 import TextArea from "@/components/ui/textarea";
 import { CountryCodes } from "@/const/enums";
 import { usePermissions } from "@/context/AuthContext";
+import { validatePortalPassword } from "@/utils/portal-password";
 import { useEffect, useState } from "react";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 
@@ -112,8 +113,11 @@ const UserDataForm: React.FC<UserDataFormProps> = ({ mode, defaultValues, onSubm
     if (mode === "create") {
       if (!values.password || values.password.trim().length === 0) {
         next.password = "請輸入密碼";
-      } else if (values.password.length < 8) {
-        next.password = "密碼長度至少需要 8 個字符";
+      } else {
+        const passwordError = validatePortalPassword(values.password);
+        if (passwordError) {
+          next.password = passwordError;
+        }
       }
 
       if (!values.password_confirm || values.password_confirm.trim().length === 0) {
@@ -197,7 +201,7 @@ const UserDataForm: React.FC<UserDataFormProps> = ({ mode, defaultValues, onSubm
               value={values.password || ""}
               onChange={(e) => setValues((v) => ({ ...v, password: e.target.value }))}
               error={errors.password || undefined}
-              hint="至少 8 個字符"
+              hint="至少 8 字元，需含大寫、小寫、數字與特殊字元 (!@#$%^&* 等)"
               required
             />
           </div>

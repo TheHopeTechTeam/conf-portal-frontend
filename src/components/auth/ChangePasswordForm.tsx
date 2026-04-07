@@ -2,6 +2,7 @@ import { httpClient } from "@/api";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
+import { validatePortalPassword } from "@/utils/portal-password";
 import { useState } from "react";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 
@@ -27,8 +28,9 @@ export default function ChangePasswordForm() {
       return;
     }
 
-    if (newPassword.length < 8) {
-      setError("新密碼長度至少需要 8 個字元");
+    const newPasswordError = validatePortalPassword(newPassword);
+    if (newPasswordError) {
+      setError(newPasswordError);
       return;
     }
 

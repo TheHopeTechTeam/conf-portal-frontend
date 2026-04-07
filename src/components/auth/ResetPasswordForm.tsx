@@ -1,6 +1,11 @@
 import { authService } from "@/api/services/authService";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
+import {
+  PORTAL_PASSWORD_MIN_LENGTH,
+  PORTAL_PASSWORD_SPECIAL_CHAR_RE,
+  validatePortalPassword,
+} from "@/utils/portal-password";
 import { useEffect, useState } from "react";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { Link, useNavigate, useSearchParams } from "react-router";
@@ -14,36 +19,17 @@ interface PasswordValidationStatus {
 }
 
 const validatePasswordStrength = (password: string): { isValid: boolean; message: string } => {
-  if (password.length < 8) {
-    return { isValid: false, message: "密碼長度至少需要 8 個字元" };
-  }
-
-  if (!/[a-z]/.test(password)) {
-    return { isValid: false, message: "密碼至少需要包含一個小寫字母" };
-  }
-
-  if (!/[A-Z]/.test(password)) {
-    return { isValid: false, message: "密碼至少需要包含一個大寫字母" };
-  }
-
-  if (!/[0-9]/.test(password)) {
-    return { isValid: false, message: "密碼至少需要包含一個數字" };
-  }
-
-  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
-    return { isValid: false, message: "密碼至少需要包含一個特殊字元 (!@#$%^&* 等)" };
-  }
-
-  return { isValid: true, message: "" };
+  const err = validatePortalPassword(password);
+  return err ? { isValid: false, message: err } : { isValid: true, message: "" };
 };
 
 const getPasswordValidationStatus = (password: string): PasswordValidationStatus => {
   return {
     hasLowerCase: /[a-z]/.test(password),
     hasUpperCase: /[A-Z]/.test(password),
-    hasNumber: /[0-9]/.test(password),
-    hasSpecialChar: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
-    hasMinLength: password.length >= 8,
+    hasNumber: /\d/.test(password),
+    hasSpecialChar: PORTAL_PASSWORD_SPECIAL_CHAR_RE.test(password),
+    hasMinLength: password.length >= PORTAL_PASSWORD_MIN_LENGTH,
   };
 };
 
