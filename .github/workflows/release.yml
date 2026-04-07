@@ -1,15 +1,16 @@
-name: CI
+name: Prod Release Check
 
 on:
   push:
     branches:
-      - main
+      - release
   pull_request:
     branches:
-      - main
+      - release
+  workflow_dispatch:
 
 jobs:
-  type-check-and-build:
+  type-check-and-prod-build:
     runs-on: ubuntu-latest
 
     steps:
