@@ -81,9 +81,8 @@ export type SortOrder = "name_asc" | "name_desc" | "date_asc" | "date_desc" | "s
 // 檔案分頁查詢參數
 export interface FilePagesParams extends Record<string, unknown> {
   page?: number;
-  pageSize?: number;
+  page_size?: number;
   keyword?: string;
-  orderBy?: string;
+  order_by?: string;
   descending?: boolean;
 }
-

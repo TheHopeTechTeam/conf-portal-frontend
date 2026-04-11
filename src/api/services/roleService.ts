@@ -35,7 +35,7 @@ export interface RolePagesResponse {
 export interface RoleCreate {
   code: string;
   name?: string;
-  isActive?: boolean;
+  is_active?: boolean;
   description?: string;
   remark?: string;
   permissions?: string[]; // permission IDs

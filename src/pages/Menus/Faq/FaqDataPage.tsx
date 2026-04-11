@@ -1,4 +1,4 @@
-import { faqService, type FaqDetail, type FaqItem } from "@/api/services/faqService";
+import { faqService, type FaqCreate, type FaqDetail, type FaqItem } from "@/api/services/faqService";
 import type { DataTableColumn, MenuButtonType, PageButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
@@ -532,15 +532,23 @@ export default function FaqDataPage() {
   const handleSubmit = async (values: FaqFormValues) => {
     try {
       setSubmitting(true);
+      const apiBody: FaqCreate = {
+        category_id: values.category_id,
+        question: values.question,
+        answer: values.answer,
+        related_link: values.related_link,
+        remark: values.remark,
+        description: values.description,
+      };
       if (formMode === "create") {
-        await faqService.create(values);
+        await faqService.create(apiBody);
         showNotification({
           variant: "success",
           title: "新增成功",
           description: `已成功新增常見問題「${values.question}」`,
         });
       } else if (formMode === "edit" && editing?.id) {
-        await faqService.update(editing.id, values);
+        await faqService.update(editing.id, apiBody);
         showNotification({
           variant: "success",
           title: "更新成功",
@@ -600,15 +608,17 @@ export default function FaqDataPage() {
     return data;
   }, [currentPage, pageSize, total, items]);
 
-  // Convert FaqDetail to FaqFormValues
+  // Convert FaqDetail to FaqFormValues (payload keys align with API snake_case)
   const editingFormValues = useMemo<FaqFormValues | null>(() => {
     if (!editing) return null;
+    const raw = editing as Record<string, unknown>;
+    const relatedFromSnake = typeof raw.related_link === "string" ? raw.related_link : undefined;
     return {
       id: editing.id,
-      categoryId: editing.category?.id || "",
+      category_id: editing.category?.id || "",
       question: editing.question,
       answer: editing.answer,
-      relatedLink: editing.relatedLink,
+      related_link: relatedFromSnake ?? editing.relatedLink,
       remark: editing.remark,
       description: editing.description,
     };

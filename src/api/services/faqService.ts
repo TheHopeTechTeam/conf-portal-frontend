@@ -80,10 +80,10 @@ export interface FaqPagesResponse {
 }
 
 export interface FaqCreate {
-  categoryId: string;
+  category_id: string;
   question: string;
   answer: string;
-  relatedLink?: string;
+  related_link?: string;
   remark?: string;
   description?: string;
 }
