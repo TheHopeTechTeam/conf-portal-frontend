@@ -1,13 +1,11 @@
-import { httpClient } from "@/api";
+import { authService } from "@/api/services/authService";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
-import { useAuth } from "@/context/AuthContext";
 import { validatePortalPassword } from "@/utils/portal-password";
 import { useState } from "react";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 
 export default function ChangePasswordForm() {
-  const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -39,19 +37,10 @@ export default function ChangePasswordForm() {
       return;
     }
 
-    if (!user?.id) {
-      setError("無法獲取用戶資訊，請重新登入");
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      const response = await httpClient.post<{ message: string }>(`/api/v1/admin/user/${user.id}/change_password`, {
-        old_password: oldPassword,
-        new_password: newPassword,
-        new_password_confirm: newPasswordConfirm,
-      });
+      const response = await authService.changePassword(oldPassword, newPassword, newPasswordConfirm);
 
       if (response.success) {
         setIsSuccess(true);
