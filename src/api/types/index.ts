@@ -139,11 +139,11 @@ export interface PermissionPage {
 }
 
 export interface PermissionCreate {
-  displayName: string;
+  display_name: string;
   code: string;
-  resourceId: string;
-  verbId: string;
-  isActive: boolean;
+  resource_id: string;
+  verb_id: string;
+  is_active: boolean;
   description?: string;
   remark?: string;
 }

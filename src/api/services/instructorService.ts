@@ -43,7 +43,7 @@ export interface InstructorCreate {
   bio?: string;
   remark?: string;
   description?: string;
-  fileIds?: string[]; // 檔案 ID 陣列（用於圖片）
+  file_ids?: string[]; // 檔案 ID 陣列（用於圖片）
 }
 
 export type InstructorUpdate = InstructorCreate;

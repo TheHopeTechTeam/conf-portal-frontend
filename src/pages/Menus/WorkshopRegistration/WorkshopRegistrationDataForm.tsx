@@ -1,4 +1,4 @@
-import { userService, workshopService } from "@/api/services/workshopRegistrationService";
+import { userService, workshopRegistrationService } from "@/api/services/workshopRegistrationService";
 import Button from "@/components/ui/button";
 import { ComboBox, type ComboBoxOption } from "@/components/ui/combobox";
 import { Select } from "@/components/ui/select";
@@ -42,12 +42,7 @@ const WorkshopRegistrationDataForm: React.FC<WorkshopRegistrationDataFormProps> 
     const fetchWorkshops = async () => {
       try {
         setLoadingWorkshops(true);
-        const response = await workshopService.getPages({
-          page: 0,
-          page_size: 1000, // 獲取所有工作坊
-          is_active: true,
-          deleted: false,
-        });
+        const response = await workshopRegistrationService.getWorkshopList();
         const workshopItems = response.data.items || [];
         setWorkshops(
           workshopItems.map((item) => ({

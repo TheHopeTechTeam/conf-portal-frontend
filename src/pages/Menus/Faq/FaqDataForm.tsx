@@ -7,10 +7,10 @@ import { useEffect, useState } from "react";
 
 export interface FaqFormValues {
   id?: string;
-  categoryId: string;
+  category_id: string;
   question: string;
   answer: string;
-  relatedLink?: string;
+  related_link?: string;
   remark?: string;
   description?: string;
 }
@@ -25,10 +25,10 @@ interface FaqDataFormProps {
 
 const FaqDataForm: React.FC<FaqDataFormProps> = ({ mode, defaultValues, onSubmit, onCancel, submitting }) => {
   const [values, setValues] = useState<FaqFormValues>({
-    categoryId: "",
+    category_id: "",
     question: "",
     answer: "",
-    relatedLink: "",
+    related_link: "",
     remark: "",
     description: "",
   });
@@ -56,19 +56,19 @@ const FaqDataForm: React.FC<FaqDataFormProps> = ({ mode, defaultValues, onSubmit
     if (defaultValues) {
       setValues({
         id: defaultValues.id,
-        categoryId: defaultValues.categoryId || "",
+        category_id: defaultValues.category_id || "",
         question: defaultValues.question || "",
         answer: defaultValues.answer || "",
-        relatedLink: defaultValues.relatedLink || "",
+        related_link: defaultValues.related_link || "",
         remark: defaultValues.remark || "",
         description: defaultValues.description || "",
       });
     } else {
       setValues({
-        categoryId: "",
+        category_id: "",
         question: "",
         answer: "",
-        relatedLink: "",
+        related_link: "",
         remark: "",
         description: "",
       });
@@ -78,8 +78,8 @@ const FaqDataForm: React.FC<FaqDataFormProps> = ({ mode, defaultValues, onSubmit
   const validate = (): boolean => {
     const next: Record<string, string> = {};
 
-    if (!values.categoryId || values.categoryId.trim().length === 0) {
-      next.categoryId = "請選擇分類";
+    if (!values.category_id || values.category_id.trim().length === 0) {
+      next.category_id = "請選擇分類";
     }
 
     if (!values.question || values.question.trim().length === 0) {
@@ -92,11 +92,11 @@ const FaqDataForm: React.FC<FaqDataFormProps> = ({ mode, defaultValues, onSubmit
       next.answer = "請輸入答案";
     }
 
-    if (values.relatedLink && values.relatedLink.trim().length > 0) {
+    if (values.related_link && values.related_link.trim().length > 0) {
       try {
-        new URL(values.relatedLink);
+        new URL(values.related_link);
       } catch {
-        next.relatedLink = "請輸入有效的 URL 格式";
+        next.related_link = "請輸入有效的 URL 格式";
       }
     }
 
@@ -123,17 +123,22 @@ const FaqDataForm: React.FC<FaqDataFormProps> = ({ mode, defaultValues, onSubmit
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Select
-          id="categoryId"
+          id="category_id"
           label="分類"
           placeholder="請選擇分類"
           options={categoryOptions}
-          value={values.categoryId}
-          onChange={(value) => setValues((v) => ({ ...v, categoryId: typeof value === "string" ? value : Array.isArray(value) ? String(value[0] || "") : String(value || "") }))}
-          error={errors.categoryId || undefined}
+          value={values.category_id}
+          onChange={(value) =>
+            setValues((v) => ({
+              ...v,
+              category_id: typeof value === "string" ? value : Array.isArray(value) ? String(value[0] || "") : String(value || ""),
+            }))
+          }
+          error={errors.category_id || undefined}
           required
           disabled={loadingCategories}
         />
-        {errors.categoryId && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.categoryId}</p>}
+        {errors.category_id && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.category_id}</p>}
       </div>
 
       <div>
@@ -166,16 +171,16 @@ const FaqDataForm: React.FC<FaqDataFormProps> = ({ mode, defaultValues, onSubmit
 
       <div>
         <Input
-          id="relatedLink"
+          id="related_link"
           label="相關連結"
           type="text"
           placeholder="https://example.com"
-          value={values.relatedLink || ""}
-          onChange={(e) => setValues((v) => ({ ...v, relatedLink: e.target.value }))}
-          error={errors.relatedLink || undefined}
+          value={values.related_link || ""}
+          onChange={(e) => setValues((v) => ({ ...v, related_link: e.target.value }))}
+          error={errors.related_link || undefined}
           hint="例如: https://example.com"
         />
-        {errors.relatedLink && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.relatedLink}</p>}
+        {errors.related_link && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.related_link}</p>}
       </div>
 
       <div>
@@ -215,4 +220,3 @@ const FaqDataForm: React.FC<FaqDataFormProps> = ({ mode, defaultValues, onSubmit
 };
 
 export default FaqDataForm;
-

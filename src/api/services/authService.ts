@@ -569,6 +569,25 @@ class AuthService {
       throw this.handleAuthError(error);
     }
   }
+
+  // 已登入使用者修改密碼
+  async changePassword(oldPassword: string, newPassword: string, newPasswordConfirm: string): Promise<ApiResponse<{ message: string }>> {
+    try {
+      const response = await httpClient.post<{ message: string }>(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, {
+        old_password: oldPassword,
+        new_password: newPassword,
+        new_password_confirm: newPasswordConfirm,
+      });
+      return response;
+    } catch (error) {
+      // 處理錯誤並顯示通知
+      if (error && typeof error === "object" && "code" in error && typeof (error as ApiError).code === "number") {
+        const apiError = error as ApiError;
+        this.showAuthErrorNotification(apiError, "password");
+      }
+      throw this.handleAuthError(error);
+    }
+  }
 }
 
 // 建立全域認證服務實例

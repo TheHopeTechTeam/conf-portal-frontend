@@ -1,4 +1,5 @@
 import { permissionService } from "@/api";
+import type { PermissionCreate, PermissionUpdate } from "@/api/types";
 import type { PermissionDetail as ApiPermissionDetail, PermissionPageItem } from "@/api/types";
 import type { DataTableColumn, MenuButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
@@ -14,6 +15,18 @@ import PermissionDataForm, { type PermissionFormValues } from "./PermissionDataF
 import PermissionDeleteForm from "./PermissionDeleteForm";
 import PermissionDetailView from "./PermissionDetailView";
 import PermissionSearchPopover, { type PermissionSearchFilters } from "./PermissionSearchPopover";
+
+const mapPermissionFormValuesToPayload = (values: PermissionFormValues): PermissionCreate => {
+  return {
+    display_name: values.displayName,
+    code: values.code,
+    resource_id: values.resourceId,
+    verb_id: values.verbId,
+    is_active: values.isActive,
+    description: values.description,
+    remark: values.remark,
+  };
+};
 
 export default function PermissionDataPage() {
   const [currentPage, setCurrentPage] = useState(1); // 1-based for UI
@@ -392,15 +405,16 @@ export default function PermissionDataPage() {
   const handleSubmit = async (values: PermissionFormValues) => {
     try {
       setSubmitting(true);
+      const payload: PermissionCreate | PermissionUpdate = mapPermissionFormValuesToPayload(values);
       if (formMode === "create") {
-        await permissionService.create(values);
+        await permissionService.create(payload);
         showNotification({
           variant: "success",
           title: "新增成功",
           description: `已成功新增權限「${values.displayName}」`,
         });
       } else if (formMode === "edit" && editing?.id) {
-        await permissionService.update(editing.id, values);
+        await permissionService.update(editing.id, payload);
         showNotification({
           variant: "success",
           title: "更新成功",
