@@ -7,9 +7,9 @@ import {
 import type { DataTableColumn, MenuButtonType, PopoverType } from "@/components/DataPage";
 import { CommonPageButton, CommonRowAction, DataPage } from "@/components/DataPage";
 import DeleteForm from "@/components/DataPage/DeleteForm";
-import { getRecycleButtonClassName } from "@/components/DataPage/PageButtonTypes";
 import SearchPopoverContent from "@/components/DataPage/SearchPopoverContent";
 import { Modal } from "@/components/ui/modal";
+import { Select } from "@/components/ui/select/Select";
 import Tooltip from "@/components/ui/tooltip";
 import { PopoverPosition, Resource } from "@/const/enums";
 import { useModal } from "@/hooks/useModal";
@@ -22,12 +22,19 @@ const camelToSnakeCase = (str: string): string => {
   return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 };
 
+interface WorkshopRegistrationSearchFilters {
+  keyword: string;
+  workshopId?: string;
+}
+
 const WorkshopRegistrationDataPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1); // 1-based for UI
   const [pageSize, setPageSize] = useState(10);
   const [keyword, setKeyword] = useState("");
-  const [searchDraft, setSearchDraft] = useState("");
-  const [showDeleted, setShowDeleted] = useState(false);
+  const [searchDraft, setSearchDraft] = useState<WorkshopRegistrationSearchFilters>({ keyword: "" });
+  const [workshopIdFilter, setWorkshopIdFilter] = useState<string | undefined>(undefined);
+  const [workshopOptions, setWorkshopOptions] = useState<Array<{ value: string; label: string }>>([]);
+  const [loadingWorkshops, setLoadingWorkshops] = useState(false);
   const [orderBy, setOrderBy] = useState<string>();
   const [descending, setDescending] = useState<boolean>();
 
@@ -53,7 +60,7 @@ const WorkshopRegistrationDataPage: React.FC = () => {
     orderBy,
     descending,
     keyword,
-    showDeleted,
+    workshopIdFilter,
   });
 
   // 更新 ref 當依賴項改變時
@@ -63,14 +70,14 @@ const WorkshopRegistrationDataPage: React.FC = () => {
     orderBy,
     descending,
     keyword,
-    showDeleted,
+    workshopIdFilter,
   };
 
   const fetchPages = useCallback(async () => {
     // 在 fetchPages 之前清除選中狀態
     clearSelectionRef.current?.();
 
-    const { currentPage, pageSize, orderBy, descending, keyword, showDeleted } = fetchPagesRef.current;
+    const { currentPage, pageSize, orderBy, descending, keyword, workshopIdFilter } = fetchPagesRef.current;
 
     setLoading(true);
     try {
@@ -80,8 +87,7 @@ const WorkshopRegistrationDataPage: React.FC = () => {
         order_by: orderBy && orderBy.trim() !== "" ? camelToSnakeCase(orderBy) : undefined,
         descending: orderBy && orderBy.trim() !== "" ? descending : undefined,
         keyword: keyword || undefined,
-        is_registered: !showDeleted ? true : undefined,
-        deleted: showDeleted || undefined,
+        workshop_id: workshopIdFilter,
       } as Record<string, unknown>;
 
       const res = await workshopRegistrationService.getPages(params);
@@ -107,7 +113,7 @@ const WorkshopRegistrationDataPage: React.FC = () => {
         sortable: false,
         width: "w-40 max-w-60",
         tooltip: true,
-        tooltipWrapContent: false,
+        tooltipWrapContent: true,
         render: (value: unknown) => {
           const title = value as string | undefined;
           return title || <span className="text-gray-400">未設置</span>;
@@ -180,13 +186,13 @@ const WorkshopRegistrationDataPage: React.FC = () => {
         },
       },
     ],
-    []
+    [],
   );
 
   // Trigger fetch on dependencies change
   useEffect(() => {
     fetchPages();
-  }, [currentPage, pageSize, orderBy, descending, keyword, showDeleted, fetchPages]);
+  }, [currentPage, pageSize, orderBy, descending, keyword, workshopIdFilter, fetchPages]);
 
   // Event handlers wired to DataPage
   const handleSort = (columnKey: string | null, newDescending: boolean) => {
@@ -230,55 +236,92 @@ const WorkshopRegistrationDataPage: React.FC = () => {
       popover: PopoverType;
     }) => (
       <SearchPopoverContent
-        value={searchDraft}
-        onChange={setSearchDraft}
         onSearch={() => {
-          setKeyword(searchDraft);
+          setKeyword(searchDraft.keyword);
+          setWorkshopIdFilter(searchDraft.workshopId);
           setCurrentPage(1);
           onOpenChange(false); // 搜尋完成後關閉 Popover
         }}
         onClear={() => {
-          setSearchDraft("");
+          const defaultFilters: WorkshopRegistrationSearchFilters = { keyword: "" };
+          setSearchDraft(defaultFilters);
           setKeyword("");
+          setWorkshopIdFilter(undefined);
           setCurrentPage(1);
           onOpenChange(false); // 清除完成後關閉 Popover
         }}
-        placeholder="輸入關鍵字"
         trigger={trigger}
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         popover={popover}
-      />
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">關鍵字</label>
+            <input
+              type="text"
+              value={searchDraft.keyword}
+              onChange={(e) => setSearchDraft((prev) => ({ ...prev, keyword: e.target.value }))}
+              placeholder="輸入關鍵字 (例如：Workshop 標題、姓名、Email)"
+              className="dark:bg-dark-900 h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+          </div>
+          <div>
+            <Select
+              id="workshopFilter"
+              label="工作坊"
+              options={workshopOptions}
+              value={searchDraft.workshopId || ""}
+              onChange={(value) => {
+                setSearchDraft((prev) => ({ ...prev, workshopId: value ? String(value) : undefined }));
+              }}
+              placeholder={loadingWorkshops ? "載入中..." : "全部"}
+              clearable
+              disabled={loadingWorkshops}
+            />
+          </div>
+        </div>
+      </SearchPopoverContent>
     );
 
     const buttons = [
       CommonPageButton.SEARCH(searchPopoverCallback, {
-        popover: { title: "搜尋註冊記錄", position: PopoverPosition.BottomLeft, width: "300px" },
+        popover: { title: "搜尋註冊記錄", position: PopoverPosition.BottomLeft, width: "500px" },
       }),
-      CommonPageButton.ADD(
-        () => {
-          setFormMode("create");
-          setEditing(null);
-          openModal();
-        },
-        {
-          visible: !showDeleted,
-        }
-      ),
+      CommonPageButton.ADD(() => {
+        setFormMode("create");
+        setEditing(null);
+        openModal();
+      }),
       CommonPageButton.REFRESH(() => {
         fetchPages();
       }),
-      CommonPageButton.RECYCLE(
-        () => {
-          setShowDeleted(!showDeleted);
-          setCurrentPage(1);
-        },
-        { className: getRecycleButtonClassName(showDeleted) }
-      ),
     ];
 
     return buttons;
-  }, [openModal, fetchPages, searchDraft, showDeleted]);
+  }, [openModal, fetchPages, searchDraft, workshopOptions, loadingWorkshops]);
+
+  useEffect(() => {
+    const fetchWorkshopOptions = async () => {
+      try {
+        setLoadingWorkshops(true);
+        const response = await workshopRegistrationService.getWorkshopList();
+        const items = response.data.items || [];
+        setWorkshopOptions(
+          items.map((item) => ({
+            value: item.id,
+            label: item.title,
+          })),
+        );
+      } catch (error) {
+        console.error("Error fetching workshop options:", error);
+      } finally {
+        setLoadingWorkshops(false);
+      }
+    };
+
+    fetchWorkshopOptions();
+  }, []);
 
   // Row actions
   const rowActions: MenuButtonType<WorkshopRegistrationPageItem>[] = useMemo(
@@ -293,40 +336,17 @@ const WorkshopRegistrationDataPage: React.FC = () => {
           alert("載入註冊詳情失敗，請稍後重試");
         }
       }),
-      {
-        key: "unregister",
-        text: "取消註冊",
-        onClick: async (row: WorkshopRegistrationPageItem) => {
-          if (!row.unregisteredAt) {
-            if (confirm("確定要取消此註冊嗎？")) {
-              try {
-                setSubmitting(true);
-                await workshopRegistrationService.unregister(row.id);
-                await fetchPages();
-              } catch (e) {
-                console.error("Error unregistering workshop registration:", e);
-                alert("取消註冊失敗，請稍後重試");
-              } finally {
-                setSubmitting(false);
-              }
-            }
-          } else {
-            alert("此註冊已經被取消");
-          }
-        },
-        visible: (row: WorkshopRegistrationPageItem) => !showDeleted && !row.unregisteredAt,
-      },
       CommonRowAction.DELETE(
         async (row: WorkshopRegistrationPageItem) => {
           setDeleting(row);
           openDeleteModal();
         },
         {
-          text: showDeleted ? "永久刪除" : "刪除",
-        }
+          text: "刪除",
+        },
       ),
     ],
-    [openDeleteModal, openViewModal, showDeleted, fetchPages]
+    [openDeleteModal, openViewModal],
   );
 
   // Submit handlers
@@ -353,11 +373,11 @@ const WorkshopRegistrationDataPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async ({ reason, permanent }: { reason?: string; permanent?: boolean }) => {
+  const handleDelete = async ({ reason }: { reason?: string; permanent?: boolean }) => {
     try {
       setSubmitting(true);
       if (!deleting?.id) return;
-      await workshopRegistrationService.remove(deleting.id, { reason, permanent: !!permanent });
+      await workshopRegistrationService.remove(deleting.id, { reason, permanent: true });
       closeDeleteModal();
       setDeleting(null);
       // Refresh list by calling fetchPages directly
@@ -386,7 +406,7 @@ const WorkshopRegistrationDataPage: React.FC = () => {
         data={pagedData}
         columns={columns}
         loading={loading}
-        singleSelect={!showDeleted}
+        singleSelect
         orderBy={orderBy}
         descending={descending}
         resource={Resource.WorkshopRegistration}
@@ -416,19 +436,8 @@ const WorkshopRegistrationDataPage: React.FC = () => {
         />
       </Modal>
 
-      <Modal
-        title={showDeleted ? "確認永久刪除註冊記錄" : "確認刪除註冊記錄"}
-        isOpen={isDeleteOpen}
-        onClose={closeDeleteModal}
-        className="max-w-[560px] w-full mx-4 p-6"
-      >
-        <DeleteForm
-          onSubmit={handleDelete}
-          onCancel={closeDeleteModal}
-          submitting={submitting}
-          entityName="註冊記錄"
-          isPermanent={showDeleted}
-        />
+      <Modal title="確認刪除註冊記錄" isOpen={isDeleteOpen} onClose={closeDeleteModal} className="max-w-[560px] w-full mx-4 p-6">
+        <DeleteForm onSubmit={handleDelete} onCancel={closeDeleteModal} submitting={submitting} entityName="註冊記錄" isPermanent />
       </Modal>
 
       <Modal title="註冊記錄詳細資料" isOpen={isViewOpen} onClose={closeViewModal} className="max-w-[600px] w-full mx-4 p-6">

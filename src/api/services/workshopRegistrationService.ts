@@ -40,6 +40,11 @@ export interface WorkshopRegistrationDelete {
   permanent?: boolean;
 }
 
+export interface WorkshopRegistrationWorkshopListItem {
+  id: string;
+  title: string;
+}
+
 // Workshop Registration Service
 export const workshopRegistrationService = {
   async getPages(params: {
@@ -58,6 +63,10 @@ export const workshopRegistrationService = {
 
   async getById(id: string) {
     return httpClient.get<WorkshopRegistrationDetail>(API_ENDPOINTS.WORKSHOP_REGISTRATIONS.DETAIL(id));
+  },
+
+  async getWorkshopList() {
+    return httpClient.get<{ items: WorkshopRegistrationWorkshopListItem[] }>(API_ENDPOINTS.WORKSHOPS.LIST);
   },
 
   async create(payload: WorkshopRegistrationCreate) {

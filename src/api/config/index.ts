@@ -83,6 +83,7 @@ export const API_ENDPOINTS = {
   // 工作坊管理
   WORKSHOPS: {
     PAGES: `${ADMIN_API_PREFIX}/workshop/pages`,
+    LIST: `${ADMIN_API_PREFIX}/workshop/list`,
     CREATE: `${ADMIN_API_PREFIX}/workshop`,
     DETAIL: (id: string) => `${ADMIN_API_PREFIX}/workshop/${id}`,
     UPDATE: (id: string) => `${ADMIN_API_PREFIX}/workshop/${id}`,
