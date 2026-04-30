@@ -17,6 +17,7 @@ import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "re
 import NotificationDataForm, { type NotificationFormValues } from "./NotificationDataForm";
 import NotificationDetailView from "./NotificationDetailView";
 import NotificationSearchPopover, { type NotificationSearchFilters } from "./NotificationSearchPopover";
+import { HttpStatusCode } from "axios";
 
 interface NotificationPagesResponse {
   page: number;
@@ -168,13 +169,15 @@ export default function NotificationDataPage() {
         label: "標題",
         sortable: true,
         width: "w-48",
-        tooltip: (row) => row.title,
+        tooltip: true,
       },
       {
         key: "message",
         label: "內容",
-        width: "w-64",
-        tooltip: (row) => row.message,
+        width: "w-160",
+        tooltip: true,
+        tooltipWidth: "w-160",
+        tooltipWrapContent: true,
       },
       {
         key: "method",
@@ -333,6 +336,16 @@ export default function NotificationDataPage() {
       closeModal();
       await fetchPages();
     } catch (e) {
+      const isUnauthorizedError =
+        typeof e === "object" &&
+        e !== null &&
+        "code" in e &&
+        typeof (e as { code?: unknown }).code === "number" &&
+        (e as { code: number }).code === HttpStatusCode.Unauthorized;
+
+      if (isUnauthorizedError) {
+        return;
+      }
       console.error(e);
       showNotification({
         variant: "error",
