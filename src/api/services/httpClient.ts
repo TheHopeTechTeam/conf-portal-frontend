@@ -17,6 +17,7 @@ class HttpClient {
   private responseInterceptors: ResponseInterceptor[] = [];
   private errorInterceptors: ErrorInterceptor[] = [];
   private refreshPromise: Promise<string> | null = null;
+  private is_handling_unauthorized_redirect = false;
 
   constructor() {
     this.axiosInstance = axios.create({
@@ -155,6 +156,37 @@ class HttpClient {
     }
   }
 
+  // 401 最終失敗後的統一處理（清理本地認證狀態 + 通知 + 導向登入）
+  private handleUnauthorizedFallback(): void {
+    if (this.is_handling_unauthorized_redirect) return;
+    this.is_handling_unauthorized_redirect = true;
+
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("refresh_token_expiry");
+    localStorage.removeItem("user_data");
+    localStorage.removeItem("remember_me");
+
+    sessionStorage.removeItem("auth_token");
+    sessionStorage.removeItem("refresh_token");
+    sessionStorage.removeItem("user_data");
+
+    notificationManager.show({
+      variant: "warning",
+      title: "登入已過期",
+      description: "Session 已過期，請重新登入",
+      position: "top-center",
+      hideDuration: 5000,
+    });
+
+    window.setTimeout(() => {
+      if (window.location.pathname !== "/signin") {
+        window.location.href = "/signin";
+      }
+      this.is_handling_unauthorized_redirect = false;
+    }, 1200);
+  }
+
   // 重試機制
   private async retryRequest(config: AxiosRequestConfig, attempt: number = 1): Promise<AxiosResponse> {
     try {
@@ -222,11 +254,21 @@ class HttpClient {
             finalError = this.handleError(retryError as AxiosError);
           }
           const processedFinalError = await this.executeErrorInterceptors(finalError);
+          if (processedFinalError.code === HttpStatusCode.Unauthorized) {
+            this.handleUnauthorizedFallback();
+          }
           throw processedFinalError;
         }
       }
 
       const processedError = await this.executeErrorInterceptors(apiError);
+      if (
+        processedError.code === HttpStatusCode.Unauthorized &&
+        !this.isRefreshRequest(config) &&
+        !this.isLoginRequest(config)
+      ) {
+        this.handleUnauthorizedFallback();
+      }
       throw processedError;
     }
   }
